@@ -34,6 +34,14 @@
   a { color: var(--primary); }
   .top { display: flex; justify-content: space-between; align-items: flex-start; }
   .badge { font-size: 11px; padding: 2px 6px; border-radius: 6px; background: var(--border); }
+  .usage-history { padding: 10px 4px 14px; }
+  .usage-history h4 { margin: 0 0 10px; font-size: 13px; color: var(--text-muted); font-weight: 600; }
+  .usage-bar-row { display: flex; align-items: center; gap: 10px; font-size: 12px; margin-bottom: 4px; }
+  .usage-bar-day { width: 90px; color: var(--text-muted); flex-shrink: 0; }
+  .usage-bar-track { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; height: 12px; overflow: hidden; }
+  .usage-bar-fill { background: var(--primary); height: 100%; }
+  .usage-bar-count { width: 30px; text-align: right; flex-shrink: 0; font-weight: 600; }
+  .usage-empty { color: var(--text-muted); font-size: 13px; }
 </style>
 </head>
 <body>
@@ -101,6 +109,7 @@
           <button class="secondary save-limit-btn" data-id="${u.id}" ${u.role === 'admin' ? 'disabled' : ''}>Salvează limită</button>
           <button class="secondary toggle-active-btn" data-id="${u.id}" data-active="${u.active}" ${u.role === 'admin' ? 'disabled' : ''}>${u.active ? 'Dezactivează' : 'Activează'}</button>
           <button class="secondary password-btn" data-id="${u.id}" data-username="${u.username}">Schimbă parola</button>
+          <button class="secondary history-btn" data-id="${u.id}" data-username="${u.username}">📊 Istoric</button>
           <button class="danger delete-btn" data-id="${u.id}" ${u.role === 'admin' ? 'disabled' : ''}>Șterge</button>
         </td>`;
       tbody.appendChild(tr);
@@ -135,6 +144,35 @@
         if (!newPassword) return;
         await api('PATCH', `/api/admin/users/${btn.dataset.id}`, { password: newPassword });
         alert('Parolă schimbată.');
+      });
+    });
+    tbody.querySelectorAll('.history-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const row = btn.closest('tr');
+        const existing = row.nextElementSibling;
+        if (existing && existing.classList.contains('history-row')) {
+          existing.remove();
+          return;
+        }
+        tbody.querySelectorAll('.history-row').forEach((r) => r.remove());
+
+        const { history } = await api('GET', `/api/admin/users/${btn.dataset.id}/usage?days=30`);
+        const max = Math.max(1, ...history.map((h) => h.count));
+        const bars = [...history].reverse().map((h) => `
+          <div class="usage-bar-row">
+            <span class="usage-bar-day">${h.day}</span>
+            <span class="usage-bar-track"><span class="usage-bar-fill" style="width:${(h.count / max) * 100}%"></span></span>
+            <span class="usage-bar-count">${h.count}</span>
+          </div>`).join('');
+        const total = history.reduce((sum, h) => sum + h.count, 0);
+
+        const historyRow = document.createElement('tr');
+        historyRow.className = 'history-row';
+        historyRow.innerHTML = `<td colspan="6"><div class="usage-history">
+          <h4>Istoric cereri AI — ${btn.dataset.username} (ultimele 30 zile, total ${total})</h4>
+          ${total > 0 ? bars : '<div class="usage-empty">Nicio cerere AI în ultimele 30 de zile.</div>'}
+        </div></td>`;
+        row.after(historyRow);
       });
     });
   }

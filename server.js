@@ -195,6 +195,32 @@ app.get('/api/admin/users', requireAuth, requireAdmin, (req, res) => {
   res.json(withUsage);
 });
 
+app.get('/api/admin/users/:id/usage', requireAuth, requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const days = Math.min(Number(req.query.days) || 30, 90);
+  const target = db.prepare('SELECT id, username FROM users WHERE id = ?').get(id);
+  if (!target) return res.status(404).json({ error: 'User inexistent.' });
+
+  const since = new Date();
+  since.setDate(since.getDate() - (days - 1));
+  const sinceStr = since.toISOString().slice(0, 10);
+
+  const rows = db
+    .prepare('SELECT day, count FROM ai_usage WHERE user_id = ? AND day >= ? ORDER BY day DESC')
+    .all(id, sinceStr);
+
+  // completeaza zilele fara nicio cerere cu count 0, ca sa fie un istoric continuu
+  const byDay = new Map(rows.map((r) => [r.day, r.count]));
+  const history = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dayStr = d.toISOString().slice(0, 10);
+    history.push({ day: dayStr, count: byDay.get(dayStr) || 0 });
+  }
+  res.json({ username: target.username, history });
+});
+
 app.post('/api/admin/users', requireAuth, requireAdmin, (req, res) => {
   const { username, password, aiDailyLimit } = req.body || {};
   if (!username || !password) {
