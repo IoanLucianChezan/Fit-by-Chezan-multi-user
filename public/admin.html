@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fit by Chezan — Admin</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0; --text: #0f172a;
+    --text-muted: #64748b; --primary: #16a34a; --primary-hover: #15803d;
+    --danger: #dc2626; --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f172a; --surface: #1e293b; --border: #334155; --text: #e2e8f0; --text-muted: #94a3b8; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--text-muted); font-size: 13px; margin: 0 0 20px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  input, button { font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+  input[type=number] { width: 80px; }
+  button { cursor: pointer; background: var(--primary); color: #fff; border: none; }
+  button:hover { background: var(--primary-hover); }
+  button.danger { background: var(--danger); }
+  button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .err { color: var(--danger); font-size: 13px; margin-top: 8px; min-height: 16px; }
+  a { color: var(--primary); }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .badge { font-size: 11px; padding: 2px 6px; border-radius: 6px; background: var(--border); }
+</style>
+</head>
+<body>
+  <div class="top">
+    <div>
+      <h1>🛠️ Fit by Chezan — Administrare</h1>
+      <p class="sub">Creează useri, setează limita zilnică de cereri AI, dezactivează conturi.</p>
+    </div>
+    <div>
+      <a href="/">← Înapoi la aplicație</a>
+    </div>
+  </div>
+
+  <div id="access-denied" class="card" style="display:none">
+    Acces permis doar administratorului. <a href="/">Înapoi la aplicație</a>.
+  </div>
+
+  <div id="admin-content" style="display:none">
+    <div class="card">
+      <h2 style="margin-top:0">Adaugă user nou</h2>
+      <div class="row">
+        <input type="text" id="new-username" placeholder="username">
+        <input type="password" id="new-password" placeholder="parolă">
+        <input type="number" id="new-limit" placeholder="limită AI/zi" value="20">
+        <button id="create-user-btn">Creează</button>
+      </div>
+      <div class="err" id="create-error"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Useri</h2>
+      <table>
+        <thead>
+          <tr><th>Username</th><th>Rol</th><th>Limită AI/zi</th><th>Folosit azi</th><th>Status</th><th>Acțiuni</th></tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+  async function api(method, url, body) {
+    const res = await fetch(url, {
+      method,
+      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    return data;
+  }
+
+  function renderUsers(users) {
+    const tbody = document.getElementById('users-tbody');
+    tbody.innerHTML = '';
+    for (const u of users) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${u.username}</td>
+        <td><span class="badge">${u.role}</span></td>
+        <td><input type="number" value="${u.ai_daily_limit}" data-id="${u.id}" class="limit-input" style="width:90px" ${u.role === 'admin' ? 'disabled' : ''}></td>
+        <td>${u.aiUsedToday}</td>
+        <td>${u.active ? 'activ' : 'dezactivat'}</td>
+        <td class="row" style="margin:0">
+          <button class="secondary save-limit-btn" data-id="${u.id}" ${u.role === 'admin' ? 'disabled' : ''}>Salvează limită</button>
+          <button class="secondary toggle-active-btn" data-id="${u.id}" data-active="${u.active}" ${u.role === 'admin' ? 'disabled' : ''}>${u.active ? 'Dezactivează' : 'Activează'}</button>
+          <button class="secondary password-btn" data-id="${u.id}" data-username="${u.username}">Schimbă parola</button>
+          <button class="danger delete-btn" data-id="${u.id}" ${u.role === 'admin' ? 'disabled' : ''}>Șterge</button>
+        </td>`;
+      tbody.appendChild(tr);
+    }
+
+    tbody.querySelectorAll('.save-limit-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const input = tbody.querySelector(`.limit-input[data-id="${id}"]`);
+        await api('PATCH', `/api/admin/users/${id}`, { aiDailyLimit: Number(input.value) });
+        load();
+      });
+    });
+    tbody.querySelectorAll('.toggle-active-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const active = btn.dataset.active === '1';
+        await api('PATCH', `/api/admin/users/${id}`, { active: !active });
+        load();
+      });
+    });
+    tbody.querySelectorAll('.delete-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Sigur ștergi acest user? Datele lui se pierd definitiv.')) return;
+        await api('DELETE', `/api/admin/users/${btn.dataset.id}`);
+        load();
+      });
+    });
+    tbody.querySelectorAll('.password-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const newPassword = prompt(`Parolă nouă pentru "${btn.dataset.username}":`);
+        if (!newPassword) return;
+        await api('PATCH', `/api/admin/users/${btn.dataset.id}`, { password: newPassword });
+        alert('Parolă schimbată.');
+      });
+    });
+  }
+
+  async function load() {
+    const users = await api('GET', '/api/admin/users');
+    renderUsers(users);
+  }
+
+  document.getElementById('create-user-btn').addEventListener('click', async () => {
+    const username = document.getElementById('new-username').value.trim();
+    const password = document.getElementById('new-password').value;
+    const aiDailyLimit = Number(document.getElementById('new-limit').value) || 20;
+    const errEl = document.getElementById('create-error');
+    errEl.textContent = '';
+    if (!username || !password) {
+      errEl.textContent = 'Username și parolă sunt obligatorii.';
+      return;
+    }
+    try {
+      await api('POST', '/api/admin/users', { username, password, aiDailyLimit });
+      document.getElementById('new-username').value = '';
+      document.getElementById('new-password').value = '';
+      document.getElementById('new-limit').value = 20;
+      load();
+    } catch (err) {
+      errEl.textContent = err.message;
+    }
+  });
+
+  (async function init() {
+    try {
+      const me = await api('GET', '/api/auth/me');
+      if (me.role !== 'admin') throw new Error('not admin');
+      document.getElementById('admin-content').style.display = 'block';
+      load();
+    } catch {
+      document.getElementById('access-denied').style.display = 'block';
+    }
+  })();
+</script>
+</body>
+</html>

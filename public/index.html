@@ -533,9 +533,47 @@
     padding: 12px 14px;
     margin-bottom: 16px;
   }
+
+  #login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+  }
+  #login-overlay.hidden { display: none; }
+  .login-box {
+    width: min(340px, 90vw);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 28px 24px;
+    text-align: center;
+  }
+  .login-box h1 { margin: 0 0 4px; font-size: 22px; }
+  .login-box p { color: var(--text-muted); font-size: 13px; margin: 0 0 16px; }
+  .login-box input { width: 100%; margin-bottom: 10px; }
+  .login-box button { width: 100%; }
+  #login-error { color: var(--danger); font-size: 13px; margin-top: 10px; min-height: 16px; }
+  #logout-btn { font-size: 16px; }
+  #admin-link { display: inline-block; margin: 0 10px 12px 0; }
 </style>
 </head>
 <body>
+  <div id="login-overlay">
+    <div class="login-box">
+      <h1>Fit by Chezan</h1>
+      <p>Autentifică-te pentru a continua.</p>
+      <input type="text" id="login-username" placeholder="Username" autocomplete="username">
+      <input type="password" id="login-password" placeholder="Parolă" autocomplete="current-password">
+      <button type="button" id="login-submit">Intră</button>
+      <div id="login-error"></div>
+    </div>
+  </div>
+
   <h1>Fit by Chezan</h1>
 
   <div class="header-row">
@@ -543,6 +581,7 @@
     <div class="header-actions">
       <button type="button" class="settings-shortcut active" data-tab="home">🏠 Home</button>
       <button type="button" class="settings-shortcut" data-tab="settings">⚙️ Setări</button>
+      <button type="button" id="logout-btn" title="Ieși din cont">🚪</button>
       <div class="theme-toggle" id="theme-toggle">
         <button type="button" data-theme-choice="light" title="Mod luminos">☀️</button>
         <button type="button" data-theme-choice="dark" title="Mod întunecat">🌙</button>
@@ -965,49 +1004,42 @@
   <!-- ================= SETĂRI ================= -->
   <section id="settings">
     <div class="privacy-note">
-      🔒 Cheile tale API rămân doar în acest browser (localStorage). Nu sunt trimise niciodată către
-      vreun server al aplicației — nu există un server. Fiecare vizitator își introduce propria cheie,
-      iar apelurile merg direct din browserul tău către Cerebras/Groq.
+      🔒 Apelurile AI trec prin serverul aplicației, care ține cheile Cerebras/Groq. Ai o limită
+      zilnică de cereri AI setată de administrator.
     </div>
 
     <div class="card">
-      <h2>Cerebras</h2>
+      <h2>Cont</h2>
       <div class="settings-field">
-        <label for="set-cerebras-key">Cerebras API Key</label>
-        <input type="password" id="set-cerebras-key" placeholder="csk-...">
+        <label>Utilizator</label>
+        <div id="account-username">–</div>
       </div>
       <div class="settings-field">
-        <label for="set-cerebras-model">Model Cerebras</label>
-        <input type="text" id="set-cerebras-model" placeholder="gpt-oss-120b">
-      </div>
-      <div class="settings-field">
-        <label for="set-cerebras-model-fallback">Model Cerebras (rezervă)</label>
-        <input type="text" id="set-cerebras-model-fallback" placeholder="gemma-4-31b">
+        <label>Cereri AI folosite azi</label>
+        <div id="account-ai-usage">–</div>
       </div>
     </div>
 
     <div class="card">
-      <h2>Groq</h2>
+      <h2>Schimbă parola</h2>
       <div class="settings-field">
-        <label for="set-groq-key">Groq API Key</label>
-        <input type="password" id="set-groq-key" placeholder="gsk_...">
+        <label for="change-pw-current">Parola curentă</label>
+        <input type="password" id="change-pw-current" autocomplete="current-password">
       </div>
       <div class="settings-field">
-        <label for="set-groq-model">Model Groq</label>
-        <input type="text" id="set-groq-model" placeholder="llama-3.3-70b-versatile">
+        <label for="change-pw-new">Parola nouă</label>
+        <input type="password" id="change-pw-new" autocomplete="new-password">
       </div>
       <div class="settings-field">
-        <label for="set-groq-model-fallback">Model Groq (rezervă)</label>
-        <input type="text" id="set-groq-model-fallback" placeholder="openai/gpt-oss-120b">
+        <label for="change-pw-confirm">Confirmă parola nouă</label>
+        <input type="password" id="change-pw-confirm" autocomplete="new-password">
       </div>
-      <div class="settings-field">
-        <label for="set-groq-vision-model">Model Groq (vision, pentru poze la Manual)</label>
-        <input type="text" id="set-groq-vision-model" placeholder="qwen/qwen3.6-27b">
-      </div>
+      <button type="button" id="change-pw-btn">Salvează parola nouă</button>
+      <span id="change-pw-status"></span>
     </div>
 
-    <button type="button" id="save-settings">Salvează setările</button>
-    <span id="save-settings-status"></span>
+    <a id="admin-link" href="/admin.html" style="display:none">🛠️ Panou administrare</a>
+    <button type="button" id="logout-btn-settings">🚪 Ieși din cont</button>
   </section>
 
 <script>
@@ -1015,17 +1047,31 @@
   // Utilitare generale
   // ============================================================
 
+  // Datele aplicației (antrenamente, nutriție, istoric etc.) trăiesc server-side,
+  // per user. __dataStore e populat sincron la boot (înainte de initApp) și
+  // salvat pe server, cu debounce, la fiecare scriere.
+  let __dataStore = {};
+  let __saveTimer = null;
+  function scheduleSave() {
+    if (__saveTimer) clearTimeout(__saveTimer);
+    __saveTimer = setTimeout(() => {
+      fetch('/api/data', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(__dataStore)
+      }).catch((err) => console.warn('Salvare eșuată:', err.message));
+    }, 400);
+  }
   function lsGet(key, fallback) {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw === null ? fallback : JSON.parse(raw);
-    } catch (err) {
-      return fallback;
-    }
+    const v = __dataStore[key];
+    return v === undefined ? fallback : v;
   }
   function lsSet(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
+    __dataStore[key] = value;
+    scheduleSave();
   }
+
+  function initApp() {
 
   const RO_DAYS = ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă'];
   const MONTH_NAMES = ['Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie', 'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'];
@@ -1227,91 +1273,31 @@
     setTimeout(() => el.remove(), 800);
   }
 
-  showScreenFlash();
-  showSplashMessage();
-
   // ============================================================
-  // Client AI: Cerebras + Groq cu fallback (apel direct din browser)
+  // AI: proxy prin server (chei ținute server-side, cu limită per user)
   // ============================================================
 
-  const SETTINGS_KEY = 'fw_settings';
-  const DEFAULT_MODELS = {
-    cerebrasModel: 'gpt-oss-120b',
-    cerebrasModelFallback: 'gemma-4-31b',
-    groqModel: 'llama-3.3-70b-versatile',
-    groqModelFallback: 'openai/gpt-oss-120b',
-    groqVisionModel: 'qwen/qwen3.6-27b'
-  };
-
-  function loadSettings() {
-    return lsGet(SETTINGS_KEY, {
-      cerebrasKey: '', cerebrasModel: '', cerebrasModelFallback: '',
-      groqKey: '', groqModel: '', groqModelFallback: '', groqVisionModel: ''
+  async function postJson(url, body) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
     });
-  }
-  function saveSettingsToStorage(s) { lsSet(SETTINGS_KEY, s); }
-
-  function getModelOrDefault(value, key) {
-    const v = String(value || '').trim();
-    return v || DEFAULT_MODELS[key];
-  }
-
-  function buildAttempts() {
-    const s = loadSettings();
-    const attempts = [];
-    if (s.cerebrasKey) {
-      attempts.push({ provider: 'cerebras', url: 'https://api.cerebras.ai/v1/chat/completions', key: s.cerebrasKey, model: getModelOrDefault(s.cerebrasModel, 'cerebrasModel') });
-      attempts.push({ provider: 'cerebras', url: 'https://api.cerebras.ai/v1/chat/completions', key: s.cerebrasKey, model: getModelOrDefault(s.cerebrasModelFallback, 'cerebrasModelFallback') });
-    }
-    if (s.groqKey) {
-      attempts.push({ provider: 'groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: s.groqKey, model: getModelOrDefault(s.groqModel, 'groqModel') });
-      attempts.push({ provider: 'groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: s.groqKey, model: getModelOrDefault(s.groqModelFallback, 'groqModelFallback') });
-    }
-    return attempts;
-  }
-
-  async function callChatCompletionClient(url, apiKey, model, messages, timeoutMs = 30000) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    let res;
-    try {
-      res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ model, messages }),
-        signal: controller.signal
-      });
-    } catch (err) {
-      clearTimeout(timer);
-      if (err.name === 'AbortError') throw new Error(`nu a răspuns în ${timeoutMs / 1000}s`);
-      throw new Error(`conexiune eșuată: ${err.message}`);
-    }
-    clearTimeout(timer);
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => ({}));
-      throw new Error(`${res.status}: ${errBody?.error?.message || res.statusText}`);
-    }
-    const data = await res.json();
-    const content = data?.choices?.[0]?.message?.content;
-    if (!content) throw new Error('răspuns fără conținut');
-    return content;
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error || `${res.status}: ${res.statusText}`);
+    return data;
   }
 
   async function generateWithFallback(messages) {
-    const attempts = buildAttempts();
-    if (!attempts.length) {
-      throw new Error('Configurează cel puțin o cheie API (Cerebras sau Groq) în Setări.');
-    }
-    const errors = [];
-    for (const attempt of attempts) {
-      try {
-        const content = await callChatCompletionClient(attempt.url, attempt.key, attempt.model, messages);
-        return { content: stripThinking(content), provider: attempt.provider, model: attempt.model };
-      } catch (err) {
-        errors.push(`${attempt.provider}/${attempt.model}: ${err.message}`);
-      }
-    }
-    throw new Error(`Toate încercările (Cerebras + Groq) au eșuat. — ${errors.join(' || ')}`);
+    const result = await postJson('/api/ai/chat', { messages });
+    refreshAiUsageIndicator();
+    return result;
+  }
+
+  async function visionTranscribeServer(messages) {
+    const result = await postJson('/api/ai/vision', { messages });
+    refreshAiUsageIndicator();
+    return result;
   }
 
   // ============================================================
@@ -2100,9 +2086,6 @@ clar, fără introduceri sau explicații.`;
         reader.onerror = () => reject(new Error('citirea imaginii a eșuat'));
         reader.readAsDataURL(file);
       });
-      const s = loadSettings();
-      if (!s.groqKey) throw new Error('Configurează cheia Groq în Setări (necesară pentru transcrierea din poză).');
-      const visionModel = getModelOrDefault(s.groqVisionModel, 'groqVisionModel');
       const messages = [
         { role: 'system', content: IMAGE_WORKOUT_TRANSCRIBE_SYSTEM_PROMPT },
         { role: 'user', content: [
@@ -2110,7 +2093,7 @@ clar, fără introduceri sau explicații.`;
             { type: 'image_url', image_url: { url: dataUrl } }
           ] }
       ];
-      const content = await callChatCompletionClient('https://api.groq.com/openai/v1/chat/completions', s.groqKey, visionModel, messages);
+      const { content } = await visionTranscribeServer(messages);
       document.getElementById('manual-workout-text').value = stripThinking(content);
     } catch (err) {
       status.textContent = `Eroare: ${err.message}`;
@@ -2365,37 +2348,58 @@ clar, fără introduceri sau explicații.`;
   renderHome();
 
   // ============================================================
-  // Setări
+  // Cont / Setări
   // ============================================================
 
-  function loadSettingsForm() {
-    const s = loadSettings();
-    document.getElementById('set-cerebras-key').value = s.cerebrasKey || '';
-    document.getElementById('set-cerebras-model').value = s.cerebrasModel || '';
-    document.getElementById('set-cerebras-model-fallback').value = s.cerebrasModelFallback || '';
-    document.getElementById('set-groq-key').value = s.groqKey || '';
-    document.getElementById('set-groq-model').value = s.groqModel || '';
-    document.getElementById('set-groq-model-fallback').value = s.groqModelFallback || '';
-    document.getElementById('set-groq-vision-model').value = s.groqVisionModel || '';
+  async function refreshAiUsageIndicator() {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (!res.ok) return;
+      const me = await res.json();
+      document.getElementById('account-username').textContent = me.username + (me.role === 'admin' ? ' (admin)' : '');
+      document.getElementById('account-ai-usage').textContent = `${me.aiUsedToday} / ${me.aiDailyLimit}`;
+      document.getElementById('admin-link').style.display = me.role === 'admin' ? 'inline-block' : 'none';
+    } catch (err) {
+      // sesiune posibil expirata - login overlay se ocupa la urmatoarea actiune
+    }
   }
 
-  document.getElementById('save-settings').addEventListener('click', () => {
-    const status = document.getElementById('save-settings-status');
-    const s = {
-      cerebrasKey: document.getElementById('set-cerebras-key').value.trim(),
-      cerebrasModel: document.getElementById('set-cerebras-model').value.trim(),
-      cerebrasModelFallback: document.getElementById('set-cerebras-model-fallback').value.trim(),
-      groqKey: document.getElementById('set-groq-key').value.trim(),
-      groqModel: document.getElementById('set-groq-model').value.trim(),
-      groqModelFallback: document.getElementById('set-groq-model-fallback').value.trim(),
-      groqVisionModel: document.getElementById('set-groq-vision-model').value.trim()
-    };
-    saveSettingsToStorage(s);
-    status.textContent = 'Salvat.';
-    setTimeout(() => { status.textContent = ''; }, 2000);
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    window.location.reload();
+  }
+  document.getElementById('logout-btn').addEventListener('click', logout);
+  document.getElementById('logout-btn-settings').addEventListener('click', logout);
+
+  document.getElementById('change-pw-btn').addEventListener('click', async () => {
+    const status = document.getElementById('change-pw-status');
+    const currentPassword = document.getElementById('change-pw-current').value;
+    const newPassword = document.getElementById('change-pw-new').value;
+    const confirmPassword = document.getElementById('change-pw-confirm').value;
+    status.style.color = 'var(--danger)';
+    if (!currentPassword || !newPassword) {
+      status.textContent = 'Completează ambele câmpuri de parolă.';
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      status.textContent = 'Parola nouă și confirmarea nu coincid.';
+      return;
+    }
+    try {
+      const result = await postJson('/api/auth/change-password', { currentPassword, newPassword });
+      status.style.color = 'var(--primary)';
+      status.textContent = 'Parolă schimbată.';
+      document.getElementById('change-pw-current').value = '';
+      document.getElementById('change-pw-new').value = '';
+      document.getElementById('change-pw-confirm').value = '';
+    } catch (err) {
+      status.textContent = err.message;
+    }
   });
 
-  loadSettingsForm();
+  refreshAiUsageIndicator();
+
+  } // sfârșit initApp()
 
   // --- PWA: service worker (doar shell-ul static, apelurile AI merg mereu live) ---
   if ('serviceWorker' in navigator) {
@@ -2403,6 +2407,63 @@ clar, fără introduceri sau explicații.`;
       navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Service worker eșuat:', err.message));
     });
   }
+
+  // ============================================================
+  // Boot: autentificare + încărcare date, apoi pornește aplicația
+  // ============================================================
+
+  function syncRequest(method, url, body) {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, false); // sincron, intenționat: ține gate-ul de login simplu
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(body ? JSON.stringify(body) : undefined);
+    let data = {};
+    try { data = xhr.responseText ? JSON.parse(xhr.responseText) : {}; } catch {}
+    return { ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, data };
+  }
+
+  function showLoginOverlay() {
+    document.getElementById('login-overlay').classList.remove('hidden');
+  }
+  function hideLoginOverlay() {
+    document.getElementById('login-overlay').classList.add('hidden');
+  }
+
+  function bootAfterAuth() {
+    const dataRes = syncRequest('GET', '/api/data');
+    __dataStore = dataRes.ok ? dataRes.data : {};
+    hideLoginOverlay();
+    initApp();
+  }
+
+  document.getElementById('login-submit').addEventListener('click', () => {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errorEl = document.getElementById('login-error');
+    errorEl.textContent = '';
+    if (!username || !password) {
+      errorEl.textContent = 'Completează username și parolă.';
+      return;
+    }
+    const res = syncRequest('POST', '/api/auth/login', { username, password });
+    if (!res.ok) {
+      errorEl.textContent = res.data?.error || 'Autentificare eșuată.';
+      return;
+    }
+    bootAfterAuth();
+  });
+  document.getElementById('login-password').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('login-submit').click();
+  });
+
+  (function boot() {
+    const me = syncRequest('GET', '/api/auth/me');
+    if (me.ok) {
+      bootAfterAuth();
+    } else {
+      showLoginOverlay();
+    }
+  })();
 </script>
 </body>
 </html>
