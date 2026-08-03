@@ -543,8 +543,9 @@
     justify-content: center;
     background: var(--bg);
   }
-  #login-overlay.hidden { display: none; }
+  .hidden { display: none !important; }
   .login-box {
+    position: relative;
     width: min(340px, 90vw);
     background: var(--surface);
     border: 1px solid var(--border);
@@ -556,21 +557,46 @@
   .login-box h1 { margin: 0 0 4px; font-size: 22px; }
   .login-box p { color: var(--text-muted); font-size: 13px; margin: 0 0 16px; }
   .login-box input { width: 100%; margin-bottom: 10px; }
-  .login-box button { width: 100%; }
+  .login-box button#login-submit { width: 100%; }
+  #login-close {
+    position: absolute; top: 10px; right: 10px;
+    width: 28px; height: 28px; padding: 0;
+    background: transparent; border: none; box-shadow: none;
+    color: var(--text-muted); font-size: 14px;
+  }
+  #login-close:hover { background: var(--surface-2); transform: none; box-shadow: none; }
   #login-error { color: var(--danger); font-size: 13px; margin-top: 10px; min-height: 16px; }
-  #logout-btn { font-size: 16px; }
+  .login-switch { margin-top: 14px; font-size: 13px; }
+  .login-switch a { color: var(--accent); text-decoration: none; cursor: pointer; }
+  .login-switch a:hover { text-decoration: underline; }
+  #logout-btn, #login-open-btn {
+    background: var(--surface);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    box-shadow: none;
+    padding: 8px 12px;
+    min-width: 36px;
+    font-size: 15px;
+    border-radius: 999px;
+  }
+  #logout-btn:hover, #login-open-btn:hover { background: var(--surface-2); color: var(--text); transform: none; box-shadow: none; }
   #admin-link { display: inline-block; margin: 0 10px 12px 0; }
 </style>
 </head>
 <body>
-  <div id="login-overlay">
+  <div id="login-overlay" class="hidden">
     <div class="login-box">
+      <button type="button" id="login-close" title="Închide">✕</button>
       <h1>Fit by Chezan</h1>
-      <p>Autentifică-te pentru a continua.</p>
+      <p id="login-hint">Autentifică-te ca să folosești AI-ul și să-ți salvezi datele.</p>
       <input type="text" id="login-username" placeholder="Username" autocomplete="username">
       <input type="password" id="login-password" placeholder="Parolă" autocomplete="current-password">
+      <input type="password" id="login-password-confirm" placeholder="Confirmă parola" autocomplete="new-password" class="hidden">
       <button type="button" id="login-submit">Intră</button>
       <div id="login-error"></div>
+      <div class="login-switch">
+        <a href="#" id="login-switch-link">Nu ai cont? Creează unul</a>
+      </div>
     </div>
   </div>
 
@@ -581,7 +607,8 @@
     <div class="header-actions">
       <button type="button" class="settings-shortcut active" data-tab="home">🏠 Home</button>
       <button type="button" class="settings-shortcut" data-tab="settings">⚙️ Setări</button>
-      <button type="button" id="logout-btn" title="Ieși din cont">🚪</button>
+      <button type="button" id="login-open-btn" title="Intră / Creează cont" class="hidden">🔐 Cont</button>
+      <button type="button" id="logout-btn" title="Ieși din cont" class="hidden">🚪</button>
       <div class="theme-toggle" id="theme-toggle">
         <button type="button" data-theme-choice="light" title="Mod luminos">☀️</button>
         <button type="button" data-theme-choice="dark" title="Mod întunecat">🌙</button>
@@ -1008,38 +1035,46 @@
       zilnică de cereri AI setată de administrator.
     </div>
 
-    <div class="card">
+    <div class="card" id="settings-logged-out">
       <h2>Cont</h2>
-      <div class="settings-field">
-        <label>Utilizator</label>
-        <div id="account-username">–</div>
-      </div>
-      <div class="settings-field">
-        <label>Cereri AI folosite azi</label>
-        <div id="account-ai-usage">–</div>
-      </div>
+      <p class="hint">Nu ești autentificat. Ai nevoie de cont doar ca să folosești AI-ul și să-ți salvezi datele — poți naviga liber prin aplicație fără el.</p>
+      <button type="button" id="settings-login-btn">🔐 Intră / Creează cont</button>
     </div>
 
-    <div class="card">
-      <h2>Schimbă parola</h2>
-      <div class="settings-field">
-        <label for="change-pw-current">Parola curentă</label>
-        <input type="password" id="change-pw-current" autocomplete="current-password">
+    <div id="settings-logged-in" class="hidden">
+      <div class="card">
+        <h2>Cont</h2>
+        <div class="settings-field">
+          <label>Utilizator</label>
+          <div id="account-username">–</div>
+        </div>
+        <div class="settings-field">
+          <label>Cereri AI folosite azi</label>
+          <div id="account-ai-usage">–</div>
+        </div>
       </div>
-      <div class="settings-field">
-        <label for="change-pw-new">Parola nouă</label>
-        <input type="password" id="change-pw-new" autocomplete="new-password">
-      </div>
-      <div class="settings-field">
-        <label for="change-pw-confirm">Confirmă parola nouă</label>
-        <input type="password" id="change-pw-confirm" autocomplete="new-password">
-      </div>
-      <button type="button" id="change-pw-btn">Salvează parola nouă</button>
-      <span id="change-pw-status"></span>
-    </div>
 
-    <a id="admin-link" href="/admin.html" style="display:none">🛠️ Panou administrare</a>
-    <button type="button" id="logout-btn-settings">🚪 Ieși din cont</button>
+      <div class="card">
+        <h2>Schimbă parola</h2>
+        <div class="settings-field">
+          <label for="change-pw-current">Parola curentă</label>
+          <input type="password" id="change-pw-current" autocomplete="current-password">
+        </div>
+        <div class="settings-field">
+          <label for="change-pw-new">Parola nouă</label>
+          <input type="password" id="change-pw-new" autocomplete="new-password">
+        </div>
+        <div class="settings-field">
+          <label for="change-pw-confirm">Confirmă parola nouă</label>
+          <input type="password" id="change-pw-confirm" autocomplete="new-password">
+        </div>
+        <button type="button" id="change-pw-btn">Salvează parola nouă</button>
+        <span id="change-pw-status"></span>
+      </div>
+
+      <a id="admin-link" href="/admin.html" style="display:none">🛠️ Panou administrare</a>
+      <button type="button" id="logout-btn-settings">🚪 Ieși din cont</button>
+    </div>
   </section>
 
 <script>
@@ -1048,8 +1083,9 @@
   // ============================================================
 
   // Datele aplicației (antrenamente, nutriție, istoric etc.) trăiesc server-side,
-  // per user. __dataStore e populat sincron la boot (înainte de initApp) și
-  // salvat pe server, cu debounce, la fiecare scriere.
+  // per user. __dataStore e populat sincron la boot (dacă userul e autentificat) și
+  // salvat pe server, cu debounce, la fiecare scriere. Vizitatorii neautentificați
+  // pot folosi interfața (store gol), dar salvarea le cere cont (401 -> modal login).
   let __dataStore = {};
   let __saveTimer = null;
   function scheduleSave() {
@@ -1059,6 +1095,8 @@
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(__dataStore)
+      }).then((res) => {
+        if (res.status === 401) openLoginOverlay('Ai nevoie de cont ca să-ți salvezi datele.');
       }).catch((err) => console.warn('Salvare eșuată:', err.message));
     }, 400);
   }
@@ -1284,6 +1322,10 @@
       body: JSON.stringify(body)
     });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      openLoginOverlay('Ai nevoie de cont pentru asta — intră sau creează unul.');
+      throw new Error('Trebuie să ai cont pentru asta.');
+    }
     if (!res.ok) throw new Error(data?.error || `${res.status}: ${res.statusText}`);
     return data;
   }
@@ -2354,13 +2396,19 @@ clar, fără introduceri sau explicații.`;
   async function refreshAiUsageIndicator() {
     try {
       const res = await fetch('/api/auth/me');
-      if (!res.ok) return;
+      if (!res.ok) {
+        document.getElementById('settings-logged-out').classList.remove('hidden');
+        document.getElementById('settings-logged-in').classList.add('hidden');
+        return;
+      }
       const me = await res.json();
+      document.getElementById('settings-logged-out').classList.add('hidden');
+      document.getElementById('settings-logged-in').classList.remove('hidden');
       document.getElementById('account-username').textContent = me.username + (me.role === 'admin' ? ' (admin)' : '');
       document.getElementById('account-ai-usage').textContent = `${me.aiUsedToday} / ${me.aiDailyLimit}`;
       document.getElementById('admin-link').style.display = me.role === 'admin' ? 'inline-block' : 'none';
     } catch (err) {
-      // sesiune posibil expirata - login overlay se ocupa la urmatoarea actiune
+      // eroare de rețea - lăsăm starea curentă neschimbată
     }
   }
 
@@ -2370,6 +2418,7 @@ clar, fără introduceri sau explicații.`;
   }
   document.getElementById('logout-btn').addEventListener('click', logout);
   document.getElementById('logout-btn-settings').addEventListener('click', logout);
+  document.getElementById('settings-login-btn').addEventListener('click', () => openLoginOverlay());
 
   document.getElementById('change-pw-btn').addEventListener('click', async () => {
     const status = document.getElementById('change-pw-status');
@@ -2409,12 +2458,13 @@ clar, fără introduceri sau explicații.`;
   }
 
   // ============================================================
-  // Boot: autentificare + încărcare date, apoi pornește aplicația
+  // Boot: aplicația e vizibilă liber; login/cont e cerut doar când
+  // userul încearcă să folosească AI-ul sau să-și salveze datele.
   // ============================================================
 
   function syncRequest(method, url, body) {
     const xhr = new XMLHttpRequest();
-    xhr.open(method, url, false); // sincron, intenționat: ține gate-ul de login simplu
+    xhr.open(method, url, false); // sincron, intenționat: check rapid, o singură dată, la boot
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(body ? JSON.stringify(body) : undefined);
     let data = {};
@@ -2422,35 +2472,75 @@ clar, fără introduceri sau explicații.`;
     return { ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, data };
   }
 
-  function showLoginOverlay() {
-    document.getElementById('login-overlay').classList.remove('hidden');
-  }
-  function hideLoginOverlay() {
-    document.getElementById('login-overlay').classList.add('hidden');
+  let authMode = 'login'; // 'login' | 'register'
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    const isRegister = mode === 'register';
+    document.getElementById('login-hint').textContent = isRegister
+      ? 'Creează-ți un cont ca să folosești AI-ul și să-ți salvezi datele.'
+      : 'Autentifică-te ca să folosești AI-ul și să-ți salvezi datele.';
+    document.getElementById('login-submit').textContent = isRegister ? 'Creează cont' : 'Intră';
+    document.getElementById('login-password-confirm').classList.toggle('hidden', !isRegister);
+    document.getElementById('login-switch-link').textContent = isRegister
+      ? 'Ai deja cont? Intră'
+      : 'Nu ai cont? Creează unul';
+    document.getElementById('login-error').textContent = '';
   }
 
-  function bootAfterAuth() {
-    const dataRes = syncRequest('GET', '/api/data');
-    __dataStore = dataRes.ok ? dataRes.data : {};
-    hideLoginOverlay();
-    initApp();
+  function openLoginOverlay(hint) {
+    const overlay = document.getElementById('login-overlay');
+    if (!overlay.classList.contains('hidden')) return; // deja deschis, nu suprascrie ce tastează userul
+    setAuthMode('login');
+    if (hint) document.getElementById('login-hint').textContent = hint;
+    overlay.classList.remove('hidden');
+    document.getElementById('login-username').focus();
   }
+  function closeLoginOverlay() {
+    document.getElementById('login-overlay').classList.add('hidden');
+    document.getElementById('login-error').textContent = '';
+  }
+
+  function refreshHeaderAuthState(isLoggedIn) {
+    document.getElementById('login-open-btn').classList.toggle('hidden', isLoggedIn);
+    document.getElementById('logout-btn').classList.toggle('hidden', !isLoggedIn);
+  }
+
+  document.getElementById('login-open-btn').addEventListener('click', () => {
+    setAuthMode('login');
+    document.getElementById('login-overlay').classList.remove('hidden');
+  });
+  document.getElementById('login-close').addEventListener('click', closeLoginOverlay);
+  document.getElementById('login-switch-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    setAuthMode(authMode === 'login' ? 'register' : 'login');
+  });
 
   document.getElementById('login-submit').addEventListener('click', () => {
     const username = document.getElementById('login-username').value.trim();
     const password = document.getElementById('login-password').value;
+    const confirmPassword = document.getElementById('login-password-confirm').value;
     const errorEl = document.getElementById('login-error');
     errorEl.textContent = '';
     if (!username || !password) {
       errorEl.textContent = 'Completează username și parolă.';
       return;
     }
-    const res = syncRequest('POST', '/api/auth/login', { username, password });
-    if (!res.ok) {
-      errorEl.textContent = res.data?.error || 'Autentificare eșuată.';
+    if (authMode === 'register' && password !== confirmPassword) {
+      errorEl.textContent = 'Parola și confirmarea nu coincid.';
       return;
     }
-    bootAfterAuth();
+    const endpoint = authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
+    const res = syncRequest('POST', endpoint, { username, password });
+    if (!res.ok) {
+      errorEl.textContent = res.data?.error || 'A eșuat. Încearcă din nou.';
+      return;
+    }
+    // reload simplu: boot() reia, vede sesiunea nouă și încarcă datele reale
+    window.location.reload();
+  });
+  document.getElementById('login-password-confirm').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('login-submit').click();
   });
   document.getElementById('login-password').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') document.getElementById('login-submit').click();
@@ -2459,10 +2549,11 @@ clar, fără introduceri sau explicații.`;
   (function boot() {
     const me = syncRequest('GET', '/api/auth/me');
     if (me.ok) {
-      bootAfterAuth();
-    } else {
-      showLoginOverlay();
+      const dataRes = syncRequest('GET', '/api/data');
+      __dataStore = dataRes.ok ? dataRes.data : {};
     }
+    refreshHeaderAuthState(me.ok);
+    initApp();
   })();
 </script>
 </body>

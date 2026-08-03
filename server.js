@@ -39,6 +39,33 @@ app.post('/api/auth/login', (req, res) => {
   res.json({ username: user.username, role: user.role });
 });
 
+app.post('/api/auth/register', (req, res) => {
+  const { username, password } = req.body || {};
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username si parola sunt obligatorii.' });
+  }
+  if (username.trim().length < 3) {
+    return res.status(400).json({ error: 'Username-ul trebuie sa aiba cel putin 3 caractere.' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Parola trebuie sa aiba cel putin 6 caractere.' });
+  }
+  const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+  if (existing) {
+    return res.status(409).json({ error: 'Exista deja un cont cu acest username.' });
+  }
+  const defaultLimit = Number(process.env.DEFAULT_USER_AI_LIMIT) || 5;
+  const hash = hashPassword(password);
+  const info = db
+    .prepare('INSERT INTO users (username, password_hash, role, ai_daily_limit, active) VALUES (?, ?, ?, ?, 1)')
+    .run(username, hash, 'user', defaultLimit);
+  db.prepare('INSERT INTO user_data (user_id, data_json) VALUES (?, ?)').run(info.lastInsertRowid, '{}');
+
+  const token = signToken({ id: info.lastInsertRowid, username, role: 'user' });
+  setSessionCookie(res, token);
+  res.status(201).json({ username, role: 'user' });
+});
+
 app.post('/api/auth/logout', (req, res) => {
   clearSessionCookie(res);
   res.json({ ok: true });
