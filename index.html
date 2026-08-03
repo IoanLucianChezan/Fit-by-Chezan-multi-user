@@ -1,0 +1,2408 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Fit by Chezan</title>
+
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="theme-color" content="#16a34a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fit by Chezan">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --surface-2: #f1f5f9;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --primary: #16a34a;
+    --primary-rgb: 22, 163, 74;
+    --primary-hover: #15803d;
+    --primary-contrast: #ffffff;
+    --accent: #0284c7;
+    --accent-soft: #e0f2fe;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,.06), 0 1px 1px rgba(15,23,42,.04);
+    --shadow-md: 0 6px 16px rgba(15,23,42,.10);
+    --radius: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+    --body-line: #94a3b8;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #172033;
+      --border: #334155;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --primary: #22c55e;
+      --primary-rgb: 34, 197, 94;
+      --primary-hover: #4ade80;
+      --primary-contrast: #052e13;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56,189,248,.16);
+      --danger: #f87171;
+      --danger-soft: rgba(248,113,113,.16);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+      --shadow-md: 0 8px 20px rgba(0,0,0,.4);
+      --body-line: #64748b;
+    }
+  }
+
+  :root[data-theme="light"] {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --surface-2: #f1f5f9;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --primary: #16a34a;
+    --primary-rgb: 22, 163, 74;
+    --primary-hover: #15803d;
+    --primary-contrast: #ffffff;
+    --accent: #0284c7;
+    --accent-soft: #e0f2fe;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,.06), 0 1px 1px rgba(15,23,42,.04);
+    --shadow-md: 0 6px 16px rgba(15,23,42,.10);
+    --body-line: #94a3b8;
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-2: #172033;
+    --border: #334155;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --primary: #22c55e;
+    --primary-rgb: 34, 197, 94;
+    --primary-hover: #4ade80;
+    --primary-contrast: #052e13;
+    --accent: #38bdf8;
+    --accent-soft: rgba(56,189,248,.16);
+    --danger: #f87171;
+    --danger-soft: rgba(248,113,113,.16);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+    --shadow-md: 0 8px 20px rgba(0,0,0,.4);
+    --body-line: #64748b;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { background-color: var(--bg); }
+
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px 60px;
+    line-height: 1.6;
+    background-color: var(--bg);
+    color: var(--text);
+    transition: background-color var(--transition), color var(--transition);
+  }
+
+  h1 {
+    margin-bottom: 4px;
+    font-size: 26px;
+    font-weight: 800;
+    display: inline-block;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .header-row p { color: var(--text-muted); margin: 0; }
+  .header-actions { display: flex; align-items: center; gap: 8px; }
+
+  .settings-shortcut {
+    background: var(--surface);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    box-shadow: none;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .settings-shortcut:hover { background: var(--surface-2); color: var(--text); transform: none; box-shadow: none; }
+  .settings-shortcut.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 700; }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 24px 0;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow-sm);
+  }
+
+  @media (max-width: 700px) {
+    nav {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      justify-content: flex-start;
+      scrollbar-width: none;
+    }
+    nav::-webkit-scrollbar { display: none; }
+    nav button { flex: 0 0 auto; }
+  }
+  nav button {
+    padding: 13px 20px;
+    background: transparent;
+    color: var(--text-muted);
+    box-shadow: none;
+    font-weight: 500;
+    font-size: 15.5px;
+    border-radius: 999px;
+  }
+  nav button:hover { background: var(--surface-2); color: var(--text); transform: none; box-shadow: none; }
+  nav button:active { transform: scale(.96); }
+  nav button.active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+
+  .theme-toggle {
+    display: flex;
+    gap: 2px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px;
+  }
+  .theme-toggle button { background: transparent; box-shadow: none; color: var(--text-muted); padding: 6px 10px; min-width: 36px; border-radius: 999px; font-size: 14px; }
+  .theme-toggle button:hover { background: var(--surface); transform: none; box-shadow: none; }
+  .theme-toggle button.active { background: var(--accent-soft); color: var(--accent); }
+
+  section { display: none; }
+  section.active { display: block; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: background-color var(--transition), border-color var(--transition);
+  }
+  .card h2 { margin-top: 0; font-size: 16px; }
+  .card .hint { color: var(--text-muted); font-size: 13px; margin-top: -8px; }
+
+  .manual-entry summary { cursor: pointer; list-style: none; }
+  .manual-entry summary::-webkit-details-marker { display: none; }
+  .manual-entry summary h2 { display: inline-flex; align-items: center; gap: 6px; }
+  .manual-entry summary h2::before { content: '▸'; color: var(--accent); transition: transform var(--transition); }
+  .manual-entry[open] summary h2::before { transform: rotate(90deg); }
+  .manual-entry .hint, .manual-entry textarea, .manual-entry .actions-row { margin-top: 10px; }
+
+  button {
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: var(--primary-contrast);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition), box-shadow var(--transition), background-color var(--transition), opacity var(--transition);
+  }
+  button:hover { background: var(--primary-hover); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  button:active { transform: translateY(0) scale(.98); box-shadow: var(--shadow-sm); }
+  button:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .row input { flex: 1; }
+  .row button { background: var(--danger-soft); color: var(--danger); padding: 8px 12px; font-size: 13px; box-shadow: none; }
+  .row button:hover { background: var(--danger); color: #fff; transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+
+  input[type="text"], input[type="date"], input[type="password"], input[type="number"], select, textarea {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  input::placeholder, textarea::placeholder { color: var(--text-muted); }
+
+  #save-config-status, #save-settings-status, #meal-save-status, #save-profile-status,
+  #test-cerebras-status, #test-groq-status { margin-left: 10px; font-size: 13px; color: var(--text-muted); }
+
+  .workout-result { margin-top: 12px; font-size: 14px; }
+  .workout-result:not(:empty) { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+  .workout-result h1, .workout-result h2, .workout-result h3, .workout-result h4 { margin: 14px 0 6px; font-size: 15px; color: var(--text); }
+  .workout-result h1:first-child, .workout-result h2:first-child, .workout-result h3:first-child, .workout-result h4:first-child { margin-top: 0; }
+  .workout-result p { margin: 6px 0; }
+  .workout-result strong { color: var(--primary); }
+  .workout-result table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+  .workout-result th, .workout-result td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; }
+  .workout-result th { background: var(--surface-2); }
+  .workout-result ul, .workout-result ol { margin: 6px 0; padding-left: 22px; }
+  .workout-result li { margin: 3px 0; }
+  .workout-result blockquote { border-left: 3px solid var(--accent); margin: 8px 0; padding: 4px 12px; color: var(--text-muted); background: var(--surface); border-radius: 0 8px 8px 0; }
+  .workout-result hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+  .workout-result code { background: var(--surface); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+
+  .history-item { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; }
+  .history-item summary { cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 10px; list-style: none; }
+  .history-item summary::-webkit-details-marker { display: none; }
+  .history-item-title::before { content: '▸'; color: var(--accent); display: inline-block; margin-right: 6px; transition: transform var(--transition); }
+  .history-item[open] .history-item-title::before { transform: rotate(90deg); }
+  .history-item .meta { font-weight: normal; color: var(--text-muted); font-size: 13px; }
+  .history-item .workout-result { margin-top: 8px; }
+  .history-item .muscle-tags { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+  .history-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .history-actions button { padding: 6px 12px; font-size: 12px; box-shadow: none; }
+  .delete-btn { background: var(--danger-soft); color: var(--danger); padding: 6px 12px; font-size: 12px; box-shadow: none; flex-shrink: 0; }
+  .delete-btn:hover { background: var(--danger); color: #fff; transform: translateY(-1px); }
+
+  .muscle-map { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; padding: 8px 0 4px; }
+  .muscle-map figure { margin: 0; text-align: center; }
+  .muscle-map figcaption { color: var(--text-muted); font-size: 12px; margin-top: 6px; }
+  .muscle-map svg { width: 140px; height: auto; overflow: visible; }
+  .mm-region { fill: var(--surface); stroke: var(--body-line); stroke-width: 1.4; transition: fill 200ms ease; }
+  .mm-region.worked-low { fill: rgba(var(--primary-rgb), 0.35); }
+  .mm-region.worked-medium { fill: rgba(var(--primary-rgb), 0.68); }
+  .mm-region.worked-high { fill: rgb(var(--primary-rgb)); }
+  .muscle-legend { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--text-muted); }
+  .muscle-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .muscle-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid var(--body-line); }
+  .muscle-legend .swatch-low { background: rgba(var(--primary-rgb), 0.35); }
+  .muscle-legend .swatch-medium { background: rgba(var(--primary-rgb), 0.68); }
+  .muscle-legend .swatch-high { background: rgb(var(--primary-rgb)); }
+  .mm-static { fill: var(--surface); stroke: var(--body-line); stroke-width: 1.4; }
+  .mm-detail { fill: none; stroke: var(--body-line); stroke-width: 1; opacity: .8; pointer-events: none; }
+
+  .celebration-toast {
+    position: fixed;
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    opacity: 0;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    font-size: 20px;
+    font-weight: 800;
+    padding: 14px 30px;
+    border-radius: 999px;
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    transition: opacity 250ms ease, transform 250ms ease;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .celebration-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+  .splash-toast {
+    position: fixed;
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    opacity: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    font-size: 20px;
+    font-weight: 800;
+    padding: 14px 30px;
+    border-radius: 999px;
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    transition: opacity 250ms ease, transform 250ms ease;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .splash-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .splash-bolt {
+    display: inline-block;
+    font-size: 26px;
+    animation: splash-bolt-fall 600ms cubic-bezier(.3, 1.4, .5, 1);
+  }
+  @keyframes splash-bolt-fall {
+    0% { transform: translateY(-60px); opacity: 0; }
+    60% { transform: translateY(6px); opacity: 1; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  .screen-flash-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    pointer-events: none;
+    background: #eaf2ff;
+    opacity: 0;
+    mix-blend-mode: screen;
+  }
+  .screen-flash-overlay.show {
+    animation: screen-flash-anim 700ms ease-out forwards;
+  }
+  @keyframes screen-flash-anim {
+    0% { opacity: 0; }
+    8% { opacity: .38; }
+    18% { opacity: .05; }
+    28% { opacity: .28; }
+    45% { opacity: 0; }
+    100% { opacity: 0; }
+  }
+
+  .calendar { margin-bottom: 12px; max-width: 320px; }
+  .split-layout { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .history-card { flex: 1 1 340px; min-width: 0; }
+  .side-card { flex: 0 1 320px; width: 320px; }
+  .side-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .side-section h2 { margin-top: 0; }
+  .side-section > button { width: 100%; }
+
+  .btn-big {
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 18px 24px;
+    font-size: 18px;
+    font-weight: 800;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    letter-spacing: .2px;
+  }
+  .btn-big:hover { background: linear-gradient(135deg, var(--primary-hover), var(--accent)); transform: translateY(-1px); }
+  .btn-finish { background: var(--primary); font-size: 16px; padding: 12px 24px; }
+  .workout-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 16px; }
+
+  .mode-toggle { display: flex; gap: 6px; margin-bottom: 16px; }
+  .mode-toggle-btn { background: var(--surface-2); color: var(--text-muted); box-shadow: none; border: 1px solid var(--border); flex: 1; }
+  .mode-toggle-btn:hover { background: var(--surface); transform: none; }
+  .mode-toggle-btn.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 700; }
+
+  .paste-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    text-align: center;
+    cursor: text;
+    color: var(--text-muted);
+    font-size: 14px;
+    background: var(--surface-2);
+    transition: border-color var(--transition), background-color var(--transition), color var(--transition);
+  }
+  .paste-zone:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
+  }
+
+  .motivational-quote { display: none; padding: 12px 14px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--border); text-align: center; }
+  .motivational-quote:not(:empty) { display: block; margin-bottom: 14px; }
+  .motivational-quote-text {
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.4;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+  .calendar-header button { padding: 4px 12px; font-size: 14px; background: var(--surface-2); color: var(--text); box-shadow: none; }
+  .calendar-header button:hover { background: var(--border); transform: none; box-shadow: none; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .calendar-daylabel { text-align: center; font-size: 11px; color: var(--text-muted); padding: 4px 0; }
+  .calendar-day {
+    aspect-ratio: 1;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 8px;
+    font-size: 13px;
+    padding: 0;
+    box-shadow: none;
+    position: relative;
+  }
+  .calendar-day:hover { background: var(--surface-2); transform: none; box-shadow: none; }
+  .calendar-day.empty { border: none; background: transparent; cursor: default; }
+  .calendar-day.is-today { border-color: var(--accent); font-weight: 700; }
+  .calendar-day.is-selected { background: var(--primary); color: var(--primary-contrast); border-color: var(--primary); }
+  .calendar-day.has-entries::after {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .calendar-day.is-selected.has-entries::after { background: var(--primary-contrast); }
+  .target-date-hint { font-size: 13px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 6px 10px; border-radius: var(--radius); margin-bottom: 12px; }
+
+  .stat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat-tile { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm); }
+  .stat-tile.goal-met { border-color: var(--primary); }
+  .stat-tile.goal-met::after {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 800; color: var(--text); }
+  .stat-value-small { font-size: 15px; font-weight: 700; }
+
+  .stats-chart { width: 100%; overflow-x: auto; }
+  .stats-chart svg { display: block; }
+  .stats-bar { transition: fill 200ms ease, opacity 200ms ease; }
+  .stats-bar-workout { fill: var(--primary); }
+  .stats-bar-workout:hover { fill: var(--primary-hover); }
+  .stats-bar-km { fill: var(--accent); }
+  .stats-bar-km:hover { opacity: 0.8; }
+  .stats-chart-label { font-size: 13px; fill: var(--text-muted); }
+  .stats-chart-value { font-size: 17px; fill: var(--text); font-weight: 700; }
+  .stats-year-field { max-width: 160px; }
+
+  .config-subsection { margin-bottom: 16px; }
+  .config-subsection h3 { font-size: 14px; margin-bottom: 6px; }
+
+  .nutrition-summary { margin-bottom: 16px; }
+  .nutrition-summary-row { margin-bottom: 12px; }
+  .nutrition-summary-row .label-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+  .nutrition-summary-row .label-row .value { font-weight: 700; color: var(--text); }
+  .nutrition-meter { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+  .nutrition-meter-fill { height: 100%; background: var(--primary); border-radius: 999px; transition: width var(--transition); }
+  .nutrition-meter-fill.over { background: var(--danger); }
+  .meal-history-item { border-top: 1px solid var(--border); padding: 10px 0; }
+  .meal-history-item:first-child { border-top: none; }
+  .meal-macros { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .meal-history-item .history-actions { margin-top: 6px; }
+
+  .settings-field { margin-bottom: 12px; }
+  .settings-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .settings-field input { width: 100%; }
+  .settings-field .settings-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .privacy-note {
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+  <h1>Fit by Chezan</h1>
+
+  <div class="header-row">
+    <p>No rest days. RX is earned, not given. Stronger every day.</p>
+    <div class="header-actions">
+      <button type="button" class="settings-shortcut active" data-tab="home">🏠 Home</button>
+      <button type="button" class="settings-shortcut" data-tab="settings">⚙️ Setări</button>
+      <div class="theme-toggle" id="theme-toggle">
+        <button type="button" data-theme-choice="light" title="Mod luminos">☀️</button>
+        <button type="button" data-theme-choice="dark" title="Mod întunecat">🌙</button>
+      </div>
+    </div>
+  </div>
+
+  <nav id="tabs">
+    <button data-tab="workout">Workout</button>
+    <button data-tab="nutrition">Nutriție</button>
+    <button data-tab="easy-workout">Easy WOD</button>
+    <button data-tab="hero-workout">Hero WOD</button>
+    <button data-tab="manual">Manual</button>
+    <button data-tab="stats">Statistici</button>
+  </nav>
+
+  <!-- ================= 1. HOME ================= -->
+  <section id="home" class="active">
+    <div class="stat-tiles">
+      <div class="stat-tile">
+        <div class="stat-label">Antrenamente azi</div>
+        <div class="stat-value" id="stat-workouts-today">–</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Antrenamente luna asta</div>
+        <div class="stat-value" id="stat-workouts-month">–</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Nutriție azi</div>
+        <div class="stat-value stat-value-small" id="stat-nutrition-today">–</div>
+        <div class="stat-value stat-value-small" id="stat-nutrition-protein-today"></div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Km alergați luna asta</div>
+        <div class="stat-value" id="stat-run-km-month">–</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Mușchi lucrați azi</h2>
+      <p class="hint">Din antrenamentele finalizate azi (Workout, Easy WOD, Hero WOD).</p>
+      <div class="muscle-map">
+        <figure>
+          <svg viewBox="0 0 220 460" xmlns="http://www.w3.org/2000/svg" id="mm-front">
+            <ellipse class="mm-static" cx="110" cy="40" rx="24" ry="32"/>
+            <path class="mm-static" d="M95,64 Q110,76 125,64 L122,92 Q110,98 98,92 Z"/>
+
+            <path class="mm-detail" d="M92,92 Q110,100 128,92"/>
+
+            <path class="mm-region" data-muscle="shoulders" title="Umeri" d="M62,98 Q46,98 39,114 Q35,130 41,144 Q50,147 58,141 Q64,123 70,108 Q68,100 62,98 Z"/>
+            <path class="mm-region" data-muscle="shoulders" title="Umeri" d="M158,98 Q174,98 181,114 Q185,130 179,144 Q170,147 162,141 Q156,123 150,108 Q152,100 158,98 Z"/>
+            <path class="mm-detail" d="M50,108 Q56,124 50,140"/>
+            <path class="mm-detail" d="M170,108 Q164,124 170,140"/>
+
+            <path class="mm-region" data-muscle="chest" title="Piept" d="M74,102 Q92,92 110,94 L110,158 Q92,164 78,156 Q66,140 68,116 Q70,108 74,102 Z"/>
+            <path class="mm-region" data-muscle="chest" title="Piept" d="M146,102 Q128,92 110,94 L110,158 Q128,164 142,156 Q154,140 152,116 Q150,108 146,102 Z"/>
+            <path class="mm-detail" d="M78,112 Q94,120 108,116"/>
+            <path class="mm-detail" d="M142,112 Q126,120 112,116"/>
+
+            <path class="mm-detail" d="M70,150 Q66,162 72,176"/>
+            <path class="mm-detail" d="M150,150 Q154,162 148,176"/>
+
+            <g class="mm-region" data-muscle="abs" title="Abdomen">
+              <rect x="90" y="164" width="40" height="17" rx="6"/>
+              <rect x="90" y="184" width="40" height="17" rx="6"/>
+              <rect x="90" y="204" width="40" height="17" rx="6"/>
+            </g>
+            <path class="mm-detail" d="M110,164 L110,221"/>
+
+            <path class="mm-static" d="M66,158 Q60,190 68,226 L88,224 L88,166 Q76,162 66,158 Z"/>
+            <path class="mm-static" d="M154,158 Q160,190 152,226 L132,224 L132,166 Q144,162 154,158 Z"/>
+
+            <path class="mm-static" d="M66,224 Q110,234 154,224 Q152,242 110,248 Q68,242 66,224 Z"/>
+
+            <path class="mm-region" data-muscle="biceps" title="Biceps" d="M32,154 Q24,174 28,196 Q36,200 44,196 Q46,176 50,158 Q42,150 32,154 Z"/>
+            <path class="mm-region" data-muscle="biceps" title="Biceps" d="M188,154 Q196,174 192,196 Q184,200 176,196 Q174,176 170,158 Q178,150 188,154 Z"/>
+            <path class="mm-detail" d="M32,166 Q38,180 34,194"/>
+            <path class="mm-detail" d="M188,166 Q182,180 186,194"/>
+
+            <path class="mm-region" data-muscle="forearms" title="Antebrațe" d="M25,204 Q19,228 24,250 Q32,254 39,249 Q39,225 44,206 Q34,200 25,204 Z"/>
+            <path class="mm-region" data-muscle="forearms" title="Antebrațe" d="M195,204 Q201,228 196,250 Q188,254 181,249 Q181,225 176,206 Q186,200 195,204 Z"/>
+            <path class="mm-detail" d="M28,214 L34,244"/>
+            <path class="mm-detail" d="M192,214 L186,244"/>
+
+            <path class="mm-static" d="M22,254 Q18,268 24,282 Q32,286 38,280 L38,258 Q32,252 22,254 Z"/>
+            <path class="mm-static" d="M198,254 Q202,268 196,282 Q188,286 182,280 L182,258 Q188,252 198,254 Z"/>
+
+            <path class="mm-region" data-muscle="quads" title="Cvadriceps" d="M64,258 Q58,320 64,370 Q72,376 80,374 Q80,312 78,258 Q70,252 64,258 Z"/>
+            <path class="mm-region" data-muscle="quads" title="Cvadriceps" d="M80,258 Q80,314 80,374 Q90,378 100,374 Q100,314 98,258 Q88,252 80,258 Z"/>
+            <path class="mm-region" data-muscle="quads" title="Cvadriceps" d="M98,258 Q100,314 100,374 Q106,376 112,370 Q116,320 108,258 Q104,252 98,258 Z"/>
+            <path class="mm-region" data-muscle="quads" title="Cvadriceps" d="M156,258 Q162,320 156,370 Q148,376 140,374 Q140,312 142,258 Q150,252 156,258 Z"/>
+            <path class="mm-region" data-muscle="quads" title="Cvadriceps" d="M140,258 Q140,314 140,374 Q130,378 120,374 Q120,314 122,258 Q132,252 140,258 Z"/>
+            <path class="mm-region" data-muscle="quads" title="Cvadriceps" d="M122,258 Q120,314 120,374 Q114,376 108,370 Q104,320 112,258 Q116,252 122,258 Z"/>
+
+            <path class="mm-static" d="M68,376 Q66,406 71,430 L95,430 Q100,406 98,376 Q84,370 68,376 Z"/>
+            <path class="mm-static" d="M152,376 Q154,406 149,430 L125,430 Q120,406 122,376 Q136,370 152,376 Z"/>
+
+            <path class="mm-static" d="M67,430 L99,430 L103,442 Q84,449 65,442 Z"/>
+            <path class="mm-static" d="M153,430 L121,430 L117,442 Q136,449 155,442 Z"/>
+          </svg>
+          <figcaption>Față</figcaption>
+        </figure>
+        <figure>
+          <svg viewBox="0 0 220 460" xmlns="http://www.w3.org/2000/svg" id="mm-back">
+            <ellipse class="mm-static" cx="110" cy="40" rx="24" ry="32"/>
+            <path class="mm-static" d="M95,64 Q110,76 125,64 L122,92 Q110,98 98,92 Z"/>
+
+            <path class="mm-region" data-muscle="shoulders" title="Umeri" d="M62,98 Q46,98 39,114 Q35,130 41,144 Q50,147 58,141 Q64,123 70,108 Q68,100 62,98 Z"/>
+            <path class="mm-region" data-muscle="shoulders" title="Umeri" d="M158,98 Q174,98 181,114 Q185,130 179,144 Q170,147 162,141 Q156,123 150,108 Q152,100 158,98 Z"/>
+
+            <path class="mm-region" data-muscle="back" title="Spate" d="M110,92 L142,110 Q126,122 110,150 Q94,122 78,110 Z"/>
+
+            <path class="mm-region" data-muscle="back" title="Spate" d="M78,110 Q64,116 60,140 Q58,168 68,192 Q84,198 100,190 Q108,160 108,128 Q100,112 78,110 Z"/>
+            <path class="mm-region" data-muscle="back" title="Spate" d="M142,110 Q156,116 160,140 Q162,168 152,192 Q136,198 120,190 Q112,160 112,128 Q120,112 142,110 Z"/>
+
+            <path class="mm-region" data-muscle="back" title="Spate" d="M96,192 Q92,208 96,224 L106,224 L106,190 Z"/>
+            <path class="mm-region" data-muscle="back" title="Spate" d="M124,192 Q128,208 124,224 L114,224 L114,190 Z"/>
+
+            <path class="mm-static" d="M64,192 Q60,208 66,224 L86,222 L86,196 Q76,194 64,192 Z"/>
+            <path class="mm-static" d="M156,192 Q160,208 154,224 L134,222 L134,196 Q144,194 156,192 Z"/>
+
+            <path class="mm-region" data-muscle="glutes" title="Fesieri" d="M64,224 Q66,208 88,208 Q108,210 108,232 Q108,258 86,264 Q64,260 60,240 Q60,230 64,224 Z"/>
+            <path class="mm-region" data-muscle="glutes" title="Fesieri" d="M156,224 Q154,208 132,208 Q112,210 112,232 Q112,258 134,264 Q156,260 160,240 Q160,230 156,224 Z"/>
+
+            <path class="mm-region" data-muscle="triceps" title="Triceps" d="M32,154 Q24,174 28,196 Q36,200 44,196 Q46,176 50,158 Q42,150 32,154 Z"/>
+            <path class="mm-region" data-muscle="triceps" title="Triceps" d="M188,154 Q196,174 192,196 Q184,200 176,196 Q174,176 170,158 Q178,150 188,154 Z"/>
+            <path class="mm-detail" d="M32,166 Q38,180 34,194"/>
+            <path class="mm-detail" d="M188,166 Q182,180 186,194"/>
+
+            <path class="mm-region" data-muscle="forearms" title="Antebrațe" d="M25,204 Q19,228 24,250 Q32,254 39,249 Q39,225 44,206 Q34,200 25,204 Z"/>
+            <path class="mm-region" data-muscle="forearms" title="Antebrațe" d="M195,204 Q201,228 196,250 Q188,254 181,249 Q181,225 176,206 Q186,200 195,204 Z"/>
+
+            <path class="mm-static" d="M22,254 Q18,268 24,282 Q32,286 38,280 L38,258 Q32,252 22,254 Z"/>
+            <path class="mm-static" d="M198,254 Q202,268 196,282 Q188,286 182,280 L182,258 Q188,252 198,254 Z"/>
+
+            <path class="mm-region" data-muscle="hamstrings" title="Ischio" d="M64,264 Q58,318 65,364 Q76,370 86,364 Q86,314 86,262 Q74,256 64,264 Z"/>
+            <path class="mm-region" data-muscle="hamstrings" title="Ischio" d="M86,262 Q86,314 86,364 Q96,370 106,364 Q112,318 106,264 Q96,256 86,262 Z"/>
+            <path class="mm-region" data-muscle="hamstrings" title="Ischio" d="M156,264 Q162,318 155,364 Q144,370 134,364 Q134,314 134,262 Q146,256 156,264 Z"/>
+            <path class="mm-region" data-muscle="hamstrings" title="Ischio" d="M134,262 Q134,314 134,364 Q124,370 114,364 Q108,318 114,264 Q124,256 134,262 Z"/>
+
+            <path class="mm-region" data-muscle="calves" title="Gambe" d="M66,368 Q60,388 64,406 Q74,412 84,406 Q86,388 84,370 Q76,364 66,368 Z"/>
+            <path class="mm-region" data-muscle="calves" title="Gambe" d="M84,370 Q86,388 84,406 Q92,410 98,404 Q100,388 96,372 Q90,368 84,370 Z"/>
+            <path class="mm-region" data-muscle="calves" title="Gambe" d="M154,368 Q160,388 156,406 Q146,412 136,406 Q134,388 136,370 Q144,364 154,368 Z"/>
+            <path class="mm-region" data-muscle="calves" title="Gambe" d="M136,370 Q134,388 136,406 Q128,410 122,404 Q120,388 124,372 Q130,368 136,370 Z"/>
+
+            <path class="mm-static" d="M66,408 Q66,420 71,430 L95,430 Q98,420 96,408 Q82,404 66,408 Z"/>
+            <path class="mm-static" d="M154,408 Q154,420 149,430 L125,430 Q122,420 124,408 Q138,404 154,408 Z"/>
+
+            <path class="mm-static" d="M67,430 L99,430 L103,440 Q84,446 65,440 Z"/>
+            <path class="mm-static" d="M153,430 L121,430 L117,440 Q136,446 155,440 Z"/>
+          </svg>
+          <figcaption>Spate</figcaption>
+        </figure>
+      </div>
+      <p class="hint" id="muscle-map-summary">Niciun antrenament bifat azi încă.</p>
+      <div class="muscle-legend">
+        <span><i class="swatch-low"></i> Ușor</span>
+        <span><i class="swatch-medium"></i> Moderat</span>
+        <span><i class="swatch-high"></i> Intens</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 2. WORKOUT ================= -->
+  <section id="workout">
+    <div class="card">
+      <h2>Antrenament (stil CrossFit / functional)</h2>
+      <p class="hint">Generat pe baza echipamentului și skill-urilor tale. Contează în statisticile de pe Home și în silueta musculară.</p>
+
+      <details class="manual-entry">
+        <summary><h2>Configurare</h2></summary>
+
+        <div class="config-subsection">
+          <h3>Echipamente</h3>
+          <p class="hint">Ce echipamente ai disponibile (ex: Bară — max 60kg).</p>
+          <div id="equipment-list"></div>
+          <button type="button" id="add-equipment">+ Adaugă echipament</button>
+        </div>
+
+        <div class="config-subsection">
+          <h3>Skill-uri</h3>
+          <p class="hint">Ce exerciții de skill poți face (ex: Tracțiuni, Pistol squat, Snatch).</p>
+          <div id="skills-list"></div>
+          <button type="button" id="add-skill">+ Adaugă skill</button>
+        </div>
+
+        <button type="button" id="save-config">Salvează configurarea</button>
+        <span id="save-config-status"></span>
+      </details>
+
+      <div class="workout-actions" style="margin-top:16px;">
+        <button type="button" id="workout-generate-btn" class="btn-big">🔄 Generează antrenament</button>
+        <span id="workout-generate-status"></span>
+      </div>
+
+      <div id="workout-generate-quote" class="motivational-quote"></div>
+      <div id="workout-preview" class="workout-result"></div>
+
+      <div class="workout-actions" id="workout-finish-wrap" style="display:none;">
+        <button type="button" id="workout-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <span id="workout-finish-status"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Istoric antrenamente</h2>
+      <div id="workout-history"></div>
+    </div>
+  </section>
+
+  <!-- ================= 3. NUTRIȚIE ================= -->
+  <section id="nutrition">
+    <div class="split-layout">
+      <div class="card side-card">
+        <div id="nutrition-calendar" class="calendar"></div>
+        <div id="nutrition-target-date" class="target-date-hint"></div>
+
+        <details class="manual-entry side-section">
+          <summary><h2>Profil nutrițional</h2></summary>
+
+          <div class="settings-field">
+            <label for="nutri-weight">Greutate (kg)</label>
+            <input type="number" id="nutri-weight" step="0.1" min="0">
+          </div>
+          <div class="settings-field">
+            <label for="nutri-height">Înălțime (cm)</label>
+            <input type="number" id="nutri-height" step="1" min="0">
+          </div>
+          <div class="settings-field">
+            <label for="nutri-age">Vârstă</label>
+            <input type="number" id="nutri-age" step="1" min="0">
+          </div>
+          <div class="settings-field">
+            <label for="nutri-sex">Sex</label>
+            <select id="nutri-sex">
+              <option value="male">Masculin</option>
+              <option value="female">Feminin</option>
+            </select>
+          </div>
+          <div class="settings-field">
+            <label for="nutri-activity">Nivel activitate</label>
+            <select id="nutri-activity">
+              <option value="sedentary">Sedentar (fără sport)</option>
+              <option value="light">Ușor activ (sport 1-3x/săpt)</option>
+              <option value="moderate">Moderat activ (sport 3-5x/săpt)</option>
+              <option value="active">Foarte activ (sport 6-7x/săpt)</option>
+            </select>
+          </div>
+          <div class="settings-field">
+            <label for="nutri-goal">Scop</label>
+            <select id="nutri-goal">
+              <option value="maintain">Menținere</option>
+              <option value="cut">Slăbit</option>
+              <option value="bulk">Masă musculară</option>
+            </select>
+          </div>
+          <p class="hint">Estimări generale (formula Mifflin-St Jeor) — nu înlocuiesc sfatul unui nutriționist sau medic.</p>
+          <button type="button" id="save-profile">Salvează profilul</button>
+          <span id="save-profile-status"></span>
+        </details>
+
+        <div class="side-section">
+          <h2>Adaugă masă</h2>
+          <p class="hint">Descrie o masă (o masă = o intrare).</p>
+          <textarea id="meal-text" rows="4" placeholder="Ex: 2 ouă ochiuri, 2 felii pâine integrală, jumătate avocado"></textarea>
+          <div class="actions-row" style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+            <button type="button" id="meal-save">Salvează masa (AI)</button>
+            <span id="meal-save-status"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card history-card">
+        <div id="nutrition-summary" class="nutrition-summary"></div>
+        <h2>Istoric mese</h2>
+        <div id="nutrition-history"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 4. EASY WOD ================= -->
+  <section id="easy-workout">
+    <div class="card">
+      <h2>Easy WOD (bodyweight)</h2>
+      <p class="hint">Antrenament pe saltea, fără echipament — flotări, genoflexiuni, abdomene, plank, triceps. Format variat (EMOM, AMRAP, seturi, circuit, tabata), 15-30 minute.</p>
+
+      <div class="workout-actions">
+        <button type="button" id="easy-generate-btn" class="btn-big">🔄 Generează antrenament</button>
+        <span id="easy-generate-status"></span>
+      </div>
+
+      <div id="easy-generate-quote" class="motivational-quote"></div>
+      <div id="easy-workout-preview" class="workout-result"></div>
+
+      <div class="workout-actions" id="easy-finish-wrap" style="display:none;">
+        <button type="button" id="easy-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <span id="easy-finish-status"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Istoric Easy WOD</h2>
+      <div id="easy-history"></div>
+    </div>
+  </section>
+
+  <!-- ================= 5. HERO WOD ================= -->
+  <section id="hero-workout">
+    <div class="card">
+      <h2>Hero WOD</h2>
+      <p class="hint">Antrenamente Hero/Girl benchmark celebre din CrossFit (Murph, Fran, Grace, Cindy, DT etc.), exact ca formatul oficial.</p>
+
+      <div class="workout-actions">
+        <button type="button" id="hero-generate-btn" class="btn-big">🔄 Generează Hero WOD</button>
+        <span id="hero-generate-status"></span>
+      </div>
+
+      <div id="hero-generate-quote" class="motivational-quote"></div>
+      <div id="hero-workout-preview" class="workout-result"></div>
+
+      <div class="workout-actions" id="hero-finish-wrap" style="display:none;">
+        <button type="button" id="hero-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <span id="hero-finish-status"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Istoric Hero WOD</h2>
+      <div id="hero-history"></div>
+    </div>
+  </section>
+
+  <!-- ================= 6. ADAUGĂ MANUAL ================= -->
+  <section id="manual">
+    <div class="card">
+      <h2>Adaugă manual</h2>
+      <div class="mode-toggle">
+        <button type="button" id="manual-mode-workout" class="mode-toggle-btn active">🏋️ Antrenament</button>
+        <button type="button" id="manual-mode-run" class="mode-toggle-btn">🏃 Alergare</button>
+      </div>
+
+      <div id="manual-workout-panel">
+        <p class="hint">Scrie liber antrenamentul, sau încarcă/lipește o poză ca AI să o transcrie automat în text.</p>
+
+        <div class="paste-zone" id="manual-paste-zone" tabindex="0">📋 Apasă aici și dă Paste (Ctrl+V) cu o poză a antrenamentului</div>
+        <div class="actions-row" style="display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap;">
+          <input type="file" id="manual-photo-input" accept="image/*" style="display:none;">
+          <button type="button" id="manual-photo-btn">📷 Încarcă poză</button>
+          <span id="manual-photo-status"></span>
+        </div>
+
+        <textarea id="manual-workout-text" rows="10" style="width:100%; margin-top:14px; font-family:inherit;" placeholder="Descrie antrenamentul (exerciții, seturi, repetări, greutăți)..."></textarea>
+
+        <div class="workout-actions" style="margin-top:16px;">
+          <button type="button" id="manual-workout-finish-btn" class="btn-big btn-finish">✓ Marchează ca finalizat</button>
+          <span id="manual-workout-finish-status"></span>
+        </div>
+      </div>
+
+      <div id="manual-run-panel" style="display:none;">
+        <p class="hint">Introdu distanța și pace-ul pentru alergarea de azi.</p>
+        <div class="settings-field">
+          <label for="manual-run-km">Distanță (km)</label>
+          <input type="number" id="manual-run-km" step="0.01" min="0">
+        </div>
+        <div class="settings-field">
+          <label for="manual-run-pace">Pace (min/km)</label>
+          <input type="text" id="manual-run-pace" placeholder="ex: 5:30">
+        </div>
+        <div class="workout-actions">
+          <button type="button" id="manual-run-save-btn" class="btn-big btn-finish">✓ Salvează alergarea</button>
+          <span id="manual-run-save-status"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Istoric antrenamente manuale</h2>
+      <div id="manual-workout-history"></div>
+    </div>
+
+    <div class="card">
+      <h2>Istoric alergări</h2>
+      <div id="manual-run-history"></div>
+    </div>
+  </section>
+
+  <!-- ================= 7. STATISTICI ================= -->
+  <section id="stats">
+    <div class="card">
+      <h2>Statistici anuale</h2>
+      <div class="settings-field stats-year-field">
+        <label for="stats-year-select">An</label>
+        <select id="stats-year-select"></select>
+      </div>
+      <div class="stat-tiles" style="margin-top:12px; margin-bottom:0;">
+        <div class="stat-tile">
+          <div class="stat-label">Total antrenamente (an)</div>
+          <div class="stat-value" id="stats-workouts-total">–</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Total km alergați (an)</div>
+          <div class="stat-value" id="stats-km-total">–</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Antrenamente pe lună</h2>
+      <p class="hint">Include Workout, Easy WOD, Hero WOD și antrenamentele adăugate manual.</p>
+      <div id="stats-workouts-chart" class="stats-chart"></div>
+    </div>
+
+    <div class="card">
+      <h2>Km alergați pe lună</h2>
+      <div id="stats-km-chart" class="stats-chart"></div>
+    </div>
+  </section>
+
+  <!-- ================= SETĂRI ================= -->
+  <section id="settings">
+    <div class="privacy-note">
+      🔒 Cheile tale API rămân doar în acest browser (localStorage). Nu sunt trimise niciodată către
+      vreun server al aplicației — nu există un server. Fiecare vizitator își introduce propria cheie,
+      iar apelurile merg direct din browserul tău către Cerebras/Groq.
+    </div>
+
+    <div class="card">
+      <h2>Cerebras</h2>
+      <div class="settings-field">
+        <label for="set-cerebras-key">Cerebras API Key</label>
+        <input type="password" id="set-cerebras-key" placeholder="csk-...">
+      </div>
+      <div class="settings-field">
+        <label for="set-cerebras-model">Model Cerebras</label>
+        <input type="text" id="set-cerebras-model" placeholder="gpt-oss-120b">
+      </div>
+      <div class="settings-field">
+        <label for="set-cerebras-model-fallback">Model Cerebras (rezervă)</label>
+        <input type="text" id="set-cerebras-model-fallback" placeholder="gemma-4-31b">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Groq</h2>
+      <div class="settings-field">
+        <label for="set-groq-key">Groq API Key</label>
+        <input type="password" id="set-groq-key" placeholder="gsk_...">
+      </div>
+      <div class="settings-field">
+        <label for="set-groq-model">Model Groq</label>
+        <input type="text" id="set-groq-model" placeholder="llama-3.3-70b-versatile">
+      </div>
+      <div class="settings-field">
+        <label for="set-groq-model-fallback">Model Groq (rezervă)</label>
+        <input type="text" id="set-groq-model-fallback" placeholder="openai/gpt-oss-120b">
+      </div>
+      <div class="settings-field">
+        <label for="set-groq-vision-model">Model Groq (vision, pentru poze la Manual)</label>
+        <input type="text" id="set-groq-vision-model" placeholder="qwen/qwen3.6-27b">
+      </div>
+    </div>
+
+    <button type="button" id="save-settings">Salvează setările</button>
+    <span id="save-settings-status"></span>
+  </section>
+
+<script>
+  // ============================================================
+  // Utilitare generale
+  // ============================================================
+
+  function lsGet(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw === null ? fallback : JSON.parse(raw);
+    } catch (err) {
+      return fallback;
+    }
+  }
+  function lsSet(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  const RO_DAYS = ['Duminică', 'Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă'];
+  const MONTH_NAMES = ['Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie', 'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'];
+
+  function localDateStr(d = new Date()) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  function todayStr() { return localDateStr(new Date()); }
+
+  // --- Tabs ---
+  const tabs = document.querySelectorAll('[data-tab]');
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      if (btn.dataset.tab === 'home') renderHome();
+      if (btn.dataset.tab === 'stats') renderStatsCharts();
+    });
+  });
+
+  // --- Temă light/dark ---
+  const THEME_KEY = 'fw_theme';
+  function applyTheme(theme) {
+    if (theme === 'light' || theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', theme);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    const effective = theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.querySelectorAll('#theme-toggle button').forEach(b => {
+      b.classList.toggle('active', b.dataset.themeChoice === effective);
+    });
+  }
+  document.querySelectorAll('#theme-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      localStorage.setItem(THEME_KEY, btn.dataset.themeChoice);
+      applyTheme(btn.dataset.themeChoice);
+    });
+  });
+  applyTheme(localStorage.getItem(THEME_KEY));
+
+  // ============================================================
+  // Randare markdown (fără librării externe)
+  // ============================================================
+
+  function stripThinking(text) {
+    return String(text || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function renderInline(text) {
+    let s = escapeHtml(text);
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    s = s.replace(/(?<![a-zA-Z0-9])_(.+?)_(?![a-zA-Z0-9])/g, '<em>$1</em>');
+    return s;
+  }
+  function renderMarkdown(rawText) {
+    const text = stripThinking(rawText);
+    const lines = text.split('\n');
+    let html = '';
+    let i = 0;
+    let inList = null;
+    function closeList() { if (inList) { html += `</${inList}>`; inList = null; } }
+
+    while (i < lines.length) {
+      const line = lines[i];
+
+      if (/^\s*([-*_])\s*(\1\s*){2,}$/.test(line)) {
+        closeList(); html += '<hr>'; i++; continue;
+      }
+      const headerMatch = line.match(/^(#{1,6})\s+(.*)$/);
+      if (headerMatch) {
+        closeList();
+        const level = headerMatch[1].length;
+        html += `<h${level}>${renderInline(headerMatch[2])}</h${level}>`;
+        i++; continue;
+      }
+      if (/^\s*\|.*\|\s*$/.test(line) && lines[i + 1] && /^\s*\|?[\s:-]+\|[\s:|-]*$/.test(lines[i + 1])) {
+        closeList();
+        const headerCells = line.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+        html += '<table><thead><tr>' + headerCells.map(c => `<th>${renderInline(c)}</th>`).join('') + '</tr></thead><tbody>';
+        i += 2;
+        while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) {
+          const cells = lines[i].trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+          html += '<tr>' + cells.map(c => `<td>${renderInline(c)}</td>`).join('') + '</tr>';
+          i++;
+        }
+        html += '</tbody></table>';
+        continue;
+      }
+      if (/^\s*>\s?/.test(line)) {
+        closeList();
+        const quoteLines = [];
+        while (i < lines.length && /^\s*>\s?/.test(lines[i])) {
+          quoteLines.push(lines[i].replace(/^\s*>\s?/, ''));
+          i++;
+        }
+        html += `<blockquote>${renderInline(quoteLines.join(' '))}</blockquote>`;
+        continue;
+      }
+      const ulMatch = line.match(/^\s*[-*]\s+(.*)$/);
+      if (ulMatch && !/^\s*([-*])\s*(\1\s*){2,}$/.test(line)) {
+        if (inList !== 'ul') { closeList(); html += '<ul>'; inList = 'ul'; }
+        html += `<li>${renderInline(ulMatch[1])}</li>`;
+        i++; continue;
+      }
+      const olMatch = line.match(/^\s*\d+\.\s+(.*)$/);
+      if (olMatch) {
+        if (inList !== 'ol') { closeList(); html += '<ol>'; inList = 'ol'; }
+        html += `<li>${renderInline(olMatch[1])}</li>`;
+        i++; continue;
+      }
+      if (/^\s*$/.test(line)) { closeList(); i++; continue; }
+      closeList();
+      html += `<p>${renderInline(line)}</p>`;
+      i++;
+    }
+    closeList();
+    return html;
+  }
+
+  // ============================================================
+  // Mesaje motivaționale + celebrare
+  // ============================================================
+
+  const MOTIVATIONAL_QUOTES = [
+    'The pain of discipline weighs ounces. The pain of regret weighs tons.',
+    'Sweat is just fat crying.',
+    'It never gets easier, you just get stronger.',
+    'The only bad workout is the one that didn\'t happen.',
+    'Pain is temporary. Quitting lasts forever.',
+    'Excuses don\'t burn calories.',
+    'Your body can stand almost anything. It\'s your mind you have to convince.',
+    'Champions train, losers complain.',
+    'Sore today, strong tomorrow.',
+    'The iron never lies.',
+    'Motivation gets you started. Discipline keeps you going.',
+    'Don\'t wish for it. Work for it.',
+    'One more rep than yesterday.',
+    'Strength doesn\'t come from what you can do. It comes from overcoming what you thought you couldn\'t.',
+    'Rest at the end, not in the middle.',
+    'Comfort is the enemy of progress.',
+    'Leave your ego at the door and your excuses with it.',
+    'Earn your rest day.'
+  ];
+  function pickRandomQuote() {
+    return MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)];
+  }
+  function showQuote(elId) {
+    document.getElementById(elId).innerHTML = `<span class="motivational-quote-text">${escapeHtml(pickRandomQuote())}</span>`;
+  }
+  function clearQuote(elId) {
+    document.getElementById(elId).innerHTML = '';
+  }
+
+  const CELEBRATION_MESSAGES = [
+    'Nice job!', 'Well done!', 'Great work!', 'Crushed it!', 'Beast mode!',
+    'You did it!', 'Awesome!', 'Keep it up!', 'Solid work!', "That's the spirit!",
+    'Beast!', 'Respect!', 'On fire!'
+  ];
+  function showCelebration() {
+    const el = document.createElement('div');
+    el.className = 'celebration-toast';
+    el.textContent = CELEBRATION_MESSAGES[Math.floor(Math.random() * CELEBRATION_MESSAGES.length)];
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 300);
+    }, 1600);
+  }
+
+  function showSplashMessage() {
+    const el = document.createElement('div');
+    el.className = 'splash-toast';
+    el.innerHTML = '<span class="splash-bolt">⚡</span><span>No rest days</span>';
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => {
+      el.classList.remove('show');
+      setTimeout(() => el.remove(), 300);
+    }, 1800);
+  }
+
+  function showScreenFlash() {
+    const el = document.createElement('div');
+    el.className = 'screen-flash-overlay';
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => el.remove(), 800);
+  }
+
+  showScreenFlash();
+  showSplashMessage();
+
+  // ============================================================
+  // Client AI: Cerebras + Groq cu fallback (apel direct din browser)
+  // ============================================================
+
+  const SETTINGS_KEY = 'fw_settings';
+  const DEFAULT_MODELS = {
+    cerebrasModel: 'gpt-oss-120b',
+    cerebrasModelFallback: 'gemma-4-31b',
+    groqModel: 'llama-3.3-70b-versatile',
+    groqModelFallback: 'openai/gpt-oss-120b',
+    groqVisionModel: 'qwen/qwen3.6-27b'
+  };
+
+  function loadSettings() {
+    return lsGet(SETTINGS_KEY, {
+      cerebrasKey: '', cerebrasModel: '', cerebrasModelFallback: '',
+      groqKey: '', groqModel: '', groqModelFallback: '', groqVisionModel: ''
+    });
+  }
+  function saveSettingsToStorage(s) { lsSet(SETTINGS_KEY, s); }
+
+  function getModelOrDefault(value, key) {
+    const v = String(value || '').trim();
+    return v || DEFAULT_MODELS[key];
+  }
+
+  function buildAttempts() {
+    const s = loadSettings();
+    const attempts = [];
+    if (s.cerebrasKey) {
+      attempts.push({ provider: 'cerebras', url: 'https://api.cerebras.ai/v1/chat/completions', key: s.cerebrasKey, model: getModelOrDefault(s.cerebrasModel, 'cerebrasModel') });
+      attempts.push({ provider: 'cerebras', url: 'https://api.cerebras.ai/v1/chat/completions', key: s.cerebrasKey, model: getModelOrDefault(s.cerebrasModelFallback, 'cerebrasModelFallback') });
+    }
+    if (s.groqKey) {
+      attempts.push({ provider: 'groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: s.groqKey, model: getModelOrDefault(s.groqModel, 'groqModel') });
+      attempts.push({ provider: 'groq', url: 'https://api.groq.com/openai/v1/chat/completions', key: s.groqKey, model: getModelOrDefault(s.groqModelFallback, 'groqModelFallback') });
+    }
+    return attempts;
+  }
+
+  async function callChatCompletionClient(url, apiKey, model, messages, timeoutMs = 30000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let res;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ model, messages }),
+        signal: controller.signal
+      });
+    } catch (err) {
+      clearTimeout(timer);
+      if (err.name === 'AbortError') throw new Error(`nu a răspuns în ${timeoutMs / 1000}s`);
+      throw new Error(`conexiune eșuată: ${err.message}`);
+    }
+    clearTimeout(timer);
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(`${res.status}: ${errBody?.error?.message || res.statusText}`);
+    }
+    const data = await res.json();
+    const content = data?.choices?.[0]?.message?.content;
+    if (!content) throw new Error('răspuns fără conținut');
+    return content;
+  }
+
+  async function generateWithFallback(messages) {
+    const attempts = buildAttempts();
+    if (!attempts.length) {
+      throw new Error('Configurează cel puțin o cheie API (Cerebras sau Groq) în Setări.');
+    }
+    const errors = [];
+    for (const attempt of attempts) {
+      try {
+        const content = await callChatCompletionClient(attempt.url, attempt.key, attempt.model, messages);
+        return { content: stripThinking(content), provider: attempt.provider, model: attempt.model };
+      } catch (err) {
+        errors.push(`${attempt.provider}/${attempt.model}: ${err.message}`);
+      }
+    }
+    throw new Error(`Toate încercările (Cerebras + Groq) au eșuat. — ${errors.join(' || ')}`);
+  }
+
+  // ============================================================
+  // Clasificare grupe musculare (Easy WOD + Hero WOD)
+  // ============================================================
+
+  const MUSCLE_GROUPS = ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'forearms', 'abs', 'glutes', 'quads', 'hamstrings', 'calves'];
+  const MUSCLE_LABELS_RO = {
+    chest: 'Piept', back: 'Spate', shoulders: 'Umeri', biceps: 'Biceps', triceps: 'Triceps',
+    forearms: 'Antebrațe', abs: 'Abdomen', glutes: 'Fesieri', quads: 'Cvadriceps',
+    hamstrings: 'Ischio', calves: 'Gambe'
+  };
+
+  const MUSCLE_LEVEL_RANK = { low: 1, medium: 2, high: 3 };
+  const MUSCLE_LEVEL_LABELS_RO = { low: 'ușor', medium: 'moderat', high: 'intens' };
+
+  const MUSCLE_CLASSIFICATION_SYSTEM_PROMPT = `Ești un antrenor expert care analizează descrierea unui
+antrenament (poate fi în română, cu nume de exerciții în engleză) și identifică ce grupe musculare
+majore au fost lucrate, împreună cu nivelul de intensitate/efort pentru fiecare în acest
+antrenament specific.
+
+Grupele valide (folosește EXACT aceste id-uri, în engleză, fără altele):
+chest, back, shoulders, biceps, triceps, forearms, abs, glutes, quads, hamstrings, calves
+
+Nivele de intensitate (folosește EXACT aceste valori):
+- "high" = mușchi principal/agonist, cel mai solicitat în antrenament
+- "medium" = lucrat semnificativ, dar nu ca mușchi principal
+- "low" = implicat doar ca stabilizator/secundar, efort minim
+
+Răspunde STRICT cu un obiect JSON valid, fără text în plus, fără markdown, în formatul exact:
+{"muscles": [{"id": "chest", "level": "high"}, {"id": "triceps", "level": "medium"}, ...]}
+
+Include doar grupele clar implicate în exercițiile descrise. Nu inventa grupe care nu rezultă din
+antrenament. Nu adăuga alte câmpuri.`;
+
+  function sanitizeMuscleLevels(list) {
+    if (!Array.isArray(list)) return [];
+    const normalized = list
+      .map(item => {
+        if (typeof item === 'string') return { id: item, level: 'high' };
+        const id = item?.id;
+        const level = MUSCLE_LEVEL_RANK[item?.level] ? item.level : 'high';
+        return { id, level };
+      })
+      .filter(item => MUSCLE_GROUPS.includes(item.id));
+
+    const byId = new Map();
+    normalized.forEach(item => {
+      const existing = byId.get(item.id);
+      if (!existing || MUSCLE_LEVEL_RANK[item.level] > MUSCLE_LEVEL_RANK[existing.level]) {
+        byId.set(item.id, item);
+      }
+    });
+    return [...byId.values()];
+  }
+
+  async function classifyMuscles(text) {
+    try {
+      const messages = [
+        { role: 'system', content: MUSCLE_CLASSIFICATION_SYSTEM_PROMPT },
+        { role: 'user', content: text }
+      ];
+      const result = await generateWithFallback(messages);
+      const match = result.content.match(/\{[\s\S]*\}/);
+      if (!match) return [];
+      const parsed = JSON.parse(match[0]);
+      return sanitizeMuscleLevels(parsed.muscles);
+    } catch (err) {
+      console.warn('Clasificare grupe musculare eșuată:', err.message);
+      return [];
+    }
+  }
+
+  // Normalizeaza si intrari vechi (array de string-uri, dinainte de nivelele de intensitate)
+  function normalizeMuscleEntry(muscleGroups) {
+    if (!Array.isArray(muscleGroups)) return [];
+    return muscleGroups.map(item => typeof item === 'string' ? { id: item, level: 'high' } : item);
+  }
+
+  // ============================================================
+  // Configurare (echipamente, skill-uri) — modul Workout
+  // ============================================================
+
+  const WORKOUT_CONFIG_KEY = 'fw_workout_config';
+
+  function addRow(containerId, name = '', detail = '') {
+    const container = document.getElementById(containerId);
+    const row = document.createElement('div');
+    row.className = 'row';
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text'; nameInput.className = 'item-name'; nameInput.placeholder = 'Nume'; nameInput.value = name;
+    const detailInput = document.createElement('input');
+    detailInput.type = 'text'; detailInput.className = 'item-detail'; detailInput.placeholder = 'Detaliu opțional'; detailInput.value = detail;
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.textContent = '✕';
+    removeBtn.addEventListener('click', () => row.remove());
+    row.appendChild(nameInput); row.appendChild(detailInput); row.appendChild(removeBtn);
+    container.appendChild(row);
+  }
+  function collectList(containerId) {
+    const rows = document.querySelectorAll(`#${containerId} .row`);
+    return [...rows].map(row => ({
+      name: row.querySelector('.item-name').value.trim(),
+      detail: row.querySelector('.item-detail').value.trim()
+    })).filter(item => item.name);
+  }
+
+  function loadWorkoutConfig() {
+    const config = lsGet(WORKOUT_CONFIG_KEY, { equipment: [], skills: [] });
+    document.getElementById('equipment-list').innerHTML = '';
+    document.getElementById('skills-list').innerHTML = '';
+    (config.equipment || []).forEach(i => addRow('equipment-list', i.name, i.detail));
+    (config.skills || []).forEach(i => addRow('skills-list', i.name, i.detail));
+    return config;
+  }
+
+  document.getElementById('add-equipment').addEventListener('click', () => addRow('equipment-list'));
+  document.getElementById('add-skill').addEventListener('click', () => addRow('skills-list'));
+  document.getElementById('save-config').addEventListener('click', () => {
+    const status = document.getElementById('save-config-status');
+    const config = {
+      equipment: collectList('equipment-list'),
+      skills: collectList('skills-list')
+    };
+    lsSet(WORKOUT_CONFIG_KEY, config);
+    status.textContent = 'Salvat.';
+    setTimeout(() => { status.textContent = ''; }, 2000);
+  });
+  loadWorkoutConfig();
+
+  // ============================================================
+  // 2. Workout — generare / regenerare / finalizare (fără istoric vizibil)
+  // ============================================================
+
+  const WORKOUT_LOG_KEY = 'fw_workout_log';
+  const WORKOUT_SYSTEM_PROMPT = `Ești un antrenor personal expert (stil CrossFit/functional fitness).
+Primești echipamentele disponibile ale utilizatorului, skill-urile pe care le poate exersa,
+și ziua curentă.
+
+Sarcina ta: generează antrenamentul complet pentru ziua curentă, variat față de o zi tipică,
+alegând tu tipul de zi (upper/lower/full body, conditioning, skill work etc.) în funcție de
+echipamentul și skill-urile disponibile. Include:
+- Încălzire
+- Parte principală, cu seturi/repetări/greutăți adaptate la echipamentul disponibil
+- Cooldown
+- Scalări (variantă mai ușoară și mai grea)
+- Intensitate/RPE recomandat
+- Note de siguranță concise
+
+Dacă ai skill-uri disponibile, alege un exercițiu concret din lista de skill-uri a
+utilizatorului pentru partea de skill work. Răspunde direct cu antrenamentul, formatat clar
+pe secțiuni, fără introduceri sau explicații despre cum ai gândit.`;
+
+  function buildWorkoutUserPrompt(config, dayName, dateStr) {
+    const equipmentText = config.equipment.length
+      ? config.equipment.map(i => `- ${i.name}${i.detail ? `: ${i.detail}` : ''}`).join('\n')
+      : '(niciun echipament specificat - presupune doar greutate corporală)';
+    const skillsText = config.skills.length
+      ? config.skills.map(i => `- ${i.name}${i.detail ? `: ${i.detail}` : ''}`).join('\n')
+      : '(niciun skill specificat)';
+    return `Ziua curentă: ${dayName}, ${dateStr}
+
+Echipamente disponibile:
+${equipmentText}
+
+Skill-uri posibile:
+${skillsText}
+
+Generează antrenamentul de azi.`;
+  }
+
+  let workoutPreview = null;
+
+  document.getElementById('workout-generate-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('workout-generate-btn');
+    const status = document.getElementById('workout-generate-status');
+    const preview = document.getElementById('workout-preview');
+    btn.disabled = true;
+    document.getElementById('workout-finish-wrap').style.display = 'none';
+    status.textContent = '';
+    showQuote('workout-generate-quote');
+    preview.innerHTML = '';
+    try {
+      const config = loadWorkoutConfig();
+      const now = new Date();
+      const dayName = RO_DAYS[now.getDay()];
+      const dateStr = localDateStr(now);
+      const messages = [
+        { role: 'system', content: WORKOUT_SYSTEM_PROMPT },
+        { role: 'user', content: buildWorkoutUserPrompt(config, dayName, dateStr) }
+      ];
+      const result = await generateWithFallback(messages);
+      workoutPreview = { ...result, day: dayName, date: dateStr };
+      preview.innerHTML = renderMarkdown(result.content);
+      status.textContent = '';
+      document.getElementById('workout-finish-wrap').style.display = 'flex';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('workout-generate-quote');
+    }
+  });
+
+  document.getElementById('workout-finish-btn').addEventListener('click', async () => {
+    if (!workoutPreview) return;
+    const status = document.getElementById('workout-finish-status');
+    const entry = { ...workoutPreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    const log = lsGet(WORKOUT_LOG_KEY, []);
+    log.unshift(entry);
+    lsSet(WORKOUT_LOG_KEY, log);
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    document.getElementById('workout-finish-wrap').style.display = 'none';
+    renderWodHistory('workout-history', WORKOUT_LOG_KEY, e => `${e.day}, ${e.date}`);
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+
+    const muscles = await classifyMuscles(entry.content);
+    if (muscles.length) {
+      const all = lsGet(WORKOUT_LOG_KEY, []);
+      const found = all.find(e => e.generatedAt === entry.generatedAt);
+      if (found) {
+        found.muscleGroups = muscles;
+        lsSet(WORKOUT_LOG_KEY, all);
+        renderWodHistory('workout-history', WORKOUT_LOG_KEY, e => `${e.day}, ${e.date}`);
+        renderHome();
+      }
+    }
+  });
+
+  renderWodHistory('workout-history', WORKOUT_LOG_KEY, e => `${e.day}, ${e.date}`);
+
+  // ============================================================
+  // Calendar generic (folosit la Nutriție)
+  // ============================================================
+
+  function toISODate(d) { return localDateStr(d); }
+
+  function renderCalendar(containerId, state, entryDates, onChange) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    const year = state.viewDate.getFullYear();
+    const month = state.viewDate.getMonth();
+
+    const header = document.createElement('div');
+    header.className = 'calendar-header';
+    const prevBtn = document.createElement('button');
+    prevBtn.type = 'button'; prevBtn.textContent = '‹';
+    prevBtn.addEventListener('click', () => { state.viewDate = new Date(year, month - 1, 1); onChange(); });
+    const title = document.createElement('span');
+    title.textContent = `${MONTH_NAMES[month]} ${year}`;
+    const nextBtn = document.createElement('button');
+    nextBtn.type = 'button'; nextBtn.textContent = '›';
+    nextBtn.addEventListener('click', () => { state.viewDate = new Date(year, month + 1, 1); onChange(); });
+    header.appendChild(prevBtn); header.appendChild(title); header.appendChild(nextBtn);
+    container.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'calendar-grid';
+    ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D'].forEach(d => {
+      const label = document.createElement('div');
+      label.className = 'calendar-daylabel';
+      label.textContent = d;
+      grid.appendChild(label);
+    });
+
+    const firstOfMonth = new Date(year, month, 1);
+    const firstWeekday = (firstOfMonth.getDay() + 6) % 7; // Luni = 0
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayIso = toISODate(new Date());
+
+    for (let i = 0; i < firstWeekday; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'calendar-day empty';
+      grid.appendChild(empty);
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateObj = new Date(year, month, day);
+      const iso = toISODate(dateObj);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'calendar-day';
+      btn.textContent = String(day);
+      if (iso === todayIso) btn.classList.add('is-today');
+      if (iso === state.selectedDate) btn.classList.add('is-selected');
+      if (entryDates.has(iso)) btn.classList.add('has-entries');
+      btn.addEventListener('click', () => { state.selectedDate = iso; onChange(); });
+      grid.appendChild(btn);
+    }
+    container.appendChild(grid);
+  }
+
+  // ============================================================
+  // 3. Nutriție
+  // ============================================================
+
+  const NUTRITION_PROFILE_KEY = 'fw_nutrition_profile';
+  const MEALS_KEY = 'fw_meals';
+  const DEFAULT_NUTRITION_PROFILE = { weight_kg: null, height_cm: null, age: null, sex: 'male', activity_level: 'moderate', goal: 'maintain' };
+  const ACTIVITY_FACTORS = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725 };
+  const PROTEIN_PER_KG = { maintain: 1.8, cut: 2.2, bulk: 1.8 };
+  const GOAL_CALORIE_ADJUST = { maintain: 0, cut: -500, bulk: 350 };
+
+  const MEAL_ANALYSIS_SYSTEM_PROMPT = `Ești un asistent nutrițional. Primești descrierea unei mese
+(în limba română, scrisă liber de utilizator) și estimezi valorile nutriționale.
+
+Răspunde STRICT cu un obiect JSON valid, fără text în plus, fără markdown, fără explicații,
+în formatul exact:
+{"calories": <numar intreg, kcal>, "protein_g": <numar, grame>, "carbs_g": <numar, grame>, "fat_g": <numar, grame>}
+
+Estimează cât mai realist pe baza cantităților descrise (dacă nu sunt precizate cantități,
+presupune porții normale/obișnuite). Nu adăuga alte câmpuri și nu scrie nimic în afara
+obiectului JSON.`;
+
+  function computeNutritionTargets(profile) {
+    const weight = Number(profile.weight_kg);
+    const height = Number(profile.height_cm);
+    const age = Number(profile.age);
+    if (!weight || !height || !age) return null;
+    const bmr = profile.sex === 'female'
+      ? 10 * weight + 6.25 * height - 5 * age - 161
+      : 10 * weight + 6.25 * height - 5 * age + 5;
+    const tdee = bmr * (ACTIVITY_FACTORS[profile.activity_level] || 1.55);
+    const calorieTarget = Math.round(tdee + (GOAL_CALORIE_ADJUST[profile.goal] || 0));
+    const proteinTarget = Math.round(weight * (PROTEIN_PER_KG[profile.goal] || 1.8));
+    return { calorieTarget, proteinTarget };
+  }
+
+  function loadNutritionProfile() {
+    const profile = lsGet(NUTRITION_PROFILE_KEY, DEFAULT_NUTRITION_PROFILE);
+    document.getElementById('nutri-weight').value = profile.weight_kg || '';
+    document.getElementById('nutri-height').value = profile.height_cm || '';
+    document.getElementById('nutri-age').value = profile.age || '';
+    document.getElementById('nutri-sex').value = profile.sex || 'male';
+    document.getElementById('nutri-activity').value = profile.activity_level || 'moderate';
+    document.getElementById('nutri-goal').value = profile.goal || 'maintain';
+    return profile;
+  }
+
+  document.getElementById('save-profile').addEventListener('click', () => {
+    const status = document.getElementById('save-profile-status');
+    const profile = {
+      weight_kg: Number(document.getElementById('nutri-weight').value) || null,
+      height_cm: Number(document.getElementById('nutri-height').value) || null,
+      age: Number(document.getElementById('nutri-age').value) || null,
+      sex: document.getElementById('nutri-sex').value === 'female' ? 'female' : 'male',
+      activity_level: document.getElementById('nutri-activity').value,
+      goal: document.getElementById('nutri-goal').value
+    };
+    lsSet(NUTRITION_PROFILE_KEY, profile);
+    status.textContent = 'Salvat.';
+    setTimeout(() => { status.textContent = ''; }, 2000);
+    renderNutritionSummary();
+    renderHome();
+  });
+
+  const nutritionCalState = { viewDate: new Date(), selectedDate: todayStr() };
+
+  function renderNutritionCalendar() {
+    const meals = lsGet(MEALS_KEY, []);
+    const entryDates = new Set(meals.map(m => m.date));
+    renderCalendar('nutrition-calendar', nutritionCalState, entryDates, () => {
+      renderNutritionCalendar();
+      renderNutritionSummary();
+    });
+    const isToday = nutritionCalState.selectedDate === todayStr();
+    document.getElementById('nutrition-target-date').textContent =
+      `📅 Vizualizezi: ${nutritionCalState.selectedDate}${isToday ? ' (azi)' : ''}`;
+  }
+
+  function buildNutritionMeterRow(label, value, target) {
+    const wrap = document.createElement('div');
+    wrap.className = 'nutrition-summary-row';
+    const pct = target ? Math.min(100, Math.round((value / target) * 100)) : 0;
+    const over = target && value > target;
+    wrap.innerHTML = `
+      <div class="label-row">
+        <span>${escapeHtml(label)}</span>
+        <span class="value">${Math.round(value)}${target ? ` / ${target}` : ''}</span>
+      </div>
+      <div class="nutrition-meter"><div class="nutrition-meter-fill${over ? ' over' : ''}" style="width:${target ? pct : 0}%"></div></div>
+    `;
+    return wrap;
+  }
+
+  function renderNutritionSummary() {
+    const meals = lsGet(MEALS_KEY, []);
+    const profile = lsGet(NUTRITION_PROFILE_KEY, DEFAULT_NUTRITION_PROFILE);
+    const targetDate = nutritionCalState.selectedDate || todayStr();
+    const dayMeals = meals.filter(m => m.date === targetDate);
+
+    const totals = dayMeals.reduce((acc, m) => {
+      acc.calories += Number(m.calories) || 0;
+      acc.protein_g += Number(m.protein_g) || 0;
+      acc.carbs_g += Number(m.carbs_g) || 0;
+      acc.fat_g += Number(m.fat_g) || 0;
+      return acc;
+    }, { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 });
+
+    const targets = computeNutritionTargets(profile);
+    const container = document.getElementById('nutrition-summary');
+    container.innerHTML = '';
+
+    const title = document.createElement('h2');
+    title.textContent = `Rezumat pentru ${targetDate}`;
+    container.appendChild(title);
+    container.appendChild(buildNutritionMeterRow('Calorii (kcal)', totals.calories, targets ? targets.calorieTarget : null));
+    container.appendChild(buildNutritionMeterRow('Proteine (g)', totals.protein_g, targets ? targets.proteinTarget : null));
+    container.appendChild(buildNutritionMeterRow('Carbohidrați (g)', totals.carbs_g, null));
+    container.appendChild(buildNutritionMeterRow('Grăsimi (g)', totals.fat_g, null));
+
+    if (!targets) {
+      const note = document.createElement('p');
+      note.className = 'hint';
+      note.textContent = 'Completează profilul nutrițional (greutate/înălțime/vârstă) ca să vezi targetul.';
+      container.appendChild(note);
+    }
+
+    const historyContainer = document.getElementById('nutrition-history');
+    historyContainer.innerHTML = '';
+    if (!dayMeals.length) {
+      historyContainer.innerHTML = '<p class="hint">Nicio masă logată în această zi.</p>';
+      return;
+    }
+    dayMeals.forEach(meal => {
+      const item = document.createElement('div');
+      item.className = 'meal-history-item';
+      item.innerHTML = `
+        <div>${escapeHtml(meal.text)}</div>
+        <div class="meal-macros">${Math.round(meal.calories)} kcal · P ${Math.round(meal.protein_g)}g · C ${Math.round(meal.carbs_g)}g · G ${Math.round(meal.fat_g)}g</div>
+        <div class="history-actions"><button type="button" class="delete-btn">Șterge</button></div>
+      `;
+      item.querySelector('.delete-btn').addEventListener('click', () => {
+        const all = lsGet(MEALS_KEY, []).filter(m => m.savedAt !== meal.savedAt);
+        lsSet(MEALS_KEY, all);
+        renderNutritionCalendar();
+        renderNutritionSummary();
+        renderHome();
+      });
+      historyContainer.appendChild(item);
+    });
+  }
+
+  document.getElementById('meal-save').addEventListener('click', async () => {
+    const btn = document.getElementById('meal-save');
+    const status = document.getElementById('meal-save-status');
+    const textarea = document.getElementById('meal-text');
+    const text = textarea.value.trim();
+    if (!text) { status.textContent = 'Descrie masa mai întâi.'; return; }
+    btn.disabled = true;
+    status.textContent = 'Se analizează cu AI...';
+    try {
+      const messages = [
+        { role: 'system', content: MEAL_ANALYSIS_SYSTEM_PROMPT },
+        { role: 'user', content: text }
+      ];
+      const result = await generateWithFallback(messages);
+      const match = result.content.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('răspuns AI neinterpretabil');
+      const parsed = JSON.parse(match[0]);
+      const entry = {
+        date: nutritionCalState.selectedDate || todayStr(),
+        text,
+        calories: Number(parsed.calories) || 0,
+        protein_g: Number(parsed.protein_g) || 0,
+        carbs_g: Number(parsed.carbs_g) || 0,
+        fat_g: Number(parsed.fat_g) || 0,
+        savedAt: new Date().toISOString()
+      };
+      const meals = lsGet(MEALS_KEY, []);
+      meals.unshift(entry);
+      lsSet(MEALS_KEY, meals);
+      textarea.value = '';
+      status.textContent = `Salvat (${result.provider}/${result.model}).`;
+      renderNutritionCalendar();
+      renderNutritionSummary();
+      renderHome();
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      setTimeout(() => { status.textContent = ''; }, 4000);
+    }
+  });
+
+  loadNutritionProfile();
+  renderNutritionCalendar();
+  renderNutritionSummary();
+
+  // ============================================================
+  // Istoric generic pentru Easy WOD / Hero WOD
+  // ============================================================
+
+  function renderWodHistory(containerId, storageKey, titleFn) {
+    const container = document.getElementById(containerId);
+    const history = lsGet(storageKey, []);
+    container.innerHTML = '';
+    if (!history.length) {
+      container.innerHTML = '<p class="hint">Niciun antrenament finalizat încă.</p>';
+      return;
+    }
+    history.forEach(entry => {
+      const details = document.createElement('details');
+      details.className = 'history-item';
+      const summary = document.createElement('summary');
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'history-item-title';
+      titleSpan.textContent = titleFn(entry);
+      summary.appendChild(titleSpan);
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button'; delBtn.className = 'delete-btn'; delBtn.textContent = 'Șterge';
+      delBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const all = lsGet(storageKey, []).filter(e => e.generatedAt !== entry.generatedAt);
+        lsSet(storageKey, all);
+        renderWodHistory(containerId, storageKey, titleFn);
+        renderHome();
+      });
+      summary.appendChild(delBtn);
+      details.appendChild(summary);
+
+      const content = document.createElement('div');
+      content.className = 'workout-result';
+      content.innerHTML = renderMarkdown(entry.content);
+      details.appendChild(content);
+
+      const normalizedMuscles = normalizeMuscleEntry(entry.muscleGroups);
+      if (normalizedMuscles.length) {
+        const tags = document.createElement('div');
+        tags.className = 'muscle-tags';
+        tags.textContent = `Grupe lucrate: ${normalizedMuscles
+          .map(m => `${MUSCLE_LABELS_RO[m.id] || m.id} (${MUSCLE_LEVEL_LABELS_RO[m.level] || m.level})`)
+          .join(', ')}`;
+        details.appendChild(tags);
+      }
+
+      container.appendChild(details);
+    });
+  }
+
+  // ============================================================
+  // 4. Easy WOD
+  // ============================================================
+
+  const EASY_HISTORY_KEY = 'fw_easy_history';
+  const EASY_WORKOUT_SYSTEM_PROMPT = `Ești un antrenor personal expert în antrenamente bodyweight, pe
+saltea/covor, fără niciun echipament (doar greutate corporală).
+
+Sarcina ta: generează un antrenament complet, de 15-30 de minute în total (încălzire + parte
+principală + cooldown), folosind DOAR exerciții bodyweight de tipul: flotări (și variante: pe
+genunchi, diamond, wide), genoflexiuni/squat-uri (air squat, sumo squat, jump squat), abdomene
+(crunch, sit-up, leg raise, russian twist, bicycle crunch, mountain climbers), plank (și variante:
+side plank, plank cu ridicare de picior), triceps (dips pe scaun/canapea, triceps push-up),
+fandări/lunges, glute bridge, superman, burpees (opțional, moderat), jumping jacks.
+
+Alege DE FIECARE DATĂ un format diferit pentru partea principală (variază față de un antrenament
+tipic, ca să nu fie mereu la fel) - de exemplu: EMOM (Every Minute On the Minute), AMRAP (As Many
+Rounds As Possible într-un timp dat), seturi clasice (X seturi × Y repetări cu pauză), circuit cu
+stații cronometrate, sau tabata (20s lucru/10s pauză). Poți combina două formate diferite (ex.
+EMOM la încălzire + AMRAP la partea principală).
+
+Include:
+- Încălzire scurtă (3-5 minute)
+- Parte principală, cu formatul ales clar specificat (EMOM/AMRAP/seturi/circuit/tabata) și
+  exercițiile alese, cu repetări/timp per exercițiu
+- Cooldown/stretching (3-5 minute)
+- Notă de siguranță concisă
+
+Răspunde direct cu antrenamentul, formatat clar pe secțiuni, fără introduceri sau explicații
+despre cum ai gândit.`;
+
+  function buildEasyWorkoutUserPrompt(dayName, dateStr) {
+    return `Ziua curentă: ${dayName}, ${dateStr}
+
+Generează un antrenament bodyweight nou, pe saltea, de 15-30 de minute, cu un format variat
+(EMOM/AMRAP/seturi/circuit/tabata - alege ce ți se pare potrivit, nu fi mereu la fel).`;
+  }
+
+  let easyWorkoutPreview = null;
+
+  document.getElementById('easy-generate-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('easy-generate-btn');
+    const status = document.getElementById('easy-generate-status');
+    const preview = document.getElementById('easy-workout-preview');
+    btn.disabled = true;
+    document.getElementById('easy-finish-wrap').style.display = 'none';
+    status.textContent = '';
+    showQuote('easy-generate-quote');
+    preview.innerHTML = '';
+    try {
+      const now = new Date();
+      const dayName = RO_DAYS[now.getDay()];
+      const dateStr = localDateStr(now);
+      const messages = [
+        { role: 'system', content: EASY_WORKOUT_SYSTEM_PROMPT },
+        { role: 'user', content: buildEasyWorkoutUserPrompt(dayName, dateStr) }
+      ];
+      const result = await generateWithFallback(messages);
+      easyWorkoutPreview = { ...result, day: dayName, date: dateStr };
+      preview.innerHTML = renderMarkdown(result.content);
+      status.textContent = '';
+      document.getElementById('easy-finish-wrap').style.display = 'flex';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('easy-generate-quote');
+    }
+  });
+
+  document.getElementById('easy-finish-btn').addEventListener('click', async () => {
+    if (!easyWorkoutPreview) return;
+    const status = document.getElementById('easy-finish-status');
+    const entry = { ...easyWorkoutPreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    const history = lsGet(EASY_HISTORY_KEY, []);
+    history.unshift(entry);
+    lsSet(EASY_HISTORY_KEY, history);
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    document.getElementById('easy-finish-wrap').style.display = 'none';
+    renderWodHistory('easy-history', EASY_HISTORY_KEY, e => `${e.day}, ${e.date}`);
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+
+    const muscles = await classifyMuscles(entry.content);
+    if (muscles.length) {
+      const all = lsGet(EASY_HISTORY_KEY, []);
+      const found = all.find(e => e.generatedAt === entry.generatedAt);
+      if (found) {
+        found.muscleGroups = muscles;
+        lsSet(EASY_HISTORY_KEY, all);
+        renderWodHistory('easy-history', EASY_HISTORY_KEY, e => `${e.day}, ${e.date}`);
+        renderHome();
+      }
+    }
+  });
+
+  renderWodHistory('easy-history', EASY_HISTORY_KEY, e => `${e.day}, ${e.date}`);
+
+  // ============================================================
+  // 5. Hero WOD
+  // ============================================================
+
+  const HERO_HISTORY_KEY = 'fw_hero_history';
+  const HERO_WORKOUT_SYSTEM_PROMPT = `Ești un antrenor CrossFit expert care cunoaște foarte bine
+WOD-urile Hero și Girl/benchmark celebre, de exemplu: MURPH, FRAN, GRACE, CINDY, DIANE, HELEN,
+ANNIE, ANGIE, CHELSEA, BARBARA, KELLY, NANCY, ISABEL, KAREN, ELIZABETH, JACKIE, DT, RANDY, CHAD,
+JT, MICHAEL, NATE, RYAN, DANIEL, JOSH, LINDA, EVA.
+
+Sarcina ta: alege UN SINGUR WOD Hero sau Girl/benchmark REAL și CUNOSCUT (nu inventa unul nou) și
+prezintă-l EXACT cum e prescris oficial:
+- Numele WOD-ului
+- Tipul (For Time / AMRAP / Rounds for Time / etc.)
+- Exercițiile cu repetări/greutăți exacte prescrise (Rx)
+- Time cap, dacă există
+- Echipamentul necesar
+- Nota Rx (inclusiv greutatea vestei sau a barelor pentru bărbați vs femei, dacă aplică)
+
+Adaugă și 1-2 opțiuni de scalare (mai ușoare) pentru cineva care nu poate face varianta Rx (ex.
+înlocuiri pentru exerciții cu bara/tracțiuni, distanțe sau greutăți reduse).
+
+FOARTE IMPORTANT: prima linie a răspunsului trebuie să fie DOAR numele WOD-ului, cu majuscule
+(ex: "MURPH"), fără alte cuvinte pe acea linie. Restul detaliilor vin după, formatate clar pe
+secțiuni.
+
+Răspunde direct, fără introduceri sau explicații despre cum ai ales.`;
+
+  function buildHeroWorkoutUserPrompt(dayName, dateStr, avoidName) {
+    const avoidClause = avoidName
+      ? `\n\nNU alege din nou "${avoidName}" (a fost generat ultima dată) - alege un WOD diferit.`
+      : '';
+    return `Ziua curentă: ${dayName}, ${dateStr}
+
+Generează un Hero WOD sau Girl/benchmark WOD cunoscut.${avoidClause}`;
+  }
+
+  let heroWorkoutPreview = null;
+  let lastHeroName = (lsGet(HERO_HISTORY_KEY, [])[0] || {}).heroName || '';
+
+  document.getElementById('hero-generate-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('hero-generate-btn');
+    const status = document.getElementById('hero-generate-status');
+    const preview = document.getElementById('hero-workout-preview');
+    btn.disabled = true;
+    document.getElementById('hero-finish-wrap').style.display = 'none';
+    status.textContent = '';
+    showQuote('hero-generate-quote');
+    preview.innerHTML = '';
+    try {
+      const now = new Date();
+      const dayName = RO_DAYS[now.getDay()];
+      const dateStr = localDateStr(now);
+      const messages = [
+        { role: 'system', content: HERO_WORKOUT_SYSTEM_PROMPT },
+        { role: 'user', content: buildHeroWorkoutUserPrompt(dayName, dateStr, lastHeroName) }
+      ];
+      const result = await generateWithFallback(messages);
+      const firstLine = String(result.content).split('\n').map(l => l.trim()).find(l => l.length > 0) || '';
+      const heroName = firstLine.replace(/^#+\s*/, '').replace(/\*/g, '').trim();
+      heroWorkoutPreview = { ...result, day: dayName, date: dateStr, heroName };
+      lastHeroName = heroName;
+      preview.innerHTML = renderMarkdown(result.content);
+      status.textContent = '';
+      document.getElementById('hero-finish-wrap').style.display = 'flex';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('hero-generate-quote');
+    }
+  });
+
+  document.getElementById('hero-finish-btn').addEventListener('click', async () => {
+    if (!heroWorkoutPreview) return;
+    const status = document.getElementById('hero-finish-status');
+    const entry = { ...heroWorkoutPreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    const history = lsGet(HERO_HISTORY_KEY, []);
+    history.unshift(entry);
+    lsSet(HERO_HISTORY_KEY, history);
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    document.getElementById('hero-finish-wrap').style.display = 'none';
+    renderWodHistory('hero-history', HERO_HISTORY_KEY, e => e.heroName || `${e.day}, ${e.date}`);
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+
+    const muscles = await classifyMuscles(entry.content);
+    if (muscles.length) {
+      const all = lsGet(HERO_HISTORY_KEY, []);
+      const found = all.find(e => e.generatedAt === entry.generatedAt);
+      if (found) {
+        found.muscleGroups = muscles;
+        lsSet(HERO_HISTORY_KEY, all);
+        renderWodHistory('hero-history', HERO_HISTORY_KEY, e => e.heroName || `${e.day}, ${e.date}`);
+        renderHome();
+      }
+    }
+  });
+
+  renderWodHistory('hero-history', HERO_HISTORY_KEY, e => e.heroName || `${e.day}, ${e.date}`);
+
+  // ============================================================
+  // 6. Adaugă manual — antrenament (text/poză) + alergare
+  // ============================================================
+
+  const MANUAL_HISTORY_KEY = 'fw_manual_history';
+  const RUNS_KEY = 'fw_runs';
+
+  document.getElementById('manual-mode-workout').addEventListener('click', () => {
+    document.getElementById('manual-mode-workout').classList.add('active');
+    document.getElementById('manual-mode-run').classList.remove('active');
+    document.getElementById('manual-workout-panel').style.display = '';
+    document.getElementById('manual-run-panel').style.display = 'none';
+  });
+  document.getElementById('manual-mode-run').addEventListener('click', () => {
+    document.getElementById('manual-mode-run').classList.add('active');
+    document.getElementById('manual-mode-workout').classList.remove('active');
+    document.getElementById('manual-run-panel').style.display = '';
+    document.getElementById('manual-workout-panel').style.display = 'none';
+  });
+
+  const IMAGE_WORKOUT_TRANSCRIBE_SYSTEM_PROMPT = `Ești un asistent care extrage text despre un
+antrenament dintr-o poză sau captură de ecran (poate fi dintr-o aplicație de fitness, un
+tabel/whiteboard din sală, sau scris de mână). Transcrie tot ce ține de antrenament: exerciții,
+seturi, repetări, greutăți/procente, timpi, distanțe, note - orice e vizibil și relevant. Nu
+inventa informații care nu apar în imagine. Răspunde direct cu textul antrenamentului, formatat
+clar, fără introduceri sau explicații.`;
+
+  async function handleManualPhoto(file) {
+    const status = document.getElementById('manual-photo-status');
+    const btn = document.getElementById('manual-photo-btn');
+    if (!file || !file.type.startsWith('image/')) return;
+    btn.disabled = true;
+    status.textContent = '';
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('citirea imaginii a eșuat'));
+        reader.readAsDataURL(file);
+      });
+      const s = loadSettings();
+      if (!s.groqKey) throw new Error('Configurează cheia Groq în Setări (necesară pentru transcrierea din poză).');
+      const visionModel = getModelOrDefault(s.groqVisionModel, 'groqVisionModel');
+      const messages = [
+        { role: 'system', content: IMAGE_WORKOUT_TRANSCRIBE_SYSTEM_PROMPT },
+        { role: 'user', content: [
+            { type: 'text', text: 'Extrage antrenamentul din această imagine.' },
+            { type: 'image_url', image_url: { url: dataUrl } }
+          ] }
+      ];
+      const content = await callChatCompletionClient('https://api.groq.com/openai/v1/chat/completions', s.groqKey, visionModel, messages);
+      document.getElementById('manual-workout-text').value = stripThinking(content);
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById('manual-photo-btn').addEventListener('click', () => {
+    document.getElementById('manual-photo-input').click();
+  });
+  document.getElementById('manual-photo-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (file) handleManualPhoto(file);
+  });
+  document.getElementById('manual-paste-zone').addEventListener('paste', (e) => {
+    const items = e.clipboardData?.items || [];
+    for (const item of items) {
+      if (item.type && item.type.startsWith('image/')) {
+        e.preventDefault();
+        handleManualPhoto(item.getAsFile());
+        break;
+      }
+    }
+  });
+
+  document.getElementById('manual-workout-finish-btn').addEventListener('click', async () => {
+    const status = document.getElementById('manual-workout-finish-status');
+    const textarea = document.getElementById('manual-workout-text');
+    const text = textarea.value.trim();
+    if (!text) { status.textContent = 'Scrie sau încarcă un antrenament mai întâi.'; return; }
+
+    const now = new Date();
+    const entry = { day: RO_DAYS[now.getDay()], date: localDateStr(now), content: text, generatedAt: now.toISOString(), muscleGroups: [] };
+    const history = lsGet(MANUAL_HISTORY_KEY, []);
+    history.unshift(entry);
+    lsSet(MANUAL_HISTORY_KEY, history);
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    textarea.value = '';
+    renderWodHistory('manual-workout-history', MANUAL_HISTORY_KEY, e => `${e.day}, ${e.date}`);
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+
+    const muscles = await classifyMuscles(entry.content);
+    if (muscles.length) {
+      const all = lsGet(MANUAL_HISTORY_KEY, []);
+      const found = all.find(e => e.generatedAt === entry.generatedAt);
+      if (found) {
+        found.muscleGroups = muscles;
+        lsSet(MANUAL_HISTORY_KEY, all);
+        renderWodHistory('manual-workout-history', MANUAL_HISTORY_KEY, e => `${e.day}, ${e.date}`);
+        renderHome();
+      }
+    }
+  });
+
+  renderWodHistory('manual-workout-history', MANUAL_HISTORY_KEY, e => `${e.day}, ${e.date}`);
+
+  function renderRunHistory() {
+    const container = document.getElementById('manual-run-history');
+    const runs = lsGet(RUNS_KEY, []);
+    container.innerHTML = '';
+    if (!runs.length) {
+      container.innerHTML = '<p class="hint">Nicio alergare înregistrată încă.</p>';
+      return;
+    }
+    runs.forEach(run => {
+      const item = document.createElement('div');
+      item.className = 'meal-history-item';
+      item.innerHTML = `
+        <div>${escapeHtml(run.date)} — ${run.km} km${run.pace ? ` @ ${escapeHtml(run.pace)}/km` : ''}</div>
+        <div class="history-actions"><button type="button" class="delete-btn">Șterge</button></div>
+      `;
+      item.querySelector('.delete-btn').addEventListener('click', () => {
+        const all = lsGet(RUNS_KEY, []).filter(r => r.savedAt !== run.savedAt);
+        lsSet(RUNS_KEY, all);
+        renderRunHistory();
+        renderHome();
+      });
+      container.appendChild(item);
+    });
+  }
+
+  document.getElementById('manual-run-save-btn').addEventListener('click', () => {
+    const status = document.getElementById('manual-run-save-status');
+    const kmInput = document.getElementById('manual-run-km');
+    const paceInput = document.getElementById('manual-run-pace');
+    const km = Number(kmInput.value);
+    if (!km || km <= 0) { status.textContent = 'Introdu o distanță validă (km).'; return; }
+
+    const entry = { date: todayStr(), km, pace: paceInput.value.trim(), savedAt: new Date().toISOString() };
+    const runs = lsGet(RUNS_KEY, []);
+    runs.unshift(entry);
+    lsSet(RUNS_KEY, runs);
+    kmInput.value = '';
+    paceInput.value = '';
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    renderRunHistory();
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+  });
+
+  renderRunHistory();
+
+  // ============================================================
+  // 7. Statistici — grafice anuale (antrenamente/lună, km/lună)
+  // ============================================================
+
+  const MONTH_SHORT_RO = ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep', 'Oct', 'Noi', 'Dec'];
+
+  function buildBarChart(values, labels, barClass, formatFn) {
+    const width = 780, height = 240, baseline = 200, topPad = 40;
+    const slot = width / values.length;
+    const barWidth = Math.min(34, slot * 0.6);
+    const maxVal = Math.max(1, ...values);
+    let svg = `<svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" role="img">`;
+    svg += `<line x1="0" y1="${baseline}" x2="${width}" y2="${baseline}" stroke="var(--border)" stroke-width="1" />`;
+    values.forEach((val, i) => {
+      const x = i * slot + (slot - barWidth) / 2;
+      const h = (val / maxVal) * (baseline - topPad);
+      const y = baseline - h;
+      svg += `<rect class="stats-bar ${barClass}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${h.toFixed(1)}" rx="4"><title>${escapeHtml(labels[i])}: ${escapeHtml(formatFn(val))}</title></rect>`;
+      if (val > 0) {
+        svg += `<text class="stats-chart-value" x="${(x + barWidth / 2).toFixed(1)}" y="${(y - 12).toFixed(1)}" text-anchor="middle">${escapeHtml(formatFn(val))}</text>`;
+      }
+      svg += `<text class="stats-chart-label" x="${(x + barWidth / 2).toFixed(1)}" y="${(baseline + 20).toFixed(1)}" text-anchor="middle">${escapeHtml(labels[i])}</text>`;
+    });
+    svg += `</svg>`;
+    return svg;
+  }
+
+  function populateStatsYearSelect() {
+    const select = document.getElementById('stats-year-select');
+    const currentYear = new Date().getFullYear();
+    select.innerHTML = '';
+    for (let y = currentYear - 5; y <= currentYear + 5; y++) {
+      const opt = document.createElement('option');
+      opt.value = String(y);
+      opt.textContent = String(y);
+      if (y === currentYear) opt.selected = true;
+      select.appendChild(opt);
+    }
+  }
+
+  function renderStatsCharts() {
+    const year = document.getElementById('stats-year-select').value;
+    const easy = lsGet(EASY_HISTORY_KEY, []);
+    const hero = lsGet(HERO_HISTORY_KEY, []);
+    const workout = lsGet(WORKOUT_LOG_KEY, []);
+    const manual = lsGet(MANUAL_HISTORY_KEY, []);
+    const runs = lsGet(RUNS_KEY, []);
+    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs];
+
+    const workoutsPerMonth = new Array(12).fill(0);
+    allWorkouts.forEach(e => {
+      if (e.date && e.date.startsWith(`${year}-`)) {
+        const monthIdx = Number(e.date.slice(5, 7)) - 1;
+        if (monthIdx >= 0 && monthIdx < 12) workoutsPerMonth[monthIdx]++;
+      }
+    });
+
+    const kmPerMonth = new Array(12).fill(0);
+    runs.forEach(r => {
+      if (r.date && r.date.startsWith(`${year}-`)) {
+        const monthIdx = Number(r.date.slice(5, 7)) - 1;
+        if (monthIdx >= 0 && monthIdx < 12) kmPerMonth[monthIdx] += Number(r.km) || 0;
+      }
+    });
+
+    document.getElementById('stats-workouts-chart').innerHTML = buildBarChart(workoutsPerMonth, MONTH_SHORT_RO, 'stats-bar-workout', v => String(v));
+    document.getElementById('stats-km-chart').innerHTML = buildBarChart(kmPerMonth, MONTH_SHORT_RO, 'stats-bar-km', v => v.toFixed(1));
+
+    const workoutsTotal = workoutsPerMonth.reduce((a, b) => a + b, 0);
+    const kmTotal = kmPerMonth.reduce((a, b) => a + b, 0);
+    document.getElementById('stats-workouts-total').textContent = String(workoutsTotal);
+    document.getElementById('stats-km-total').textContent = `${kmTotal.toFixed(1)} km`;
+  }
+
+  populateStatsYearSelect();
+  document.getElementById('stats-year-select').addEventListener('change', renderStatsCharts);
+  renderStatsCharts();
+
+  // ============================================================
+  // 1. Home — statistici + silueta musculară
+  // ============================================================
+
+  function renderHome() {
+    const today = todayStr();
+    const monthPrefix = today.slice(0, 7);
+    const easy = lsGet(EASY_HISTORY_KEY, []);
+    const hero = lsGet(HERO_HISTORY_KEY, []);
+    const workout = lsGet(WORKOUT_LOG_KEY, []);
+    const manual = lsGet(MANUAL_HISTORY_KEY, []);
+    const runs = lsGet(RUNS_KEY, []);
+    const all = [...easy, ...hero, ...workout, ...manual, ...runs];
+
+    const workoutsToday = all.filter(e => e.date === today).length;
+    const workoutsMonth = all.filter(e => e.date.startsWith(monthPrefix)).length;
+    document.getElementById('stat-workouts-today').textContent = String(workoutsToday);
+    document.getElementById('stat-workouts-month').textContent = String(workoutsMonth);
+
+    const workoutsTodayTile = document.getElementById('stat-workouts-today').closest('.stat-tile');
+    if (workoutsTodayTile) workoutsTodayTile.classList.toggle('goal-met', workoutsToday >= 1);
+
+    const kmMonth = runs.filter(r => r.date.startsWith(monthPrefix)).reduce((sum, r) => sum + (Number(r.km) || 0), 0);
+    document.getElementById('stat-run-km-month').textContent = `${kmMonth.toFixed(1)} km`;
+
+    const profile = lsGet(NUTRITION_PROFILE_KEY, DEFAULT_NUTRITION_PROFILE);
+    const meals = lsGet(MEALS_KEY, []).filter(m => m.date === today);
+    const caloriesToday = meals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
+    const proteinToday = meals.reduce((sum, m) => sum + (Number(m.protein_g) || 0), 0);
+    const targets = computeNutritionTargets(profile);
+    document.getElementById('stat-nutrition-today').textContent = targets
+      ? `${Math.round(caloriesToday)} / ${targets.calorieTarget} kcal`
+      : `${Math.round(caloriesToday)} kcal`;
+    document.getElementById('stat-nutrition-protein-today').textContent = targets
+      ? `P: ${Math.round(proteinToday)} / ${targets.proteinTarget} g`
+      : `P: ${Math.round(proteinToday)} g`;
+
+    const levelByMuscle = new Map();
+    all.filter(e => e.date === today).forEach(e => {
+      normalizeMuscleEntry(e.muscleGroups).forEach(m => {
+        const existing = levelByMuscle.get(m.id);
+        if (!existing || MUSCLE_LEVEL_RANK[m.level] > MUSCLE_LEVEL_RANK[existing]) {
+          levelByMuscle.set(m.id, m.level);
+        }
+      });
+    });
+
+    document.querySelectorAll('#mm-front .mm-region, #mm-back .mm-region').forEach(el => {
+      const muscle = el.getAttribute('data-muscle');
+      el.classList.remove('worked-low', 'worked-medium', 'worked-high');
+      const level = levelByMuscle.get(muscle);
+      if (level) el.classList.add(`worked-${level}`);
+    });
+
+    const summary = document.getElementById('muscle-map-summary');
+    if (levelByMuscle.size) {
+      summary.textContent = `Lucrate azi: ${[...levelByMuscle.entries()]
+        .map(([id, level]) => `${MUSCLE_LABELS_RO[id] || id} (${MUSCLE_LEVEL_LABELS_RO[level] || level})`)
+        .join(', ')}`;
+    } else {
+      summary.textContent = 'Niciun antrenament bifat azi încă.';
+    }
+  }
+
+  renderHome();
+
+  // ============================================================
+  // Setări
+  // ============================================================
+
+  function loadSettingsForm() {
+    const s = loadSettings();
+    document.getElementById('set-cerebras-key').value = s.cerebrasKey || '';
+    document.getElementById('set-cerebras-model').value = s.cerebrasModel || '';
+    document.getElementById('set-cerebras-model-fallback').value = s.cerebrasModelFallback || '';
+    document.getElementById('set-groq-key').value = s.groqKey || '';
+    document.getElementById('set-groq-model').value = s.groqModel || '';
+    document.getElementById('set-groq-model-fallback').value = s.groqModelFallback || '';
+    document.getElementById('set-groq-vision-model').value = s.groqVisionModel || '';
+  }
+
+  document.getElementById('save-settings').addEventListener('click', () => {
+    const status = document.getElementById('save-settings-status');
+    const s = {
+      cerebrasKey: document.getElementById('set-cerebras-key').value.trim(),
+      cerebrasModel: document.getElementById('set-cerebras-model').value.trim(),
+      cerebrasModelFallback: document.getElementById('set-cerebras-model-fallback').value.trim(),
+      groqKey: document.getElementById('set-groq-key').value.trim(),
+      groqModel: document.getElementById('set-groq-model').value.trim(),
+      groqModelFallback: document.getElementById('set-groq-model-fallback').value.trim(),
+      groqVisionModel: document.getElementById('set-groq-vision-model').value.trim()
+    };
+    saveSettingsToStorage(s);
+    status.textContent = 'Salvat.';
+    setTimeout(() => { status.textContent = ''; }, 2000);
+  });
+
+  loadSettingsForm();
+
+  // --- PWA: service worker (doar shell-ul static, apelurile AI merg mereu live) ---
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Service worker eșuat:', err.message));
+    });
+  }
+</script>
+</body>
+</html>
