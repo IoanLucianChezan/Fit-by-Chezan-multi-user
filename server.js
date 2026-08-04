@@ -181,7 +181,7 @@ app.post(
     try {
       const result = await generateWithFallback(messages);
       await incrementQuota(req.user.id, quota.day);
-      res.json(result);
+      res.json({ content: result.content });
     } catch (err) {
       res.status(502).json({ error: err.message });
     }
@@ -205,7 +205,7 @@ app.post(
     try {
       const result = await visionTranscribe(messages);
       await incrementQuota(req.user.id, quota.day);
-      res.json(result);
+      res.json({ content: result.content });
     } catch (err) {
       res.status(502).json({ error: err.message });
     }

@@ -618,10 +618,10 @@
   <div class="header-row">
     <p>No rest days. RX is earned, not given. Stronger every day.</p>
     <div class="header-actions">
-      <button type="button" class="settings-shortcut active" data-tab="home">🏠 Home</button>
+      <button type="button" class="settings-shortcut active" data-tab="home">🏠 Acasă</button>
       <button type="button" class="settings-shortcut" data-tab="settings">⚙️ Setări</button>
       <button type="button" id="login-open-btn" title="Intră / Creează cont" class="hidden">🔐 Cont</button>
-      <button type="button" id="logout-btn" title="Ieși din cont" class="hidden">🚪</button>
+      <button type="button" id="logout-btn" title="Ieși din cont" class="hidden">🚪 Ieși din cont</button>
       <div class="theme-toggle" id="theme-toggle">
         <button type="button" data-theme-choice="light" title="Mod luminos">☀️</button>
         <button type="button" data-theme-choice="dark" title="Mod întunecat">🌙</button>
@@ -1044,7 +1044,7 @@
   <!-- ================= SETĂRI ================= -->
   <section id="settings">
     <div class="privacy-note">
-      🔒 Apelurile AI trec prin serverul aplicației, care ține cheile Cerebras/Groq. Ai o limită
+      🔒 Apelurile AI trec prin serverul aplicației. Ai o limită
       zilnică de cereri AI setată de administrator.
     </div>
 
@@ -1828,7 +1828,7 @@ obiectului JSON.`;
       meals.unshift(entry);
       lsSet(MEALS_KEY, meals);
       textarea.value = '';
-      status.textContent = `Salvat (${result.provider}/${result.model}).`;
+      status.textContent = 'Salvat.';
       renderNutritionCalendar();
       renderNutritionSummary();
       renderHome();

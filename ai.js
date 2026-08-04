@@ -84,7 +84,8 @@ async function generateWithFallback(messages) {
       errors.push(`${attempt.provider}/${attempt.model}: ${err.message}`);
     }
   }
-  throw new Error(`Toate incercarile (Cerebras + Groq) au esuat. - ${errors.join(' || ')}`);
+  console.error('Toate incercarile AI au esuat:', errors.join(' || '));
+  throw new Error('Serviciul AI nu a raspuns. Incearca din nou in cateva momente.');
 }
 
 async function visionTranscribe(messages) {
