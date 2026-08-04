@@ -2108,6 +2108,13 @@ Generează un Hero WOD sau Girl/benchmark WOD cunoscut.${avoidClause}`;
 
   const MANUAL_HISTORY_KEY = 'fw_manual_history';
   const RUNS_KEY = 'fw_runs';
+  // alergarea lucrează mereu aceleași grupe, deci nu are nevoie de clasificare AI
+  const RUN_MUSCLE_GROUPS = [
+    { id: 'quads', level: 'high' },
+    { id: 'calves', level: 'high' },
+    { id: 'hamstrings', level: 'medium' },
+    { id: 'glutes', level: 'medium' }
+  ];
 
   document.getElementById('manual-mode-workout').addEventListener('click', () => {
     document.getElementById('manual-mode-workout').classList.add('active');
@@ -2243,7 +2250,13 @@ clar, fără introduceri sau explicații.`;
     const km = Number(kmInput.value);
     if (!km || km <= 0) { status.textContent = 'Introdu o distanță validă (km).'; return; }
 
-    const entry = { date: todayStr(), km, pace: paceInput.value.trim(), savedAt: new Date().toISOString() };
+    const entry = {
+      date: todayStr(),
+      km,
+      pace: paceInput.value.trim(),
+      savedAt: new Date().toISOString(),
+      muscleGroups: RUN_MUSCLE_GROUPS
+    };
     const runs = lsGet(RUNS_KEY, []);
     runs.unshift(entry);
     lsSet(RUNS_KEY, runs);
