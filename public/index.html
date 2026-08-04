@@ -252,6 +252,7 @@
     color: var(--text);
     transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
   }
+  textarea { width: 100%; }
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
   input::placeholder, textarea::placeholder { color: var(--text-muted); }
 
@@ -833,6 +834,16 @@
 
   <!-- ================= 3. NUTRIȚIE ================= -->
   <section id="nutrition">
+    <div class="card">
+      <h2>Adaugă masă</h2>
+      <p class="hint">Descrie o masă (o masă = o intrare).</p>
+      <textarea id="meal-text" rows="4" placeholder="Ex: 2 ouă ochiuri, 2 felii pâine integrală, jumătate avocado"></textarea>
+      <div class="actions-row" style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+        <button type="button" id="meal-save">Salvează masa (AI)</button>
+        <span id="meal-save-status"></span>
+      </div>
+    </div>
+
     <div class="split-layout">
       <div class="card side-card">
         <div id="nutrition-calendar" class="calendar"></div>
@@ -881,16 +892,6 @@
           <button type="button" id="save-profile">Salvează profilul</button>
           <span id="save-profile-status"></span>
         </details>
-
-        <div class="side-section">
-          <h2>Adaugă masă</h2>
-          <p class="hint">Descrie o masă (o masă = o intrare).</p>
-          <textarea id="meal-text" rows="4" placeholder="Ex: 2 ouă ochiuri, 2 felii pâine integrală, jumătate avocado"></textarea>
-          <div class="actions-row" style="display:flex; align-items:center; gap:10px; margin-top:10px;">
-            <button type="button" id="meal-save">Salvează masa (AI)</button>
-            <span id="meal-save-status"></span>
-          </div>
-        </div>
       </div>
 
       <div class="card history-card">
