@@ -9,6 +9,12 @@ if (!JWT_SECRET) {
 const COOKIE_NAME = 'fwc_session';
 const TOKEN_TTL = '30d';
 
+const PASSWORD_RULE_MESSAGE = 'Parola trebuie sa aiba minim 6 caractere, cu cel putin o litera si o cifra.';
+
+function isPasswordValid(password) {
+  return typeof password === 'string' && /^(?=.*[a-zA-Z])(?=.*\d).{6,}$/.test(password);
+}
+
 function hashPassword(password) {
   return bcrypt.hashSync(password, 10);
 }
@@ -67,6 +73,8 @@ function requireAdmin(req, res, next) {
 module.exports = {
   hashPassword,
   verifyPassword,
+  isPasswordValid,
+  PASSWORD_RULE_MESSAGE,
   signToken,
   setSessionCookie,
   clearSessionCookie,

@@ -75,7 +75,7 @@
       <h2 style="margin-top:0">Adaugă user nou</h2>
       <div class="row">
         <input type="text" id="new-username" placeholder="username">
-        <input type="password" id="new-password" placeholder="parolă">
+        <input type="password" id="new-password" placeholder="parolă (min 6, o literă + o cifră)">
         <input type="number" id="new-limit" placeholder="limită AI/zi" value="20">
         <button id="create-user-btn">Creează</button>
       </div>
@@ -151,7 +151,7 @@
     });
     tbody.querySelectorAll('.password-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
-        const newPassword = prompt(`Parolă nouă pentru "${btn.dataset.username}":`);
+        const newPassword = prompt(`Parolă nouă pentru "${btn.dataset.username}" (min 6 caractere, o literă și o cifră):`);
         if (!newPassword) return;
         await api('PATCH', `/api/admin/users/${btn.dataset.id}`, { password: newPassword });
         alert('Parolă schimbată.');

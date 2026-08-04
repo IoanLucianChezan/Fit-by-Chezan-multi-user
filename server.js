@@ -6,6 +6,8 @@ const { one, all, run, todayStr, initDb } = require('./db');
 const {
   hashPassword,
   verifyPassword,
+  isPasswordValid,
+  PASSWORD_RULE_MESSAGE,
   signToken,
   setSessionCookie,
   clearSessionCookie,
@@ -55,8 +57,8 @@ app.post(
     if (username.trim().length < 3) {
       return res.status(400).json({ error: 'Username-ul trebuie sa aiba cel putin 3 caractere.' });
     }
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Parola trebuie sa aiba cel putin 6 caractere.' });
+    if (!isPasswordValid(password)) {
+      return res.status(400).json({ error: PASSWORD_RULE_MESSAGE });
     }
     const existing = await one('SELECT id FROM users WHERE username = $1', [username]);
     if (existing) {
@@ -104,8 +106,8 @@ app.post(
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ error: 'Completează parola curentă și parola nouă.' });
     }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: 'Parola nouă trebuie să aibă cel puțin 6 caractere.' });
+    if (!isPasswordValid(newPassword)) {
+      return res.status(400).json({ error: PASSWORD_RULE_MESSAGE });
     }
     if (!verifyPassword(currentPassword, req.user.password_hash)) {
       return res.status(401).json({ error: 'Parola curentă e greșită.' });
@@ -274,6 +276,9 @@ app.post(
     if (!username || !password) {
       return res.status(400).json({ error: 'Username si parola sunt obligatorii.' });
     }
+    if (!isPasswordValid(password)) {
+      return res.status(400).json({ error: PASSWORD_RULE_MESSAGE });
+    }
     const existing = await one('SELECT id FROM users WHERE username = $1', [username]);
     if (existing) {
       return res.status(409).json({ error: 'Exista deja un user cu acest username.' });
@@ -309,6 +314,9 @@ app.patch(
       await run('UPDATE users SET active = $1 WHERE id = $2', [Boolean(active), id]);
     }
     if (password) {
+      if (!isPasswordValid(password)) {
+        return res.status(400).json({ error: PASSWORD_RULE_MESSAGE });
+      }
       await run('UPDATE users SET password_hash = $1 WHERE id = $2', [hashPassword(password), id]);
     }
     res.json({ ok: true });

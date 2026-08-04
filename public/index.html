@@ -1076,6 +1076,7 @@
         <div class="settings-field">
           <label for="change-pw-new">Parola nouă</label>
           <input type="password" id="change-pw-new" autocomplete="new-password">
+          <div class="hint">Minim 6 caractere, cu cel puțin o literă și o cifră.</div>
         </div>
         <div class="settings-field">
           <label for="change-pw-confirm">Confirmă parola nouă</label>
@@ -2491,7 +2492,7 @@ clar, fără introduceri sau explicații.`;
     authMode = mode;
     const isRegister = mode === 'register';
     document.getElementById('login-hint').textContent = isRegister
-      ? 'Creează-ți un cont ca să folosești AI-ul și să-ți salvezi datele.'
+      ? 'Creează-ți un cont (parola: minim 6 caractere, cu o literă și o cifră).'
       : 'Autentifică-te ca să folosești AI-ul și să-ți salvezi datele.';
     document.getElementById('login-submit').textContent = isRegister ? 'Creează cont' : 'Intră';
     document.getElementById('login-password-confirm').classList.toggle('hidden', !isRegister);
