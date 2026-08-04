@@ -580,7 +580,19 @@
     border-radius: 999px;
   }
   #logout-btn:hover, #login-open-btn:hover { background: var(--surface-2); color: var(--text); transform: none; box-shadow: none; }
-  #admin-link { display: inline-block; margin: 0 10px 12px 0; }
+  #admin-link {
+    display: inline-block;
+    margin: 0 10px 12px 0;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  #admin-link:hover { background: var(--surface-2); }
 </style>
 </head>
 <body>

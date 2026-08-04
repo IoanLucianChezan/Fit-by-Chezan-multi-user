@@ -32,6 +32,17 @@
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
   .err { color: var(--danger); font-size: 13px; margin-top: 8px; min-height: 16px; }
   a { color: var(--primary); }
+  a.btn-link {
+    display: inline-block;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  a.btn-link:hover { background: var(--bg); }
   .top { display: flex; justify-content: space-between; align-items: flex-start; }
   .badge { font-size: 11px; padding: 2px 6px; border-radius: 6px; background: var(--border); }
   .usage-history { padding: 10px 4px 14px; }
@@ -51,7 +62,7 @@
       <p class="sub">Creează useri, setează limita zilnică de cereri AI, dezactivează conturi.</p>
     </div>
     <div>
-      <a href="/">← Înapoi la aplicație</a>
+      <a href="/" class="btn-link">← Înapoi la aplicație</a>
     </div>
   </div>
 
