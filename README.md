@@ -6,8 +6,10 @@ sunt izolate pe server, iar administratorul poate seta o limită zilnică de cer
 
 ## Arhitectură
 
-- **Backend**: Node.js + Express, `server.js`. Baza de date e SQLite via modulul nativ `node:sqlite`
-  (Node ≥ 22.5) — fără dependențe native de compilat.
+- **Backend**: Node.js + Express, `server.js`.
+- **Bază de date**: Postgres (ex: [Neon](https://neon.tech), plan gratuit fără expirare), via `pg`.
+  Un Postgres persistent e obligatoriu — planul Free de pe Render are disk efemer, orice redeploy
+  ar șterge o bază SQLite locală.
 - **Auth**: sesiune JWT în cookie httpOnly (`auth.js`). Parole hash-uite cu bcrypt.
 - **AI proxy**: `ai.js` — aceeași logică de fallback Cerebras → Groq care exista înainte în browser,
   mutată server-side. Cheile stau doar în `.env`, niciodată trimise către client.
@@ -28,6 +30,7 @@ Completează `.env`:
 
 | Variabilă | Descriere |
 |---|---|
+| `DATABASE_URL` | Connection string Postgres (ex: din Neon) |
 | `JWT_SECRET` | Secret pentru semnarea sesiunilor. Generează: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Contul de admin, creat automat la primul start |
 | `CEREBRAS_API_KEY` / `GROQ_API_KEY` | Cheile AI, server-side |
@@ -47,17 +50,18 @@ Panou admin: `http://localhost:3000/admin.html`
 
 GitHub Pages **nu merge** aici (are nevoie de server care rulează, nu doar fișiere statice).
 Railway sau Render sunt cele mai simple — deploy direct din repo git, plan gratuit/hobby suficient
-la trafic mic, HTTPS automat. Setează aceleași variabile de mediu din `.env` în platforma aleasă.
+la trafic mic, HTTPS automat. Setează aceleași variabile de mediu din `.env` în platforma aleasă
+(inclusiv `DATABASE_URL` — folosește **aceeași** bază Neon ca la dezvoltare locală, sau creează una
+nouă doar pentru producție).
 
 ## Structură
 
 ```
 server.js       - rute Express (auth, date, AI proxy, admin)
-db.js           - schema SQLite + seed admin
+db.js           - conexiune Postgres, schema, seed admin
 auth.js         - JWT, bcrypt, middleware requireAuth/requireAdmin
 ai.js           - fallback Cerebras -> Groq, server-side
 public/
   index.html    - aplicația (fostul Fit by Chezan, cu login gate + sync server)
   admin.html    - panou administrare useri
-data/           - app.db (SQLite, exclus din git)
 ```

@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { db } = require('./db');
+const { one } = require('./db');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -36,7 +36,7 @@ function clearSessionCookie(res) {
   res.clearCookie(COOKIE_NAME);
 }
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const token = req.cookies?.[COOKIE_NAME];
   if (!token) return res.status(401).json({ error: 'Neautentificat.' });
   let payload;
@@ -45,12 +45,16 @@ function requireAuth(req, res, next) {
   } catch {
     return res.status(401).json({ error: 'Sesiune invalida sau expirata.' });
   }
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.id);
-  if (!user || !user.active) {
-    return res.status(401).json({ error: 'Cont inexistent sau dezactivat.' });
+  try {
+    const user = await one('SELECT * FROM users WHERE id = $1', [payload.id]);
+    if (!user || !user.active) {
+      return res.status(401).json({ error: 'Cont inexistent sau dezactivat.' });
+    }
+    req.user = user;
+    next();
+  } catch (err) {
+    next(err);
   }
-  req.user = user;
-  next();
 }
 
 function requireAdmin(req, res, next) {

@@ -4,11 +4,15 @@
 Browser (tu / userii)
     ↓ HTTPS
 Render (server Node.js, ruleaza server.js non-stop)
-    ↓
-SQLite (fisier local pe disk, pe serverul Render)
-    ↓
-Cerebras / Groq (API extern, apelat DOAR de server, niciodata din browser)
+    ↓                                    ↓
+Neon Postgres (baza de date,     Cerebras / Groq (API extern,
+persistenta, separata de Render)  apelat DOAR de server)
 ```
+
+Baza de date NU sta pe discul Render — sta pe Neon (Postgres gratuit, fara
+expirare), tocmai ca sa supravietuiasca la fiecare redeploy. Planul Free al
+Render are disk efemer: orice fisier local (ex: un SQLite) s-ar sterge la
+urmatorul build. Neon rezolva exact asta.
 
 Totul e server-centric: browserul nu vorbeste niciodata direct cu Cerebras/Groq —
 vorbeste doar cu serverul tau, iar serverul vorbeste cu AI-ul.
@@ -18,7 +22,7 @@ vorbeste doar cu serverul tau, iar serverul vorbeste cu AI-ul.
 | Fisier | Rol |
 |---|---|
 | `server.js` | Punctul central — toate rutele HTTP (`/api/auth/*`, `/api/data`, `/api/ai/*`, `/api/admin/*`) |
-| `db.js` | Deschide baza SQLite, defineste tabelele, creeaza contul de admin la primul start |
+| `db.js` | Se conecteaza la Postgres (Neon), defineste tabelele, creeaza contul de admin la primul start |
 | `auth.js` | Hash parole (bcrypt), semneaza/verifica sesiuni (JWT), middleware `requireAuth`/`requireAdmin` |
 | `ai.js` | Logica de apel catre Cerebras (cu fallback pe Groq) — singurul loc din tot proiectul unde cheile AI sunt folosite |
 | `public/index.html` | Frontend-ul (tot ce vede userul) |
@@ -37,11 +41,13 @@ in dashboard-ul Render (sectiunea Environment):
 - `ADMIN_PASSWORD` — folosit o singura data, la primul pornit al serverului,
   ca sa creeze contul de admin (dupa aceea parola reala traieste doar
   hash-uita in baza de date)
+- `DATABASE_URL` — connection string-ul catre Neon (contine si parola bazei
+  de date, deci e la fel de sensibil ca o cheie API)
 
 Local, aceleasi variabile stau in fisierul `.env` din radacina proiectului —
 care e in `.gitignore`, deci n-a ajuns niciodata pe GitHub.
 
-## Baza de date (SQLite, un singur fisier `data/app.db` pe server)
+## Baza de date (Postgres, gazduita pe Neon)
 
 Trei tabele:
 
