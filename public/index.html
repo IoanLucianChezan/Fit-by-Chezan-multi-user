@@ -1809,6 +1809,7 @@ Generează antrenamentul de azi.`;
   const ACTIVITY_FACTORS = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725 };
   const PROTEIN_PER_KG = { maintain: 1.8, cut: 2.2, bulk: 1.8 };
   const GOAL_CALORIE_ADJUST = { maintain: 0, cut: -500, bulk: 350 };
+  const FAT_CALORIE_SHARE = 0.28; // din totalul de calorii, restul (după proteine) merge la carbohidrați
 
   const MEAL_ANALYSIS_SYSTEM_PROMPT = `Ești un asistent nutrițional. Primești descrierea unei mese
 (în limba română, scrisă liber de utilizator) și estimezi valorile nutriționale.
@@ -1832,7 +1833,11 @@ obiectului JSON.`;
     const tdee = bmr * (ACTIVITY_FACTORS[profile.activity_level] || 1.55);
     const calorieTarget = Math.round(tdee + (GOAL_CALORIE_ADJUST[profile.goal] || 0));
     const proteinTarget = Math.round(weight * (PROTEIN_PER_KG[profile.goal] || 1.8));
-    return { calorieTarget, proteinTarget };
+    const fatCalories = calorieTarget * FAT_CALORIE_SHARE;
+    const fatTarget = Math.round(fatCalories / 9);
+    const carbsCalories = Math.max(0, calorieTarget - proteinTarget * 4 - fatCalories);
+    const carbsTarget = Math.round(carbsCalories / 4);
+    return { calorieTarget, proteinTarget, carbsTarget, fatTarget };
   }
 
   function loadNutritionProfile() {
@@ -1915,8 +1920,8 @@ obiectului JSON.`;
     container.appendChild(title);
     container.appendChild(buildNutritionMeterRow('Calorii (kcal)', totals.calories, targets ? targets.calorieTarget : null));
     container.appendChild(buildNutritionMeterRow('Proteine (g)', totals.protein_g, targets ? targets.proteinTarget : null));
-    container.appendChild(buildNutritionMeterRow('Carbohidrați (g)', totals.carbs_g, null));
-    container.appendChild(buildNutritionMeterRow('Grăsimi (g)', totals.fat_g, null));
+    container.appendChild(buildNutritionMeterRow('Carbohidrați (g)', totals.carbs_g, targets ? targets.carbsTarget : null));
+    container.appendChild(buildNutritionMeterRow('Grăsimi (g)', totals.fat_g, targets ? targets.fatTarget : null));
 
     if (!targets) {
       const note = document.createElement('p');
