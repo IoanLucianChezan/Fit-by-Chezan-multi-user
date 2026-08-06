@@ -630,10 +630,10 @@
   </div>
 
   <nav id="tabs">
-    <button data-tab="workout">Workout</button>
+    <button data-tab="workout">Custom Workout</button>
     <button data-tab="nutrition">Nutriție</button>
-    <button data-tab="easy-workout">Easy WOD</button>
-    <button data-tab="hero-workout">Hero WOD</button>
+    <button data-tab="program-crossfit">Program Crossfit</button>
+    <button data-tab="program-bodybuilding">Program Bodybuilding</button>
     <button data-tab="manual">Manual</button>
     <button data-tab="stats">Statistici</button>
   </nav>
@@ -662,7 +662,7 @@
 
     <div class="card">
       <h2>Mușchi lucrați azi</h2>
-      <p class="hint">Din antrenamentele finalizate azi (Workout, Easy WOD, Hero WOD).</p>
+      <p class="hint">Din antrenamentele finalizate azi (Custom Workout, Program Crossfit, Program Bodybuilding, Manual).</p>
       <div class="muscle-map">
         <figure>
           <svg viewBox="0 0 220 460" xmlns="http://www.w3.org/2000/svg" id="mm-front">
@@ -785,7 +785,7 @@
     </div>
   </section>
 
-  <!-- ================= 2. WORKOUT ================= -->
+  <!-- ================= 2. CUSTOM WORKOUT ================= -->
   <section id="workout">
     <div class="card">
       <h2>Antrenament (stil CrossFit / functional)</h2>
@@ -827,8 +827,45 @@
     </div>
 
     <div class="card">
-      <h2>Istoric antrenamente</h2>
-      <div id="workout-history"></div>
+      <h2>Easy WOD (bodyweight)</h2>
+      <p class="hint">Antrenament pe saltea, fără echipament — flotări, genoflexiuni, abdomene, plank, triceps. Format variat (EMOM, AMRAP, seturi, circuit, tabata), 15-30 minute.</p>
+
+      <div class="workout-actions">
+        <button type="button" id="easy-generate-btn" class="btn-big">🔄 Generează antrenament</button>
+        <span id="easy-generate-status"></span>
+      </div>
+
+      <div id="easy-generate-quote" class="motivational-quote"></div>
+      <div id="easy-workout-preview" class="workout-result"></div>
+
+      <div class="workout-actions" id="easy-finish-wrap" style="display:none;">
+        <button type="button" id="easy-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <span id="easy-finish-status"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Hero WOD</h2>
+      <p class="hint">Antrenamente Hero/Girl benchmark celebre din CrossFit (Murph, Fran, Grace, Cindy, DT etc.), exact ca formatul oficial.</p>
+
+      <div class="workout-actions">
+        <button type="button" id="hero-generate-btn" class="btn-big">🔄 Generează Hero WOD</button>
+        <span id="hero-generate-status"></span>
+      </div>
+
+      <div id="hero-generate-quote" class="motivational-quote"></div>
+      <div id="hero-workout-preview" class="workout-result"></div>
+
+      <div class="workout-actions" id="hero-finish-wrap" style="display:none;">
+        <button type="button" id="hero-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <span id="hero-finish-status"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Istoric</h2>
+      <p class="hint">Toate antrenamentele finalizate din acest tab (Antrenament, Easy WOD, Hero WOD), într-un singur istoric.</p>
+      <div id="custom-workout-history"></div>
     </div>
   </section>
 
@@ -902,55 +939,171 @@
     </div>
   </section>
 
-  <!-- ================= 4. EASY WOD ================= -->
-  <section id="easy-workout">
-    <div class="card">
-      <h2>Easy WOD (bodyweight)</h2>
-      <p class="hint">Antrenament pe saltea, fără echipament — flotări, genoflexiuni, abdomene, plank, triceps. Format variat (EMOM, AMRAP, seturi, circuit, tabata), 15-30 minute.</p>
+  <!-- ================= PROGRAM CROSSFIT ================= -->
+  <section id="program-crossfit">
+    <div class="card" id="crossfit-program-setup">
+      <h2>Configurare program Crossfit</h2>
+      <p class="hint">AI generează un program complet, pe săptămâni, adaptat obiectivului tău. În fiecare zi, antrenamentul concret rămâne aliniat cu planul — nu e random.</p>
+
+      <div class="config-subsection">
+        <h3>Echipamente</h3>
+        <p class="hint">Ce echipamente ai disponibile (ex: Bară — max 60kg).</p>
+        <div id="crossfit-equipment-list"></div>
+        <button type="button" id="crossfit-add-equipment">+ Adaugă echipament</button>
+      </div>
+
+      <div class="config-subsection">
+        <h3>Skill-uri</h3>
+        <p class="hint">Ce exerciții de skill poți face (ex: Tracțiuni, Pistol squat, Snatch).</p>
+        <div id="crossfit-skills-list"></div>
+        <button type="button" id="crossfit-add-skill">+ Adaugă skill</button>
+      </div>
+
+      <div class="settings-field">
+        <label for="crossfit-weeks">Durata programului (săptămâni)</label>
+        <input type="number" id="crossfit-weeks" min="1" max="24" value="8">
+      </div>
+      <div class="settings-field">
+        <label for="crossfit-days-per-week">Antrenamente pe săptămână</label>
+        <input type="number" id="crossfit-days-per-week" min="1" max="7" value="4">
+      </div>
+      <div class="settings-field">
+        <label for="crossfit-level">Nivel</label>
+        <select id="crossfit-level">
+          <option value="Începător">Începător</option>
+          <option value="Intermediar" selected>Intermediar</option>
+          <option value="Avansat">Avansat</option>
+        </select>
+      </div>
+      <div class="settings-field">
+        <label for="crossfit-objective">Obiectiv</label>
+        <textarea id="crossfit-objective" rows="3" placeholder="Ex: vreau să-mi îmbunătățesc PR-ul la snatch, sau să particip la o competiție, sau să lucrez la tracțiuni stricte"></textarea>
+      </div>
+      <div class="settings-field">
+        <label for="crossfit-limitations">Limitări / accidentări (opțional)</label>
+        <input type="text" id="crossfit-limitations" placeholder="Ex: genunchi sensibil, evit box jumps">
+      </div>
 
       <div class="workout-actions">
-        <button type="button" id="easy-generate-btn" class="btn-big">🔄 Generează antrenament</button>
-        <span id="easy-generate-status"></span>
+        <button type="button" id="crossfit-generate-program-btn" class="btn-big">🔄 Generează programul</button>
+        <span id="crossfit-generate-program-status"></span>
       </div>
-
-      <div id="easy-generate-quote" class="motivational-quote"></div>
-      <div id="easy-workout-preview" class="workout-result"></div>
-
-      <div class="workout-actions" id="easy-finish-wrap" style="display:none;">
-        <button type="button" id="easy-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
-        <span id="easy-finish-status"></span>
-      </div>
+      <div id="crossfit-generate-program-quote" class="motivational-quote"></div>
     </div>
 
-    <div class="card">
-      <h2>Istoric Easy WOD</h2>
-      <div id="easy-history"></div>
+    <div id="crossfit-program-active" class="hidden">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+          <h2 style="margin:0;">Programul tău Crossfit</h2>
+          <button type="button" id="crossfit-reset-program-btn" class="settings-shortcut">Renunță / program nou</button>
+        </div>
+        <p class="hint" id="crossfit-program-progress"></p>
+        <details class="manual-entry">
+          <summary><h2>Vezi planul complet</h2></summary>
+          <div id="crossfit-program-plan" class="workout-result"></div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h2>Antrenamentul de azi</h2>
+        <div class="workout-actions">
+          <button type="button" id="crossfit-generate-today-btn" class="btn-big">🔄 Generează antrenamentul de azi</button>
+          <span id="crossfit-generate-today-status"></span>
+        </div>
+        <div id="crossfit-today-quote" class="motivational-quote"></div>
+        <div id="crossfit-today-preview" class="workout-result"></div>
+        <div class="workout-actions" id="crossfit-today-finish-wrap" style="display:none;">
+          <button type="button" id="crossfit-today-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+          <span id="crossfit-today-finish-status"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Istoric program Crossfit</h2>
+        <div id="crossfit-program-history"></div>
+      </div>
     </div>
   </section>
 
-  <!-- ================= 5. HERO WOD ================= -->
-  <section id="hero-workout">
-    <div class="card">
-      <h2>Hero WOD</h2>
-      <p class="hint">Antrenamente Hero/Girl benchmark celebre din CrossFit (Murph, Fran, Grace, Cindy, DT etc.), exact ca formatul oficial.</p>
+  <!-- ================= PROGRAM BODYBUILDING ================= -->
+  <section id="program-bodybuilding">
+    <div class="card" id="bb-program-setup">
+      <h2>Configurare program Bodybuilding</h2>
+      <p class="hint">Presupune acces complet la o sală de fitness dotată. AI generează un program pe săptămâni, apoi antrenamentul zilnic rămâne aliniat cu planul.</p>
+
+      <div class="settings-field">
+        <label for="bb-weeks">Durata programului (săptămâni)</label>
+        <input type="number" id="bb-weeks" min="1" max="24" value="8">
+      </div>
+      <div class="settings-field">
+        <label for="bb-days-per-week">Antrenamente pe săptămână</label>
+        <input type="number" id="bb-days-per-week" min="1" max="7" value="4">
+      </div>
+      <div class="settings-field">
+        <label for="bb-experience">Nivel experiență</label>
+        <select id="bb-experience">
+          <option value="Începător">Începător</option>
+          <option value="Intermediar" selected>Intermediar</option>
+          <option value="Avansat">Avansat</option>
+        </select>
+      </div>
+      <div class="settings-field">
+        <label for="bb-split">Split preferat</label>
+        <select id="bb-split">
+          <option value="AI alege">Las AI să aleagă</option>
+          <option value="Push/Pull/Legs">Push/Pull/Legs</option>
+          <option value="Upper/Lower">Upper/Lower</option>
+          <option value="Full body">Full body</option>
+          <option value="O grupă pe zi (bro split)">O grupă pe zi (bro split)</option>
+        </select>
+      </div>
+      <div class="settings-field">
+        <label for="bb-objective">Obiectiv</label>
+        <textarea id="bb-objective" rows="3" placeholder="Ex: masă musculară generală, focus pe piept și brațe, pregătire pentru o competiție de culturism, recompoziție"></textarea>
+      </div>
+      <div class="settings-field">
+        <label for="bb-limitations">Limitări / accidentări (opțional)</label>
+        <input type="text" id="bb-limitations" placeholder="Ex: umăr sensibil, evit overhead press">
+      </div>
 
       <div class="workout-actions">
-        <button type="button" id="hero-generate-btn" class="btn-big">🔄 Generează Hero WOD</button>
-        <span id="hero-generate-status"></span>
+        <button type="button" id="bb-generate-program-btn" class="btn-big">🔄 Generează programul</button>
+        <span id="bb-generate-program-status"></span>
       </div>
-
-      <div id="hero-generate-quote" class="motivational-quote"></div>
-      <div id="hero-workout-preview" class="workout-result"></div>
-
-      <div class="workout-actions" id="hero-finish-wrap" style="display:none;">
-        <button type="button" id="hero-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
-        <span id="hero-finish-status"></span>
-      </div>
+      <div id="bb-generate-program-quote" class="motivational-quote"></div>
     </div>
 
-    <div class="card">
-      <h2>Istoric Hero WOD</h2>
-      <div id="hero-history"></div>
+    <div id="bb-program-active" class="hidden">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+          <h2 style="margin:0;">Programul tău de Bodybuilding</h2>
+          <button type="button" id="bb-reset-program-btn" class="settings-shortcut">Renunță / program nou</button>
+        </div>
+        <p class="hint" id="bb-program-progress"></p>
+        <details class="manual-entry">
+          <summary><h2>Vezi planul complet</h2></summary>
+          <div id="bb-program-plan" class="workout-result"></div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h2>Antrenamentul de azi</h2>
+        <div class="workout-actions">
+          <button type="button" id="bb-generate-today-btn" class="btn-big">🔄 Generează antrenamentul de azi</button>
+          <span id="bb-generate-today-status"></span>
+        </div>
+        <div id="bb-today-quote" class="motivational-quote"></div>
+        <div id="bb-today-preview" class="workout-result"></div>
+        <div class="workout-actions" id="bb-today-finish-wrap" style="display:none;">
+          <button type="button" id="bb-today-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+          <span id="bb-today-finish-status"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Istoric program Bodybuilding</h2>
+        <div id="bb-program-history"></div>
+      </div>
     </div>
   </section>
 
@@ -1569,7 +1722,7 @@ Generează antrenamentul de azi.`;
     showScreenFlash();
     showCelebration();
     document.getElementById('workout-finish-wrap').style.display = 'none';
-    renderWodHistory('workout-history', WORKOUT_LOG_KEY, e => `${e.day}, ${e.date}`);
+    renderMergedWorkoutHistory();
     renderHome();
     setTimeout(() => { status.textContent = ''; }, 2000);
 
@@ -1580,13 +1733,11 @@ Generează antrenamentul de azi.`;
       if (found) {
         found.muscleGroups = muscles;
         lsSet(WORKOUT_LOG_KEY, all);
-        renderWodHistory('workout-history', WORKOUT_LOG_KEY, e => `${e.day}, ${e.date}`);
+        renderMergedWorkoutHistory();
         renderHome();
       }
     }
   });
-
-  renderWodHistory('workout-history', WORKOUT_LOG_KEY, e => `${e.day}, ${e.date}`);
 
   // ============================================================
   // Calendar generic (folosit la Nutriție)
@@ -1899,6 +2050,64 @@ obiectului JSON.`;
     });
   }
 
+  // Istoric unificat pentru tab-ul Custom Workout: combină cele 3 surse
+  // (Antrenament/Easy WOD/Hero WOD) într-o singură listă, sortată descrescător.
+  function renderMergedWorkoutHistory() {
+    const sourceKeys = [WORKOUT_LOG_KEY, EASY_HISTORY_KEY, HERO_HISTORY_KEY];
+    const container = document.getElementById('custom-workout-history');
+    const merged = [];
+    sourceKeys.forEach(key => {
+      lsGet(key, []).forEach(entry => merged.push({ ...entry, _sourceKey: key }));
+    });
+    merged.sort((a, b) => new Date(b.generatedAt) - new Date(a.generatedAt));
+
+    container.innerHTML = '';
+    if (!merged.length) {
+      container.innerHTML = '<p class="hint">Niciun antrenament finalizat încă.</p>';
+      return;
+    }
+    merged.forEach(entry => {
+      const details = document.createElement('details');
+      details.className = 'history-item';
+      const summary = document.createElement('summary');
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'history-item-title';
+      titleSpan.textContent = entry.heroName || `${entry.day}, ${entry.date}`;
+      summary.appendChild(titleSpan);
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button'; delBtn.className = 'delete-btn'; delBtn.textContent = 'Șterge';
+      delBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const remaining = lsGet(entry._sourceKey, []).filter(e => e.generatedAt !== entry.generatedAt);
+        lsSet(entry._sourceKey, remaining);
+        renderMergedWorkoutHistory();
+        renderHome();
+      });
+      summary.appendChild(delBtn);
+      details.appendChild(summary);
+
+      const content = document.createElement('div');
+      content.className = 'workout-result';
+      content.innerHTML = renderMarkdown(entry.content);
+      details.appendChild(content);
+
+      const normalizedMuscles = normalizeMuscleEntry(entry.muscleGroups);
+      if (normalizedMuscles.length) {
+        const tags = document.createElement('div');
+        tags.className = 'muscle-tags';
+        tags.textContent = `Grupe lucrate: ${normalizedMuscles
+          .map(m => `${MUSCLE_LABELS_RO[m.id] || m.id} (${MUSCLE_LEVEL_LABELS_RO[m.level] || m.level})`)
+          .join(', ')}`;
+        details.appendChild(tags);
+      }
+
+      container.appendChild(details);
+    });
+  }
+
   // ============================================================
   // 4. Easy WOD
   // ============================================================
@@ -1980,7 +2189,7 @@ Generează un antrenament bodyweight nou, pe saltea, de 15-30 de minute, cu un f
     showScreenFlash();
     showCelebration();
     document.getElementById('easy-finish-wrap').style.display = 'none';
-    renderWodHistory('easy-history', EASY_HISTORY_KEY, e => `${e.day}, ${e.date}`);
+    renderMergedWorkoutHistory();
     renderHome();
     setTimeout(() => { status.textContent = ''; }, 2000);
 
@@ -1991,13 +2200,11 @@ Generează un antrenament bodyweight nou, pe saltea, de 15-30 de minute, cu un f
       if (found) {
         found.muscleGroups = muscles;
         lsSet(EASY_HISTORY_KEY, all);
-        renderWodHistory('easy-history', EASY_HISTORY_KEY, e => `${e.day}, ${e.date}`);
+        renderMergedWorkoutHistory();
         renderHome();
       }
     }
   });
-
-  renderWodHistory('easy-history', EASY_HISTORY_KEY, e => `${e.day}, ${e.date}`);
 
   // ============================================================
   // 5. Hero WOD
@@ -2083,7 +2290,7 @@ Generează un Hero WOD sau Girl/benchmark WOD cunoscut.${avoidClause}`;
     showScreenFlash();
     showCelebration();
     document.getElementById('hero-finish-wrap').style.display = 'none';
-    renderWodHistory('hero-history', HERO_HISTORY_KEY, e => e.heroName || `${e.day}, ${e.date}`);
+    renderMergedWorkoutHistory();
     renderHome();
     setTimeout(() => { status.textContent = ''; }, 2000);
 
@@ -2094,13 +2301,13 @@ Generează un Hero WOD sau Girl/benchmark WOD cunoscut.${avoidClause}`;
       if (found) {
         found.muscleGroups = muscles;
         lsSet(HERO_HISTORY_KEY, all);
-        renderWodHistory('hero-history', HERO_HISTORY_KEY, e => e.heroName || `${e.day}, ${e.date}`);
+        renderMergedWorkoutHistory();
         renderHome();
       }
     }
   });
 
-  renderWodHistory('hero-history', HERO_HISTORY_KEY, e => e.heroName || `${e.day}, ${e.date}`);
+  renderMergedWorkoutHistory();
 
   // ============================================================
   // 6. Adaugă manual — antrenament (text/poză) + alergare
@@ -2273,6 +2480,434 @@ clar, fără introduceri sau explicații.`;
   renderRunHistory();
 
   // ============================================================
+  // Program Crossfit — generat AI pe săptămâni, antrenamentul zilnic
+  // rămâne aliniat cu planul (nu random)
+  // ============================================================
+
+  const CROSSFIT_PROGRAM_KEY = 'fw_crossfit_program';
+  const CROSSFIT_PROGRAM_HISTORY_KEY = 'fw_crossfit_program_history';
+
+  const CROSSFIT_PROGRAM_SYSTEM_PROMPT = `Ești un antrenor CrossFit/functional fitness expert,
+specializat în programare pe termen lung (periodizare).
+
+Primești: durata programului (săptămâni), câte antrenamente pe săptămână, nivelul utilizatorului,
+obiectivul lui specific, echipamentul și skill-urile disponibile, și eventuale limitări.
+
+Sarcina ta: generează STRUCTURA programului (nu antrenamente detaliate zi cu zi), formată din:
+1. O propoziție-rezumat a strategiei generale, aliniată la obiectiv.
+2. Un șablon săptămânal: pentru fiecare zi de antrenament din săptămână (Ziua 1, Ziua 2, ... până
+   la numărul de antrenamente/săptămână primit), descrie pe scurt tema/focusul zilei (ex: "Ziua 1
+   - Forță: squat + conditioning scurt", "Ziua 2 - Skill work: gimnastică + EMOM"), coerent cu
+   obiectivul, nivelul și echipamentul disponibil.
+3. O notă de progresie: cum ar trebui să crească intensitatea/volumul de-a lungul celor N
+   săptămâni, împărțit pe faze (ex: săptămânile 1-2 tehnică și bază, urmatoarele intensitate
+   crescândă, ultima săptămână taper/vârf dacă obiectivul e o competiție).
+
+Răspunde direct, formatat clar (markdown: titluri, liste), fără introduceri. NU genera
+antrenamentul efectiv al fiecărei zile — doar structura/planul general, va fi folosit ca ghid
+pentru generarea zilnică ulterioară.`;
+
+  function buildCrossfitProgramUserPrompt(cfg) {
+    const equipmentText = cfg.equipment.length
+      ? cfg.equipment.map(i => `- ${i.name}${i.detail ? `: ${i.detail}` : ''}`).join('\n')
+      : '(niciun echipament specificat - presupune doar greutate corporală)';
+    const skillsText = cfg.skills.length
+      ? cfg.skills.map(i => `- ${i.name}${i.detail ? `: ${i.detail}` : ''}`).join('\n')
+      : '(niciun skill specificat)';
+    return `Durata: ${cfg.weeks} săptămâni
+Antrenamente pe săptămână: ${cfg.daysPerWeek}
+Nivel: ${cfg.level}
+Obiectiv: ${cfg.objective || '(neprecizat, alege un obiectiv general de condiție fizică)'}
+Limitări: ${cfg.limitations || '(niciuna)'}
+
+Echipamente disponibile:
+${equipmentText}
+
+Skill-uri posibile:
+${skillsText}
+
+Generează structura programului.`;
+  }
+
+  const CROSSFIT_DAILY_SYSTEM_PROMPT = `Ești un antrenor CrossFit/functional fitness expert. Primești
+planul general al unui program pe mai multe săptămâni (deja generat), în ce săptămână și zi din
+program se află utilizatorul azi, și tot planul ca să găsești tema zilei respective.
+
+Sarcina ta: generează antrenamentul CONCRET și detaliat pentru AZI, care respectă tema/focusul zilei
+din plan (caut-o în șablonul săptămânal) și intensitatea potrivită fazei curente a programului. Include:
+- Încălzire
+- Parte principală, cu seturi/repetări/greutăți adaptate la echipamentul disponibil, aliniată strict
+  cu tema zilei din plan
+- Cooldown
+- Scalări (variantă mai ușoară și mai grea)
+- Intensitate/RPE recomandat
+- Note de siguranță concise
+
+Răspunde direct cu antrenamentul, formatat clar pe secțiuni, fără introduceri.`;
+
+  function buildCrossfitDailyUserPrompt(program, weekNumber, dayInWeek, dayName, dateStr) {
+    const equipmentText = program.equipment.length
+      ? program.equipment.map(i => `- ${i.name}${i.detail ? `: ${i.detail}` : ''}`).join('\n')
+      : '(niciun echipament specificat)';
+    return `Ziua curentă: ${dayName}, ${dateStr}
+Ești la săptămâna ${weekNumber} din ${program.weeks}, ziua de antrenament ${dayInWeek} din
+${program.daysPerWeek} antrenamente/săptămână.
+Obiectiv general al programului: ${program.objective || '(neprecizat)'}
+
+Planul complet al programului (găsește tema zilei ${dayInWeek} din șablonul săptămânal de mai jos,
+și generează antrenamentul concret pentru ea, la intensitatea potrivită fazei curente):
+${program.planText}
+
+Echipamente disponibile:
+${equipmentText}
+
+Generează antrenamentul concret de azi.`;
+  }
+
+  function loadCrossfitProgramConfigForm() {
+    document.getElementById('crossfit-equipment-list').innerHTML = '';
+    document.getElementById('crossfit-skills-list').innerHTML = '';
+    const base = lsGet(WORKOUT_CONFIG_KEY, { equipment: [], skills: [] });
+    (base.equipment || []).forEach(i => addRow('crossfit-equipment-list', i.name, i.detail));
+    (base.skills || []).forEach(i => addRow('crossfit-skills-list', i.name, i.detail));
+  }
+  document.getElementById('crossfit-add-equipment').addEventListener('click', () => addRow('crossfit-equipment-list'));
+  document.getElementById('crossfit-add-skill').addEventListener('click', () => addRow('crossfit-skills-list'));
+  loadCrossfitProgramConfigForm();
+
+  function crossfitProgramProgress(program) {
+    const weekNumber = Math.floor(program.dayIndex / program.daysPerWeek) + 1;
+    const dayInWeek = (program.dayIndex % program.daysPerWeek) + 1;
+    const finished = weekNumber > program.weeks;
+    return { weekNumber, dayInWeek, finished, done: program.dayIndex };
+  }
+
+  function renderCrossfitProgramView() {
+    const program = lsGet(CROSSFIT_PROGRAM_KEY, null);
+    document.getElementById('crossfit-program-setup').classList.toggle('hidden', !!program);
+    document.getElementById('crossfit-program-active').classList.toggle('hidden', !program);
+    if (!program) return;
+    const { weekNumber, dayInWeek, finished, done } = crossfitProgramProgress(program);
+    document.getElementById('crossfit-program-progress').textContent = finished
+      ? `Program finalizat! ${done} antrenamente completate din planul de ${program.weeks} săptămâni. Poți începe unul nou.`
+      : `Săptămâna ${weekNumber} din ${program.weeks} · Ziua ${dayInWeek} din ${program.daysPerWeek} antrenamente/săptămână · ${done} antrenamente completate până acum.`;
+    document.getElementById('crossfit-program-plan').innerHTML = renderMarkdown(program.planText);
+    document.getElementById('crossfit-generate-today-btn').disabled = finished;
+  }
+
+  document.getElementById('crossfit-generate-program-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('crossfit-generate-program-btn');
+    const status = document.getElementById('crossfit-generate-program-status');
+    btn.disabled = true;
+    status.textContent = '';
+    showQuote('crossfit-generate-program-quote');
+    try {
+      const cfg = {
+        equipment: collectList('crossfit-equipment-list'),
+        skills: collectList('crossfit-skills-list'),
+        weeks: Math.max(1, Number(document.getElementById('crossfit-weeks').value) || 8),
+        daysPerWeek: Math.max(1, Math.min(7, Number(document.getElementById('crossfit-days-per-week').value) || 4)),
+        level: document.getElementById('crossfit-level').value,
+        objective: document.getElementById('crossfit-objective').value.trim(),
+        limitations: document.getElementById('crossfit-limitations').value.trim()
+      };
+      const messages = [
+        { role: 'system', content: CROSSFIT_PROGRAM_SYSTEM_PROMPT },
+        { role: 'user', content: buildCrossfitProgramUserPrompt(cfg) }
+      ];
+      const result = await generateWithFallback(messages);
+      const program = { ...cfg, planText: result.content, dayIndex: 0, createdAt: new Date().toISOString() };
+      lsSet(CROSSFIT_PROGRAM_KEY, program);
+      renderCrossfitProgramView();
+      document.getElementById('crossfit-today-preview').innerHTML = '';
+      document.getElementById('crossfit-today-finish-wrap').style.display = 'none';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('crossfit-generate-program-quote');
+    }
+  });
+
+  document.getElementById('crossfit-reset-program-btn').addEventListener('click', () => {
+    if (!confirm('Renunți la programul curent? Istoricul antrenamentelor deja făcute rămâne salvat.')) return;
+    lsSet(CROSSFIT_PROGRAM_KEY, null);
+    loadCrossfitProgramConfigForm();
+    renderCrossfitProgramView();
+  });
+
+  let crossfitTodayPreview = null;
+
+  document.getElementById('crossfit-generate-today-btn').addEventListener('click', async () => {
+    const program = lsGet(CROSSFIT_PROGRAM_KEY, null);
+    if (!program) return;
+    const btn = document.getElementById('crossfit-generate-today-btn');
+    const status = document.getElementById('crossfit-generate-today-status');
+    const preview = document.getElementById('crossfit-today-preview');
+    btn.disabled = true;
+    document.getElementById('crossfit-today-finish-wrap').style.display = 'none';
+    status.textContent = '';
+    showQuote('crossfit-today-quote');
+    preview.innerHTML = '';
+    try {
+      const { weekNumber, dayInWeek } = crossfitProgramProgress(program);
+      const now = new Date();
+      const dayName = RO_DAYS[now.getDay()];
+      const dateStr = localDateStr(now);
+      const messages = [
+        { role: 'system', content: CROSSFIT_DAILY_SYSTEM_PROMPT },
+        { role: 'user', content: buildCrossfitDailyUserPrompt(program, weekNumber, dayInWeek, dayName, dateStr) }
+      ];
+      const result = await generateWithFallback(messages);
+      crossfitTodayPreview = { ...result, day: dayName, date: dateStr, programWeek: weekNumber, programDay: dayInWeek };
+      preview.innerHTML = renderMarkdown(result.content);
+      document.getElementById('crossfit-today-finish-wrap').style.display = 'flex';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('crossfit-today-quote');
+    }
+  });
+
+  document.getElementById('crossfit-today-finish-btn').addEventListener('click', async () => {
+    if (!crossfitTodayPreview) return;
+    const status = document.getElementById('crossfit-today-finish-status');
+    const entry = { ...crossfitTodayPreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    const history = lsGet(CROSSFIT_PROGRAM_HISTORY_KEY, []);
+    history.unshift(entry);
+    lsSet(CROSSFIT_PROGRAM_HISTORY_KEY, history);
+
+    const program = lsGet(CROSSFIT_PROGRAM_KEY, null);
+    if (program) {
+      program.dayIndex += 1;
+      lsSet(CROSSFIT_PROGRAM_KEY, program);
+    }
+
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    document.getElementById('crossfit-today-finish-wrap').style.display = 'none';
+    renderWodHistory('crossfit-program-history', CROSSFIT_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
+    renderCrossfitProgramView();
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+
+    const muscles = await classifyMuscles(entry.content);
+    if (muscles.length) {
+      const all = lsGet(CROSSFIT_PROGRAM_HISTORY_KEY, []);
+      const found = all.find(e => e.generatedAt === entry.generatedAt);
+      if (found) {
+        found.muscleGroups = muscles;
+        lsSet(CROSSFIT_PROGRAM_HISTORY_KEY, all);
+        renderWodHistory('crossfit-program-history', CROSSFIT_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
+        renderHome();
+      }
+    }
+  });
+
+  renderWodHistory('crossfit-program-history', CROSSFIT_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
+  renderCrossfitProgramView();
+
+  // ============================================================
+  // Program Bodybuilding — generat AI pe săptămâni (sală dotată,
+  // fără echipament/skills de configurat)
+  // ============================================================
+
+  const BB_PROGRAM_KEY = 'fw_bb_program';
+  const BB_PROGRAM_HISTORY_KEY = 'fw_bb_program_history';
+
+  const BB_PROGRAM_SYSTEM_PROMPT = `Ești un antrenor de bodybuilding/hipertrofie expert, specializat
+în programare pe termen lung (periodizare), pentru cineva care se antrenează într-o sală de fitness
+complet dotată (gantere, bară, aparate, cabluri).
+
+Primești: durata programului (săptămâni), câte antrenamente pe săptămână, nivelul de experiență,
+split-ul preferat (sau "las AI să aleagă"), obiectivul specific și eventuale limitări.
+
+Sarcina ta: generează STRUCTURA programului (nu antrenamente detaliate zi cu zi), formată din:
+1. O propoziție-rezumat a strategiei (ce split ai ales și de ce, aliniat la obiectiv și numărul de
+   zile/săptămână).
+2. Un șablon săptămânal: pentru fiecare zi de antrenament (Ziua 1 ... Ziua N), ce grupe musculare
+   și tip de stimul (ex: "Ziua 1 - Piept/Umeri/Triceps, focus forță compusă", "Ziua 2 - Spate/Biceps,
+   focus volum/hipertrofie").
+3. O notă de progresie pe parcursul celor N săptămâni (progressive overload: cum crește volumul sau
+   intensitatea, unde ar avea sens o săptămână de deload dacă programul e suficient de lung).
+
+Răspunde direct, formatat clar (markdown), fără introduceri. NU genera antrenamentul efectiv al
+fiecărei zile — doar structura, va fi folosită ca ghid pentru generarea zilnică.`;
+
+  function buildBbProgramUserPrompt(cfg) {
+    return `Durata: ${cfg.weeks} săptămâni
+Antrenamente pe săptămână: ${cfg.daysPerWeek}
+Nivel experiență: ${cfg.experience}
+Split preferat: ${cfg.split === 'AI alege' ? 'lasă AI să aleagă cel mai potrivit split' : cfg.split}
+Obiectiv: ${cfg.objective || '(neprecizat, alege hipertrofie generală echilibrată)'}
+Limitări: ${cfg.limitations || '(niciuna)'}
+
+Presupune acces complet la o sală de fitness dotată (gantere, bară, aparate, cabluri).
+
+Generează structura programului.`;
+  }
+
+  const BB_DAILY_SYSTEM_PROMPT = `Ești un antrenor de bodybuilding expert. Primești planul general al
+unui program pe mai multe săptămâni (deja generat), în ce săptămână și zi din program se află
+utilizatorul azi, presupunând acces complet la sală.
+
+Sarcina ta: generează antrenamentul CONCRET pentru AZI, aliniat cu tema zilei din plan (caut-o în
+șablonul săptămânal - grupele musculare/tipul de stimul) și cu faza de progresie curentă a
+programului. Include, pentru fiecare exercițiu: numele exercițiului, seturi × repetări, timp de
+pauză recomandat, și intensitate (RPE sau %1RM aproximativ) — NU inventa greutăți absolute în kg,
+utilizatorul nu are un istoric de 1RM disponibil aici. Structurează răspunsul clar (tabel sau listă)
+per exercițiu, plus o încălzire scurtă specifică grupei și o notă de tehnică/siguranță.
+
+Răspunde direct, formatat clar (markdown), fără introduceri.`;
+
+  function buildBbDailyUserPrompt(program, weekNumber, dayInWeek, dayName, dateStr) {
+    return `Ziua curentă: ${dayName}, ${dateStr}
+Ești la săptămâna ${weekNumber} din ${program.weeks}, ziua de antrenament ${dayInWeek} din
+${program.daysPerWeek} antrenamente/săptămână.
+Obiectiv general al programului: ${program.objective || '(neprecizat)'}
+
+Planul complet al programului (găsește tema zilei ${dayInWeek} din șablonul săptămânal de mai jos,
+și generează antrenamentul concret pentru ea, la faza de progresie curentă):
+${program.planText}
+
+Generează antrenamentul concret de azi.`;
+  }
+
+  function bbProgramProgress(program) {
+    const weekNumber = Math.floor(program.dayIndex / program.daysPerWeek) + 1;
+    const dayInWeek = (program.dayIndex % program.daysPerWeek) + 1;
+    const finished = weekNumber > program.weeks;
+    return { weekNumber, dayInWeek, finished, done: program.dayIndex };
+  }
+
+  function renderBbProgramView() {
+    const program = lsGet(BB_PROGRAM_KEY, null);
+    document.getElementById('bb-program-setup').classList.toggle('hidden', !!program);
+    document.getElementById('bb-program-active').classList.toggle('hidden', !program);
+    if (!program) return;
+    const { weekNumber, dayInWeek, finished, done } = bbProgramProgress(program);
+    document.getElementById('bb-program-progress').textContent = finished
+      ? `Program finalizat! ${done} antrenamente completate din planul de ${program.weeks} săptămâni. Poți începe unul nou.`
+      : `Săptămâna ${weekNumber} din ${program.weeks} · Ziua ${dayInWeek} din ${program.daysPerWeek} antrenamente/săptămână · ${done} antrenamente completate până acum.`;
+    document.getElementById('bb-program-plan').innerHTML = renderMarkdown(program.planText);
+    document.getElementById('bb-generate-today-btn').disabled = finished;
+  }
+
+  document.getElementById('bb-generate-program-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('bb-generate-program-btn');
+    const status = document.getElementById('bb-generate-program-status');
+    btn.disabled = true;
+    status.textContent = '';
+    showQuote('bb-generate-program-quote');
+    try {
+      const cfg = {
+        weeks: Math.max(1, Number(document.getElementById('bb-weeks').value) || 8),
+        daysPerWeek: Math.max(1, Math.min(7, Number(document.getElementById('bb-days-per-week').value) || 4)),
+        experience: document.getElementById('bb-experience').value,
+        split: document.getElementById('bb-split').value,
+        objective: document.getElementById('bb-objective').value.trim(),
+        limitations: document.getElementById('bb-limitations').value.trim()
+      };
+      const messages = [
+        { role: 'system', content: BB_PROGRAM_SYSTEM_PROMPT },
+        { role: 'user', content: buildBbProgramUserPrompt(cfg) }
+      ];
+      const result = await generateWithFallback(messages);
+      const program = { ...cfg, planText: result.content, dayIndex: 0, createdAt: new Date().toISOString() };
+      lsSet(BB_PROGRAM_KEY, program);
+      renderBbProgramView();
+      document.getElementById('bb-today-preview').innerHTML = '';
+      document.getElementById('bb-today-finish-wrap').style.display = 'none';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('bb-generate-program-quote');
+    }
+  });
+
+  document.getElementById('bb-reset-program-btn').addEventListener('click', () => {
+    if (!confirm('Renunți la programul curent? Istoricul antrenamentelor deja făcute rămâne salvat.')) return;
+    lsSet(BB_PROGRAM_KEY, null);
+    renderBbProgramView();
+  });
+
+  let bbTodayPreview = null;
+
+  document.getElementById('bb-generate-today-btn').addEventListener('click', async () => {
+    const program = lsGet(BB_PROGRAM_KEY, null);
+    if (!program) return;
+    const btn = document.getElementById('bb-generate-today-btn');
+    const status = document.getElementById('bb-generate-today-status');
+    const preview = document.getElementById('bb-today-preview');
+    btn.disabled = true;
+    document.getElementById('bb-today-finish-wrap').style.display = 'none';
+    status.textContent = '';
+    showQuote('bb-today-quote');
+    preview.innerHTML = '';
+    try {
+      const { weekNumber, dayInWeek } = bbProgramProgress(program);
+      const now = new Date();
+      const dayName = RO_DAYS[now.getDay()];
+      const dateStr = localDateStr(now);
+      const messages = [
+        { role: 'system', content: BB_DAILY_SYSTEM_PROMPT },
+        { role: 'user', content: buildBbDailyUserPrompt(program, weekNumber, dayInWeek, dayName, dateStr) }
+      ];
+      const result = await generateWithFallback(messages);
+      bbTodayPreview = { ...result, day: dayName, date: dateStr, programWeek: weekNumber, programDay: dayInWeek };
+      preview.innerHTML = renderMarkdown(result.content);
+      document.getElementById('bb-today-finish-wrap').style.display = 'flex';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('bb-today-quote');
+    }
+  });
+
+  document.getElementById('bb-today-finish-btn').addEventListener('click', async () => {
+    if (!bbTodayPreview) return;
+    const status = document.getElementById('bb-today-finish-status');
+    const entry = { ...bbTodayPreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    const history = lsGet(BB_PROGRAM_HISTORY_KEY, []);
+    history.unshift(entry);
+    lsSet(BB_PROGRAM_HISTORY_KEY, history);
+
+    const program = lsGet(BB_PROGRAM_KEY, null);
+    if (program) {
+      program.dayIndex += 1;
+      lsSet(BB_PROGRAM_KEY, program);
+    }
+
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    document.getElementById('bb-today-finish-wrap').style.display = 'none';
+    renderWodHistory('bb-program-history', BB_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
+    renderBbProgramView();
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+
+    const muscles = await classifyMuscles(entry.content);
+    if (muscles.length) {
+      const all = lsGet(BB_PROGRAM_HISTORY_KEY, []);
+      const found = all.find(e => e.generatedAt === entry.generatedAt);
+      if (found) {
+        found.muscleGroups = muscles;
+        lsSet(BB_PROGRAM_HISTORY_KEY, all);
+        renderWodHistory('bb-program-history', BB_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
+        renderHome();
+      }
+    }
+  });
+
+  renderWodHistory('bb-program-history', BB_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
+  renderBbProgramView();
+
+  // ============================================================
   // 7. Statistici — grafice anuale (antrenamente/lună, km/lună)
   // ============================================================
 
@@ -2319,7 +2954,9 @@ clar, fără introduceri sau explicații.`;
     const workout = lsGet(WORKOUT_LOG_KEY, []);
     const manual = lsGet(MANUAL_HISTORY_KEY, []);
     const runs = lsGet(RUNS_KEY, []);
-    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs];
+    const crossfitProgram = lsGet(CROSSFIT_PROGRAM_HISTORY_KEY, []);
+    const bbProgram = lsGet(BB_PROGRAM_HISTORY_KEY, []);
+    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram];
 
     const workoutsPerMonth = new Array(12).fill(0);
     allWorkouts.forEach(e => {
@@ -2362,7 +2999,9 @@ clar, fără introduceri sau explicații.`;
     const workout = lsGet(WORKOUT_LOG_KEY, []);
     const manual = lsGet(MANUAL_HISTORY_KEY, []);
     const runs = lsGet(RUNS_KEY, []);
-    const all = [...easy, ...hero, ...workout, ...manual, ...runs];
+    const crossfitProgram = lsGet(CROSSFIT_PROGRAM_HISTORY_KEY, []);
+    const bbProgram = lsGet(BB_PROGRAM_HISTORY_KEY, []);
+    const all = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram];
 
     const workoutsToday = all.filter(e => e.date === today).length;
     const workoutsMonth = all.filter(e => e.date.startsWith(monthPrefix)).length;
