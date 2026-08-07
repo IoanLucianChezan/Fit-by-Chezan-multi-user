@@ -1060,6 +1060,12 @@
         <div id="crossfit-program-history"></div>
       </div>
     </div>
+
+    <div class="card">
+      <h2>Programe anterioare</h2>
+      <p class="hint">Planurile programelor la care ai renunțat rămân aici — le poți revedea sau șterge definitiv.</p>
+      <div id="crossfit-program-archive"></div>
+    </div>
   </section>
 
   <!-- ================= PROGRAM BODYBUILDING ================= -->
@@ -1141,6 +1147,12 @@
         <h2>Istoric program Bodybuilding</h2>
         <div id="bb-program-history"></div>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>Programe anterioare</h2>
+      <p class="hint">Planurile programelor la care ai renunțat rămân aici — le poți revedea sau șterge definitiv.</p>
+      <div id="bb-program-archive"></div>
     </div>
   </section>
 
@@ -2740,6 +2752,7 @@ clar, fără introduceri sau explicații.`;
 
   const CROSSFIT_PROGRAM_KEY = 'fw_crossfit_program';
   const CROSSFIT_PROGRAM_HISTORY_KEY = 'fw_crossfit_program_history';
+  const CROSSFIT_PROGRAM_ARCHIVE_KEY = 'fw_crossfit_program_archive';
 
   const CROSSFIT_PROGRAM_SYSTEM_PROMPT = `Ești un antrenor CrossFit/functional fitness expert,
 specializat în programare pe termen lung (periodizare).
@@ -2883,11 +2896,65 @@ Generează antrenamentul concret de azi.`;
     }
   });
 
+  function renderCrossfitProgramArchive() {
+    const container = document.getElementById('crossfit-program-archive');
+    const archive = lsGet(CROSSFIT_PROGRAM_ARCHIVE_KEY, []);
+    container.innerHTML = '';
+    if (!archive.length) {
+      container.innerHTML = '<p class="hint">Niciun program anterior încă.</p>';
+      return;
+    }
+    archive.forEach(prog => {
+      const details = document.createElement('details');
+      details.className = 'history-item';
+      const summary = document.createElement('summary');
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'history-item-title';
+      const startDate = (prog.createdAt || '').slice(0, 10);
+      const endDate = (prog.endedAt || '').slice(0, 10);
+      const objectiveShort = prog.objective ? prog.objective.slice(0, 50) : 'Program Crossfit';
+      titleSpan.textContent = `${objectiveShort} (${startDate} → ${endDate})`;
+      summary.appendChild(titleSpan);
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'delete-btn';
+      delBtn.textContent = 'Șterge din arhivă';
+      delBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (!confirm('Ștergi definitiv acest program din arhivă?')) return;
+        const remaining = lsGet(CROSSFIT_PROGRAM_ARCHIVE_KEY, []).filter(p => p.createdAt !== prog.createdAt);
+        lsSet(CROSSFIT_PROGRAM_ARCHIVE_KEY, remaining);
+        renderCrossfitProgramArchive();
+      });
+      summary.appendChild(delBtn);
+      details.appendChild(summary);
+
+      const content = document.createElement('div');
+      content.className = 'workout-result';
+      content.innerHTML =
+        `<p><strong>Durată:</strong> ${prog.weeks} săpt. · <strong>Antrenamente/săpt.:</strong> ${prog.daysPerWeek} · <strong>Nivel:</strong> ${escapeHtml(prog.level || '')}</p>` +
+        renderMarkdown(prog.planText || '');
+      details.appendChild(content);
+
+      container.appendChild(details);
+    });
+  }
+
   document.getElementById('crossfit-reset-program-btn').addEventListener('click', () => {
-    if (!confirm('Renunți la programul curent? Istoricul antrenamentelor deja făcute rămâne salvat.')) return;
+    if (!confirm('Renunți la programul curent? Istoricul antrenamentelor deja făcute rămâne salvat, iar planul trece în arhivă.')) return;
+    const program = lsGet(CROSSFIT_PROGRAM_KEY, null);
+    if (program) {
+      const archive = lsGet(CROSSFIT_PROGRAM_ARCHIVE_KEY, []);
+      archive.unshift({ ...program, endedAt: new Date().toISOString() });
+      lsSet(CROSSFIT_PROGRAM_ARCHIVE_KEY, archive);
+    }
     lsSet(CROSSFIT_PROGRAM_KEY, null);
     loadCrossfitProgramConfigForm();
     renderCrossfitProgramView();
+    renderCrossfitProgramArchive();
   });
 
   let crossfitTodayPreview = null;
@@ -2962,6 +3029,7 @@ Generează antrenamentul concret de azi.`;
 
   renderWodHistory('crossfit-program-history', CROSSFIT_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
   renderCrossfitProgramView();
+  renderCrossfitProgramArchive();
 
   // ============================================================
   // Program Bodybuilding — generat AI pe săptămâni (sală dotată,
@@ -2970,6 +3038,7 @@ Generează antrenamentul concret de azi.`;
 
   const BB_PROGRAM_KEY = 'fw_bb_program';
   const BB_PROGRAM_HISTORY_KEY = 'fw_bb_program_history';
+  const BB_PROGRAM_ARCHIVE_KEY = 'fw_bb_program_archive';
 
   const BB_PROGRAM_SYSTEM_PROMPT = `Ești un antrenor de bodybuilding/hipertrofie expert, specializat
 în programare pe termen lung (periodizare), pentru cineva care se antrenează într-o sală de fitness
@@ -3082,10 +3151,64 @@ Generează antrenamentul concret de azi.`;
     }
   });
 
+  function renderBbProgramArchive() {
+    const container = document.getElementById('bb-program-archive');
+    const archive = lsGet(BB_PROGRAM_ARCHIVE_KEY, []);
+    container.innerHTML = '';
+    if (!archive.length) {
+      container.innerHTML = '<p class="hint">Niciun program anterior încă.</p>';
+      return;
+    }
+    archive.forEach(prog => {
+      const details = document.createElement('details');
+      details.className = 'history-item';
+      const summary = document.createElement('summary');
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'history-item-title';
+      const startDate = (prog.createdAt || '').slice(0, 10);
+      const endDate = (prog.endedAt || '').slice(0, 10);
+      const objectiveShort = prog.objective ? prog.objective.slice(0, 50) : 'Program Bodybuilding';
+      titleSpan.textContent = `${objectiveShort} (${startDate} → ${endDate})`;
+      summary.appendChild(titleSpan);
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'delete-btn';
+      delBtn.textContent = 'Șterge din arhivă';
+      delBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (!confirm('Ștergi definitiv acest program din arhivă?')) return;
+        const remaining = lsGet(BB_PROGRAM_ARCHIVE_KEY, []).filter(p => p.createdAt !== prog.createdAt);
+        lsSet(BB_PROGRAM_ARCHIVE_KEY, remaining);
+        renderBbProgramArchive();
+      });
+      summary.appendChild(delBtn);
+      details.appendChild(summary);
+
+      const content = document.createElement('div');
+      content.className = 'workout-result';
+      content.innerHTML =
+        `<p><strong>Durată:</strong> ${prog.weeks} săpt. · <strong>Antrenamente/săpt.:</strong> ${prog.daysPerWeek} · <strong>Nivel:</strong> ${escapeHtml(prog.experience || '')} · <strong>Split:</strong> ${escapeHtml(prog.split || '')}</p>` +
+        renderMarkdown(prog.planText || '');
+      details.appendChild(content);
+
+      container.appendChild(details);
+    });
+  }
+
   document.getElementById('bb-reset-program-btn').addEventListener('click', () => {
-    if (!confirm('Renunți la programul curent? Istoricul antrenamentelor deja făcute rămâne salvat.')) return;
+    if (!confirm('Renunți la programul curent? Istoricul antrenamentelor deja făcute rămâne salvat, iar planul trece în arhivă.')) return;
+    const program = lsGet(BB_PROGRAM_KEY, null);
+    if (program) {
+      const archive = lsGet(BB_PROGRAM_ARCHIVE_KEY, []);
+      archive.unshift({ ...program, endedAt: new Date().toISOString() });
+      lsSet(BB_PROGRAM_ARCHIVE_KEY, archive);
+    }
     lsSet(BB_PROGRAM_KEY, null);
     renderBbProgramView();
+    renderBbProgramArchive();
   });
 
   let bbTodayPreview = null;
@@ -3160,6 +3283,7 @@ Generează antrenamentul concret de azi.`;
 
   renderWodHistory('bb-program-history', BB_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
   renderBbProgramView();
+  renderBbProgramArchive();
 
   // ============================================================
   // 7. Statistici — grafice anuale (antrenamente/lună, km/lună)
