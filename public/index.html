@@ -619,6 +619,7 @@
     <p>No rest days. Pain is temporary, progress is permanent.</p>
     <div class="header-actions">
       <button type="button" class="settings-shortcut active" data-tab="home">🏠 Acasă</button>
+      <button type="button" class="settings-shortcut" data-tab="stats">📊 Statistici</button>
       <button type="button" class="settings-shortcut" data-tab="settings">⚙️ Setări</button>
       <button type="button" id="login-open-btn" title="Intră / Creează cont" class="hidden">🔐 Cont</button>
       <button type="button" id="logout-btn" title="Ieși din cont" class="hidden">🚪 Ieși din cont</button>
@@ -634,8 +635,7 @@
     <button data-tab="nutrition">Nutriție</button>
     <button data-tab="program-crossfit">Program Crossfit</button>
     <button data-tab="program-bodybuilding">Program Bodybuilding</button>
-    <button data-tab="manual">Manual</button>
-    <button data-tab="stats">Statistici</button>
+    <button data-tab="program-weightlifting">Program Weightlifting</button>
   </nav>
 
   <!-- ================= 1. HOME ================= -->
@@ -662,7 +662,7 @@
 
     <div class="card">
       <h2>Mușchi lucrați azi</h2>
-      <p class="hint">Din antrenamentele finalizate azi (Custom Workout, Program Crossfit, Program Bodybuilding, Manual).</p>
+      <p class="hint">Din antrenamentele finalizate azi (Custom Workout, Program Crossfit, Program Bodybuilding, Program Weightlifting).</p>
       <div class="muscle-map">
         <figure>
           <svg viewBox="0 0 220 460" xmlns="http://www.w3.org/2000/svg" id="mm-front">
@@ -903,6 +903,58 @@
       <h2>Istoric</h2>
       <p class="hint">Toate antrenamentele finalizate din acest tab (Antrenament, Easy WOD, Hero WOD), într-un singur istoric.</p>
       <div id="custom-workout-history"></div>
+    </div>
+
+    <div class="card">
+      <h2>Adaugă manual</h2>
+      <div class="mode-toggle">
+        <button type="button" id="manual-mode-workout" class="mode-toggle-btn active">🏋️ Antrenament</button>
+        <button type="button" id="manual-mode-run" class="mode-toggle-btn">🏃 Alergare</button>
+      </div>
+
+      <div id="manual-workout-panel">
+        <p class="hint">Scrie liber antrenamentul, sau încarcă/lipește o poză ca AI să o transcrie automat în text.</p>
+
+        <div class="paste-zone" id="manual-paste-zone" tabindex="0">📋 Apasă aici și dă Paste (Ctrl+V) cu o poză a antrenamentului</div>
+        <div class="actions-row" style="display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap;">
+          <input type="file" id="manual-photo-input" accept="image/*" style="display:none;">
+          <button type="button" id="manual-photo-btn">📷 Încarcă poză</button>
+          <span id="manual-photo-status"></span>
+        </div>
+
+        <textarea id="manual-workout-text" rows="10" style="width:100%; margin-top:14px; font-family:inherit;" placeholder="Descrie antrenamentul (exerciții, seturi, repetări, greutăți)..."></textarea>
+
+        <div class="workout-actions" style="margin-top:16px;">
+          <button type="button" id="manual-workout-finish-btn" class="btn-big btn-finish">✓ Marchează ca finalizat</button>
+          <span id="manual-workout-finish-status"></span>
+        </div>
+      </div>
+
+      <div id="manual-run-panel" style="display:none;">
+        <p class="hint">Introdu distanța și pace-ul pentru alergarea de azi.</p>
+        <div class="settings-field">
+          <label for="manual-run-km">Distanță (km)</label>
+          <input type="number" id="manual-run-km" step="0.01" min="0">
+        </div>
+        <div class="settings-field">
+          <label for="manual-run-pace">Pace (min/km)</label>
+          <input type="text" id="manual-run-pace" placeholder="ex: 5:30">
+        </div>
+        <div class="workout-actions">
+          <button type="button" id="manual-run-save-btn" class="btn-big btn-finish">✓ Salvează alergarea</button>
+          <span id="manual-run-save-status"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Istoric antrenamente manuale</h2>
+      <div id="manual-workout-history"></div>
+    </div>
+
+    <div class="card">
+      <h2>Istoric alergări</h2>
+      <div id="manual-run-history"></div>
     </div>
   </section>
 
@@ -1156,58 +1208,199 @@
     </div>
   </section>
 
-  <!-- ================= 6. ADAUGĂ MANUAL ================= -->
-  <section id="manual">
+  <!-- ================= PROGRAM WEIGHTLIFTING ================= -->
+  <section id="program-weightlifting">
     <div class="card">
-      <h2>Adaugă manual</h2>
       <div class="mode-toggle">
-        <button type="button" id="manual-mode-workout" class="mode-toggle-btn active">🏋️ Antrenament</button>
-        <button type="button" id="manual-mode-run" class="mode-toggle-btn">🏃 Alergare</button>
+        <button type="button" id="wl-mode-sheiko" class="mode-toggle-btn active">🏋️ Sheiko (Powerlifting)</button>
+        <button type="button" id="wl-mode-olympic" class="mode-toggle-btn">🥇 Olimpic (Weightlifting)</button>
       </div>
+    </div>
 
-      <div id="manual-workout-panel">
-        <p class="hint">Scrie liber antrenamentul, sau încarcă/lipește o poză ca AI să o transcrie automat în text.</p>
+    <div id="wl-sheiko-panel">
+      <div class="card" id="sheiko-program-setup">
+        <h2>Configurare program Sheiko</h2>
+        <p class="hint">Model Boris Sheiko: genoflexiuni, împins culcat și îndreptări, cu multe variații și volum mare pe aceleași mișcări în aceeași ședință, bazat pe procente din 1RM.</p>
 
-        <div class="paste-zone" id="manual-paste-zone" tabindex="0">📋 Apasă aici și dă Paste (Ctrl+V) cu o poză a antrenamentului</div>
-        <div class="actions-row" style="display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap;">
-          <input type="file" id="manual-photo-input" accept="image/*" style="display:none;">
-          <button type="button" id="manual-photo-btn">📷 Încarcă poză</button>
-          <span id="manual-photo-status"></span>
-        </div>
-
-        <textarea id="manual-workout-text" rows="10" style="width:100%; margin-top:14px; font-family:inherit;" placeholder="Descrie antrenamentul (exerciții, seturi, repetări, greutăți)..."></textarea>
-
-        <div class="workout-actions" style="margin-top:16px;">
-          <button type="button" id="manual-workout-finish-btn" class="btn-big btn-finish">✓ Marchează ca finalizat</button>
-          <span id="manual-workout-finish-status"></span>
-        </div>
-      </div>
-
-      <div id="manual-run-panel" style="display:none;">
-        <p class="hint">Introdu distanța și pace-ul pentru alergarea de azi.</p>
         <div class="settings-field">
-          <label for="manual-run-km">Distanță (km)</label>
-          <input type="number" id="manual-run-km" step="0.01" min="0">
+          <label for="sheiko-1rm-squat">1RM Genoflexiuni / Squat (kg)</label>
+          <input type="number" id="sheiko-1rm-squat" min="0" step="0.5">
         </div>
         <div class="settings-field">
-          <label for="manual-run-pace">Pace (min/km)</label>
-          <input type="text" id="manual-run-pace" placeholder="ex: 5:30">
+          <label for="sheiko-1rm-bench">1RM Împins culcat / Bench Press (kg)</label>
+          <input type="number" id="sheiko-1rm-bench" min="0" step="0.5">
         </div>
+        <div class="settings-field">
+          <label for="sheiko-1rm-deadlift">1RM Îndreptări / Deadlift (kg)</label>
+          <input type="number" id="sheiko-1rm-deadlift" min="0" step="0.5">
+        </div>
+        <div class="settings-field">
+          <label for="sheiko-weeks">Durata programului (săptămâni)</label>
+          <input type="number" id="sheiko-weeks" min="1" max="24" value="8">
+        </div>
+        <div class="settings-field">
+          <label for="sheiko-days-per-week">Antrenamente pe săptămână</label>
+          <input type="number" id="sheiko-days-per-week" min="1" max="7" value="4">
+        </div>
+        <div class="settings-field">
+          <label for="sheiko-level">Nivel</label>
+          <select id="sheiko-level">
+            <option value="Începător">Începător</option>
+            <option value="Intermediar" selected>Intermediar</option>
+            <option value="Avansat">Avansat</option>
+          </select>
+        </div>
+        <div class="settings-field">
+          <label for="sheiko-objective">Obiectiv</label>
+          <textarea id="sheiko-objective" rows="3" placeholder="Ex: creștere total la genoflexiuni/bench/îndreptări, pregătire pentru o competiție de powerlifting"></textarea>
+        </div>
+        <div class="settings-field">
+          <label for="sheiko-competition-date">Dată competiție (opțional)</label>
+          <input type="date" id="sheiko-competition-date">
+        </div>
+        <div class="settings-field">
+          <label for="sheiko-limitations">Limitări / accidentări (opțional)</label>
+          <input type="text" id="sheiko-limitations" placeholder="Ex: genunchi sensibil, evit good mornings">
+        </div>
+
         <div class="workout-actions">
-          <button type="button" id="manual-run-save-btn" class="btn-big btn-finish">✓ Salvează alergarea</button>
-          <span id="manual-run-save-status"></span>
+          <button type="button" id="sheiko-generate-program-btn" class="btn-big">🔄 Generează programul</button>
+          <span id="sheiko-generate-program-status"></span>
         </div>
+        <div id="sheiko-generate-program-quote" class="motivational-quote"></div>
+      </div>
+
+      <div id="sheiko-program-active" class="hidden">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+            <h2 style="margin:0;">Programul tău Sheiko</h2>
+            <button type="button" id="sheiko-reset-program-btn" class="settings-shortcut">Renunță / program nou</button>
+          </div>
+          <p class="hint" id="sheiko-program-progress"></p>
+          <details class="manual-entry">
+            <summary><h2>Vezi planul complet</h2></summary>
+            <div id="sheiko-program-plan" class="workout-result"></div>
+          </details>
+        </div>
+
+        <div class="card">
+          <h2>Antrenamentul de azi</h2>
+          <div class="workout-actions">
+            <button type="button" id="sheiko-generate-today-btn" class="btn-big">🔄 Generează antrenamentul de azi</button>
+            <span id="sheiko-generate-today-status"></span>
+          </div>
+          <div id="sheiko-today-quote" class="motivational-quote"></div>
+          <div id="sheiko-today-preview" class="workout-result"></div>
+          <div class="workout-actions" id="sheiko-today-finish-wrap" style="display:none;">
+            <button type="button" id="sheiko-today-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+            <span id="sheiko-today-finish-status"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Istoric program Sheiko</h2>
+          <div id="sheiko-program-history"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Programe anterioare</h2>
+        <p class="hint">Planurile programelor la care ai renunțat rămân aici — le poți revedea sau șterge definitiv.</p>
+        <div id="sheiko-program-archive"></div>
       </div>
     </div>
 
-    <div class="card">
-      <h2>Istoric antrenamente manuale</h2>
-      <div id="manual-workout-history"></div>
-    </div>
+    <div id="wl-olympic-panel" style="display:none;">
+      <div class="card" id="olympic-program-setup">
+        <h2>Configurare program Olimpic (Weightlifting)</h2>
+        <p class="hint">Smulgere (snatch) și aruncare (clean and jerk), plus genoflexiuni de asistență, bazat pe procente din 1RM.</p>
 
-    <div class="card">
-      <h2>Istoric alergări</h2>
-      <div id="manual-run-history"></div>
+        <div class="settings-field">
+          <label for="olympic-1rm-snatch">1RM Smulgere / Snatch (kg)</label>
+          <input type="number" id="olympic-1rm-snatch" min="0" step="0.5">
+        </div>
+        <div class="settings-field">
+          <label for="olympic-1rm-cj">1RM Aruncare / Clean &amp; Jerk (kg)</label>
+          <input type="number" id="olympic-1rm-cj" min="0" step="0.5">
+        </div>
+        <div class="settings-field">
+          <label for="olympic-1rm-squat">1RM Genoflexiune spate / Back Squat (kg, opțional)</label>
+          <input type="number" id="olympic-1rm-squat" min="0" step="0.5">
+        </div>
+        <div class="settings-field">
+          <label for="olympic-weeks">Durata programului (săptămâni)</label>
+          <input type="number" id="olympic-weeks" min="1" max="24" value="8">
+        </div>
+        <div class="settings-field">
+          <label for="olympic-days-per-week">Antrenamente pe săptămână</label>
+          <input type="number" id="olympic-days-per-week" min="1" max="7" value="4">
+        </div>
+        <div class="settings-field">
+          <label for="olympic-level">Nivel</label>
+          <select id="olympic-level">
+            <option value="Începător">Începător</option>
+            <option value="Intermediar" selected>Intermediar</option>
+            <option value="Avansat">Avansat</option>
+          </select>
+        </div>
+        <div class="settings-field">
+          <label for="olympic-objective">Obiectiv</label>
+          <textarea id="olympic-objective" rows="3" placeholder="Ex: îmbunătățire tehnică la smulgere, creștere 1RM la aruncare, pregătire pentru o competiție"></textarea>
+        </div>
+        <div class="settings-field">
+          <label for="olympic-competition-date">Dată competiție (opțional)</label>
+          <input type="date" id="olympic-competition-date">
+        </div>
+        <div class="settings-field">
+          <label for="olympic-limitations">Limitări / accidentări (opțional)</label>
+          <input type="text" id="olympic-limitations" placeholder="Ex: încheietură sensibilă, umăr">
+        </div>
+
+        <div class="workout-actions">
+          <button type="button" id="olympic-generate-program-btn" class="btn-big">🔄 Generează programul</button>
+          <span id="olympic-generate-program-status"></span>
+        </div>
+        <div id="olympic-generate-program-quote" class="motivational-quote"></div>
+      </div>
+
+      <div id="olympic-program-active" class="hidden">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+            <h2 style="margin:0;">Programul tău Olimpic</h2>
+            <button type="button" id="olympic-reset-program-btn" class="settings-shortcut">Renunță / program nou</button>
+          </div>
+          <p class="hint" id="olympic-program-progress"></p>
+          <details class="manual-entry">
+            <summary><h2>Vezi planul complet</h2></summary>
+            <div id="olympic-program-plan" class="workout-result"></div>
+          </details>
+        </div>
+
+        <div class="card">
+          <h2>Antrenamentul de azi</h2>
+          <div class="workout-actions">
+            <button type="button" id="olympic-generate-today-btn" class="btn-big">🔄 Generează antrenamentul de azi</button>
+            <span id="olympic-generate-today-status"></span>
+          </div>
+          <div id="olympic-today-quote" class="motivational-quote"></div>
+          <div id="olympic-today-preview" class="workout-result"></div>
+          <div class="workout-actions" id="olympic-today-finish-wrap" style="display:none;">
+            <button type="button" id="olympic-today-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+            <span id="olympic-today-finish-status"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Istoric program Olimpic</h2>
+          <div id="olympic-program-history"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Programe anterioare</h2>
+        <p class="hint">Planurile programelor la care ai renunțat rămân aici — le poți revedea sau șterge definitiv.</p>
+        <div id="olympic-program-archive"></div>
+      </div>
     </div>
   </section>
 
@@ -3308,6 +3501,565 @@ Generează antrenamentul concret de azi.`;
   renderBbProgramArchive();
 
   // ============================================================
+  // Program Weightlifting — comutator Sheiko / Olimpic
+  // ============================================================
+
+  document.getElementById('wl-mode-sheiko').addEventListener('click', () => {
+    document.getElementById('wl-mode-sheiko').classList.add('active');
+    document.getElementById('wl-mode-olympic').classList.remove('active');
+    document.getElementById('wl-sheiko-panel').style.display = '';
+    document.getElementById('wl-olympic-panel').style.display = 'none';
+  });
+  document.getElementById('wl-mode-olympic').addEventListener('click', () => {
+    document.getElementById('wl-mode-olympic').classList.add('active');
+    document.getElementById('wl-mode-sheiko').classList.remove('active');
+    document.getElementById('wl-olympic-panel').style.display = '';
+    document.getElementById('wl-sheiko-panel').style.display = 'none';
+  });
+
+  // ============================================================
+  // Program Sheiko (powerlifting) — genoflexiuni/bench/îndreptări,
+  // volum mare, procente din 1RM real
+  // ============================================================
+
+  const SHEIKO_PROGRAM_KEY = 'fw_sheiko_program';
+  const SHEIKO_PROGRAM_HISTORY_KEY = 'fw_sheiko_program_history';
+  const SHEIKO_PROGRAM_ARCHIVE_KEY = 'fw_sheiko_program_archive';
+
+  const SHEIKO_PROGRAM_SYSTEM_PROMPT = `Ești un antrenor de powerlifting expert, specializat în
+metodologia lui Boris Sheiko: programare cu volum mare, frecvență mare a celor 3 mișcări de bază
+(genoflexiuni, împins culcat, îndreptări), bazată pe procente din 1RM, cu multe variații ale
+aceleiași mișcări chiar în aceeași ședință (ex: genoflexiuni + genoflexiuni pauză, împins culcat +
+împins culcat priză îngustă), intensitate predominant submaximală (majoritatea seturilor 50-80%
+din 1RM) cu valuri de intensitate.
+
+Primești 1RM-urile actuale la genoflexiuni, împins culcat și îndreptări, durata programului
+(săptămâni), câte antrenamente pe săptămână, nivelul, obiectivul, o eventuală dată de competiție,
+și eventuale limitări.
+
+Sarcina ta: generează STRUCTURA programului (nu antrenamente detaliate zi cu zi):
+1. O propoziție-rezumat a strategiei (accent pe care mișcare/mișcări, cum variază volumul).
+2. Un șablon săptămânal: pentru fiecare zi de antrenament (Ziua 1...Ziua N), ce mișcări principale
+   și ce tip de volum/intensitate (ex: "Ziua 1 - Genoflexiuni volum mare 70-75%, Împins culcat
+   intensitate 80-85%").
+3. O notă de progresie pe parcursul săptămânilor (cum crește intensitatea, unde ar fi o săptămână
+   de descărcare, și dacă există dată de competiție, un taper spre acea dată).
+
+Răspunde direct, formatat clar (markdown), fără introduceri. NU genera antrenamentul efectiv al
+fiecărei zile — doar structura, va fi folosită ca ghid pentru generarea zilnică.`;
+
+  function buildSheikoProgramUserPrompt(cfg) {
+    return `1RM Genoflexiuni: ${cfg.oneRmSquat} kg
+1RM Împins culcat: ${cfg.oneRmBench} kg
+1RM Îndreptări: ${cfg.oneRmDeadlift} kg
+Durata: ${cfg.weeks} săptămâni
+Antrenamente pe săptămână: ${cfg.daysPerWeek}
+Nivel: ${cfg.level}
+Obiectiv: ${cfg.objective || '(neprecizat, alege cresterea generala a celor 3 miscari)'}
+Dată competiție: ${cfg.competitionDate || '(neprecizată)'}
+Limitări: ${cfg.limitations || '(niciuna)'}
+
+Generează structura programului.`;
+  }
+
+  const SHEIKO_DAILY_SYSTEM_PROMPT = `Ești un antrenor de powerlifting expert, specializat în
+metodologia Sheiko. Primești planul general al unui program pe mai multe săptămâni (deja generat),
+în ce săptămână și zi din program se află utilizatorul azi, și 1RM-urile lui actuale la
+genoflexiuni, împins culcat și îndreptări.
+
+Sarcina ta: generează antrenamentul CONCRET pentru AZI, aliniat cu tema zilei din plan (caut-o în
+șablonul săptămânal) și cu faza de progresie curentă. Pentru fiecare exercițiu/variație inclusă,
+calculează greutatea REALĂ în kg pornind de la procentul din 1RM specificat (rotunjește la cel mai
+apropiat 2.5 kg), specificând clar seturi × repetări × greutate (kg) × %1RM pentru fiecare. Include
+mai multe variații ale aceleiași mișcări dacă e cazul (specific metodei Sheiko), într-o ordine
+logică. Adaugă o notă de tehnică/siguranță concisă.
+
+Răspunde direct, formatat clar (markdown, tabel per exercițiu), fără introduceri.`;
+
+  function buildSheikoDailyUserPrompt(program, weekNumber, dayInWeek, dayName, dateStr) {
+    return `Ziua curentă: ${dayName}, ${dateStr}
+Ești la săptămâna ${weekNumber} din ${program.weeks}, ziua de antrenament ${dayInWeek} din
+${program.daysPerWeek} antrenamente/săptămână.
+1RM Genoflexiuni: ${program.oneRmSquat} kg
+1RM Împins culcat: ${program.oneRmBench} kg
+1RM Îndreptări: ${program.oneRmDeadlift} kg
+Obiectiv general al programului: ${program.objective || '(neprecizat)'}
+
+Planul complet al programului (găsește tema zilei ${dayInWeek} din șablonul săptămânal de mai jos,
+și generează antrenamentul concret pentru ea, la intensitatea potrivită fazei curente):
+${program.planText}
+
+Generează antrenamentul concret de azi.`;
+  }
+
+  function sheikoProgramProgress(program) {
+    const weekNumber = Math.floor(program.dayIndex / program.daysPerWeek) + 1;
+    const dayInWeek = (program.dayIndex % program.daysPerWeek) + 1;
+    const finished = weekNumber > program.weeks;
+    return { weekNumber, dayInWeek, finished, done: program.dayIndex };
+  }
+
+  function renderSheikoProgramView() {
+    const program = lsGet(SHEIKO_PROGRAM_KEY, null);
+    document.getElementById('sheiko-program-setup').classList.toggle('hidden', !!program);
+    document.getElementById('sheiko-program-active').classList.toggle('hidden', !program);
+    if (!program) return;
+    const { weekNumber, dayInWeek, finished, done } = sheikoProgramProgress(program);
+    document.getElementById('sheiko-program-progress').textContent = finished
+      ? `Program finalizat! ${done} antrenamente completate din planul de ${program.weeks} săptămâni. Poți începe unul nou.`
+      : `Săptămâna ${weekNumber} din ${program.weeks} · Ziua ${dayInWeek} din ${program.daysPerWeek} antrenamente/săptămână · ${done} antrenamente completate până acum.`;
+    document.getElementById('sheiko-program-plan').innerHTML = renderMarkdown(program.planText);
+    document.getElementById('sheiko-generate-today-btn').disabled = finished;
+  }
+
+  document.getElementById('sheiko-generate-program-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('sheiko-generate-program-btn');
+    const status = document.getElementById('sheiko-generate-program-status');
+    btn.disabled = true;
+    status.textContent = '';
+    showQuote('sheiko-generate-program-quote');
+    try {
+      const cfg = {
+        oneRmSquat: Number(document.getElementById('sheiko-1rm-squat').value) || 0,
+        oneRmBench: Number(document.getElementById('sheiko-1rm-bench').value) || 0,
+        oneRmDeadlift: Number(document.getElementById('sheiko-1rm-deadlift').value) || 0,
+        weeks: Math.max(1, Number(document.getElementById('sheiko-weeks').value) || 8),
+        daysPerWeek: Math.max(1, Math.min(7, Number(document.getElementById('sheiko-days-per-week').value) || 4)),
+        level: document.getElementById('sheiko-level').value,
+        objective: document.getElementById('sheiko-objective').value.trim(),
+        competitionDate: document.getElementById('sheiko-competition-date').value,
+        limitations: document.getElementById('sheiko-limitations').value.trim()
+      };
+      if (!cfg.oneRmSquat || !cfg.oneRmBench || !cfg.oneRmDeadlift) {
+        status.textContent = 'Completează cele 3 valori de 1RM.';
+        btn.disabled = false;
+        clearQuote('sheiko-generate-program-quote');
+        return;
+      }
+      const messages = [
+        { role: 'system', content: SHEIKO_PROGRAM_SYSTEM_PROMPT },
+        { role: 'user', content: buildSheikoProgramUserPrompt(cfg) }
+      ];
+      const result = await generateWithFallback(messages);
+      const program = { ...cfg, planText: result.content, dayIndex: 0, createdAt: new Date().toISOString() };
+      lsSet(SHEIKO_PROGRAM_KEY, program);
+      renderSheikoProgramView();
+      document.getElementById('sheiko-today-preview').innerHTML = '';
+      document.getElementById('sheiko-today-finish-wrap').style.display = 'none';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('sheiko-generate-program-quote');
+    }
+  });
+
+  function renderSheikoProgramArchive() {
+    const container = document.getElementById('sheiko-program-archive');
+    const archive = lsGet(SHEIKO_PROGRAM_ARCHIVE_KEY, []);
+    container.innerHTML = '';
+    if (!archive.length) {
+      container.innerHTML = '<p class="hint">Niciun program anterior încă.</p>';
+      return;
+    }
+    archive.forEach(prog => {
+      const details = document.createElement('details');
+      details.className = 'history-item';
+      const summary = document.createElement('summary');
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'history-item-title';
+      const startDate = (prog.createdAt || '').slice(0, 10);
+      const endDate = (prog.endedAt || '').slice(0, 10);
+      const objectiveShort = prog.objective ? prog.objective.slice(0, 50) : 'Program Sheiko';
+      titleSpan.textContent = `${objectiveShort} (${startDate} → ${endDate})`;
+      summary.appendChild(titleSpan);
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'delete-btn';
+      delBtn.textContent = 'Șterge din arhivă';
+      delBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (!confirm('Ștergi definitiv acest program din arhivă?')) return;
+        const remaining = lsGet(SHEIKO_PROGRAM_ARCHIVE_KEY, []).filter(p => p.createdAt !== prog.createdAt);
+        lsSet(SHEIKO_PROGRAM_ARCHIVE_KEY, remaining);
+        renderSheikoProgramArchive();
+      });
+      summary.appendChild(delBtn);
+      details.appendChild(summary);
+
+      const content = document.createElement('div');
+      content.className = 'workout-result';
+      content.innerHTML =
+        `<p><strong>1RM:</strong> Genoflexiuni ${prog.oneRmSquat}kg · Bench ${prog.oneRmBench}kg · Îndreptări ${prog.oneRmDeadlift}kg<br>` +
+        `<strong>Durată:</strong> ${prog.weeks} săpt. · <strong>Antrenamente/săpt.:</strong> ${prog.daysPerWeek} · <strong>Nivel:</strong> ${escapeHtml(prog.level || '')}</p>` +
+        renderMarkdown(prog.planText || '');
+      details.appendChild(content);
+
+      container.appendChild(details);
+    });
+  }
+
+  document.getElementById('sheiko-reset-program-btn').addEventListener('click', () => {
+    if (!confirm('Renunți la programul curent? Istoricul antrenamentelor deja făcute rămâne salvat, iar planul trece în arhivă.')) return;
+    const program = lsGet(SHEIKO_PROGRAM_KEY, null);
+    if (program) {
+      const archive = lsGet(SHEIKO_PROGRAM_ARCHIVE_KEY, []);
+      archive.unshift({ ...program, endedAt: new Date().toISOString() });
+      lsSet(SHEIKO_PROGRAM_ARCHIVE_KEY, archive);
+    }
+    lsSet(SHEIKO_PROGRAM_KEY, null);
+    renderSheikoProgramView();
+    renderSheikoProgramArchive();
+  });
+
+  let sheikoTodayPreview = null;
+
+  document.getElementById('sheiko-generate-today-btn').addEventListener('click', async () => {
+    const program = lsGet(SHEIKO_PROGRAM_KEY, null);
+    if (!program) return;
+    const btn = document.getElementById('sheiko-generate-today-btn');
+    const status = document.getElementById('sheiko-generate-today-status');
+    const preview = document.getElementById('sheiko-today-preview');
+    btn.disabled = true;
+    document.getElementById('sheiko-today-finish-wrap').style.display = 'none';
+    status.textContent = '';
+    showQuote('sheiko-today-quote');
+    preview.innerHTML = '';
+    try {
+      const { weekNumber, dayInWeek } = sheikoProgramProgress(program);
+      const now = new Date();
+      const dayName = RO_DAYS[now.getDay()];
+      const dateStr = localDateStr(now);
+      const messages = [
+        { role: 'system', content: SHEIKO_DAILY_SYSTEM_PROMPT },
+        { role: 'user', content: buildSheikoDailyUserPrompt(program, weekNumber, dayInWeek, dayName, dateStr) }
+      ];
+      const result = await generateWithFallback(messages);
+      sheikoTodayPreview = { ...result, day: dayName, date: dateStr, programWeek: weekNumber, programDay: dayInWeek };
+      preview.innerHTML = renderMarkdown(result.content);
+      document.getElementById('sheiko-today-finish-wrap').style.display = 'flex';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('sheiko-today-quote');
+    }
+  });
+
+  document.getElementById('sheiko-today-finish-btn').addEventListener('click', async () => {
+    if (!sheikoTodayPreview) return;
+    const status = document.getElementById('sheiko-today-finish-status');
+    const entry = { ...sheikoTodayPreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    const history = lsGet(SHEIKO_PROGRAM_HISTORY_KEY, []);
+    history.unshift(entry);
+    lsSet(SHEIKO_PROGRAM_HISTORY_KEY, history);
+
+    const program = lsGet(SHEIKO_PROGRAM_KEY, null);
+    if (program) {
+      program.dayIndex += 1;
+      lsSet(SHEIKO_PROGRAM_KEY, program);
+    }
+
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    document.getElementById('sheiko-today-finish-wrap').style.display = 'none';
+    renderWodHistory('sheiko-program-history', SHEIKO_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
+    renderSheikoProgramView();
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+
+    const muscles = await classifyMuscles(entry.content);
+    if (muscles.length) {
+      const all = lsGet(SHEIKO_PROGRAM_HISTORY_KEY, []);
+      const found = all.find(e => e.generatedAt === entry.generatedAt);
+      if (found) {
+        found.muscleGroups = muscles;
+        lsSet(SHEIKO_PROGRAM_HISTORY_KEY, all);
+        renderWodHistory('sheiko-program-history', SHEIKO_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
+        renderHome();
+      }
+    }
+  });
+
+  renderWodHistory('sheiko-program-history', SHEIKO_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
+  renderSheikoProgramView();
+  renderSheikoProgramArchive();
+
+  // ============================================================
+  // Program Olimpic (weightlifting) — smulgere/aruncare, procente
+  // din 1RM real
+  // ============================================================
+
+  const OLYMPIC_PROGRAM_KEY = 'fw_olympic_program';
+  const OLYMPIC_PROGRAM_HISTORY_KEY = 'fw_olympic_program_history';
+  const OLYMPIC_PROGRAM_ARCHIVE_KEY = 'fw_olympic_program_archive';
+
+  const OLYMPIC_PROGRAM_SYSTEM_PROMPT = `Ești un antrenor de haltere olimpice (weightlifting)
+expert, specializat în programare pe termen lung pentru smulgere (snatch) și aruncare (clean and
+jerk), bazată pe procente din 1RM, cu accent pe tehnică și mișcări de asistență (trageri,
+genoflexiuni, poziții).
+
+Primești 1RM-urile actuale la smulgere și aruncare (și opțional genoflexiune spate), durata
+programului (săptămâni), câte antrenamente pe săptămână, nivelul, obiectivul, o eventuală dată de
+competiție, și eventuale limitări.
+
+Sarcina ta: generează STRUCTURA programului (nu antrenamente detaliate zi cu zi):
+1. O propoziție-rezumat a strategiei (accent tehnic vs. forță, cum se împarte între
+   smulgere/aruncare/asistență).
+2. Un șablon săptămânal: pentru fiecare zi de antrenament (Ziua 1...Ziua N), ce mișcări principale
+   (ex: "Ziua 1 - Smulgere tehnică + genoflexiune spate", "Ziua 2 - Aruncare + tragere de aruncare").
+3. O notă de progresie pe parcursul săptămânilor, și dacă există dată de competiție, un taper/vârf
+   spre acea dată.
+
+Răspunde direct, formatat clar (markdown), fără introduceri. NU genera antrenamentul efectiv al
+fiecărei zile — doar structura, va fi folosită ca ghid pentru generarea zilnică.`;
+
+  function buildOlympicProgramUserPrompt(cfg) {
+    return `1RM Smulgere: ${cfg.oneRmSnatch} kg
+1RM Aruncare: ${cfg.oneRmCleanJerk} kg
+1RM Genoflexiune spate: ${cfg.oneRmSquat || '(neprecizat)'} kg
+Durata: ${cfg.weeks} săptămâni
+Antrenamente pe săptămână: ${cfg.daysPerWeek}
+Nivel: ${cfg.level}
+Obiectiv: ${cfg.objective || '(neprecizat, alege progres tehnic si de forta echilibrat)'}
+Dată competiție: ${cfg.competitionDate || '(neprecizată)'}
+Limitări: ${cfg.limitations || '(niciuna)'}
+
+Generează structura programului.`;
+  }
+
+  const OLYMPIC_DAILY_SYSTEM_PROMPT = `Ești un antrenor de haltere olimpice expert. Primești planul
+general al unui program pe mai multe săptămâni (deja generat), în ce săptămână și zi din program se
+află utilizatorul azi, și 1RM-urile lui actuale la smulgere, aruncare (și opțional genoflexiune
+spate).
+
+Sarcina ta: generează antrenamentul CONCRET pentru AZI, aliniat cu tema zilei din plan (caut-o în
+șablonul săptămânal) și cu faza de progresie curentă. Pentru fiecare mișcare/variație inclusă,
+calculează greutatea REALĂ în kg pornind de la procentul din 1RM specificat (rotunjește la cel mai
+apropiat 2.5 kg), specificând clar seturi × repetări × greutate (kg) × %1RM. Include mișcări de
+tehnică/poziții (ex: hang snatch, snatch pull, overhead squat) când e relevant. Adaugă o notă de
+tehnică/siguranță concisă.
+
+Răspunde direct, formatat clar (markdown, tabel per mișcare), fără introduceri.`;
+
+  function buildOlympicDailyUserPrompt(program, weekNumber, dayInWeek, dayName, dateStr) {
+    return `Ziua curentă: ${dayName}, ${dateStr}
+Ești la săptămâna ${weekNumber} din ${program.weeks}, ziua de antrenament ${dayInWeek} din
+${program.daysPerWeek} antrenamente/săptămână.
+1RM Smulgere: ${program.oneRmSnatch} kg
+1RM Aruncare: ${program.oneRmCleanJerk} kg
+1RM Genoflexiune spate: ${program.oneRmSquat || '(neprecizat)'} kg
+Obiectiv general al programului: ${program.objective || '(neprecizat)'}
+
+Planul complet al programului (găsește tema zilei ${dayInWeek} din șablonul săptămânal de mai jos,
+și generează antrenamentul concret pentru ea, la intensitatea potrivită fazei curente):
+${program.planText}
+
+Generează antrenamentul concret de azi.`;
+  }
+
+  function olympicProgramProgress(program) {
+    const weekNumber = Math.floor(program.dayIndex / program.daysPerWeek) + 1;
+    const dayInWeek = (program.dayIndex % program.daysPerWeek) + 1;
+    const finished = weekNumber > program.weeks;
+    return { weekNumber, dayInWeek, finished, done: program.dayIndex };
+  }
+
+  function renderOlympicProgramView() {
+    const program = lsGet(OLYMPIC_PROGRAM_KEY, null);
+    document.getElementById('olympic-program-setup').classList.toggle('hidden', !!program);
+    document.getElementById('olympic-program-active').classList.toggle('hidden', !program);
+    if (!program) return;
+    const { weekNumber, dayInWeek, finished, done } = olympicProgramProgress(program);
+    document.getElementById('olympic-program-progress').textContent = finished
+      ? `Program finalizat! ${done} antrenamente completate din planul de ${program.weeks} săptămâni. Poți începe unul nou.`
+      : `Săptămâna ${weekNumber} din ${program.weeks} · Ziua ${dayInWeek} din ${program.daysPerWeek} antrenamente/săptămână · ${done} antrenamente completate până acum.`;
+    document.getElementById('olympic-program-plan').innerHTML = renderMarkdown(program.planText);
+    document.getElementById('olympic-generate-today-btn').disabled = finished;
+  }
+
+  document.getElementById('olympic-generate-program-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('olympic-generate-program-btn');
+    const status = document.getElementById('olympic-generate-program-status');
+    btn.disabled = true;
+    status.textContent = '';
+    showQuote('olympic-generate-program-quote');
+    try {
+      const cfg = {
+        oneRmSnatch: Number(document.getElementById('olympic-1rm-snatch').value) || 0,
+        oneRmCleanJerk: Number(document.getElementById('olympic-1rm-cj').value) || 0,
+        oneRmSquat: Number(document.getElementById('olympic-1rm-squat').value) || 0,
+        weeks: Math.max(1, Number(document.getElementById('olympic-weeks').value) || 8),
+        daysPerWeek: Math.max(1, Math.min(7, Number(document.getElementById('olympic-days-per-week').value) || 4)),
+        level: document.getElementById('olympic-level').value,
+        objective: document.getElementById('olympic-objective').value.trim(),
+        competitionDate: document.getElementById('olympic-competition-date').value,
+        limitations: document.getElementById('olympic-limitations').value.trim()
+      };
+      if (!cfg.oneRmSnatch || !cfg.oneRmCleanJerk) {
+        status.textContent = 'Completează 1RM la smulgere și aruncare.';
+        btn.disabled = false;
+        clearQuote('olympic-generate-program-quote');
+        return;
+      }
+      const messages = [
+        { role: 'system', content: OLYMPIC_PROGRAM_SYSTEM_PROMPT },
+        { role: 'user', content: buildOlympicProgramUserPrompt(cfg) }
+      ];
+      const result = await generateWithFallback(messages);
+      const program = { ...cfg, planText: result.content, dayIndex: 0, createdAt: new Date().toISOString() };
+      lsSet(OLYMPIC_PROGRAM_KEY, program);
+      renderOlympicProgramView();
+      document.getElementById('olympic-today-preview').innerHTML = '';
+      document.getElementById('olympic-today-finish-wrap').style.display = 'none';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('olympic-generate-program-quote');
+    }
+  });
+
+  function renderOlympicProgramArchive() {
+    const container = document.getElementById('olympic-program-archive');
+    const archive = lsGet(OLYMPIC_PROGRAM_ARCHIVE_KEY, []);
+    container.innerHTML = '';
+    if (!archive.length) {
+      container.innerHTML = '<p class="hint">Niciun program anterior încă.</p>';
+      return;
+    }
+    archive.forEach(prog => {
+      const details = document.createElement('details');
+      details.className = 'history-item';
+      const summary = document.createElement('summary');
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'history-item-title';
+      const startDate = (prog.createdAt || '').slice(0, 10);
+      const endDate = (prog.endedAt || '').slice(0, 10);
+      const objectiveShort = prog.objective ? prog.objective.slice(0, 50) : 'Program Olimpic';
+      titleSpan.textContent = `${objectiveShort} (${startDate} → ${endDate})`;
+      summary.appendChild(titleSpan);
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'delete-btn';
+      delBtn.textContent = 'Șterge din arhivă';
+      delBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (!confirm('Ștergi definitiv acest program din arhivă?')) return;
+        const remaining = lsGet(OLYMPIC_PROGRAM_ARCHIVE_KEY, []).filter(p => p.createdAt !== prog.createdAt);
+        lsSet(OLYMPIC_PROGRAM_ARCHIVE_KEY, remaining);
+        renderOlympicProgramArchive();
+      });
+      summary.appendChild(delBtn);
+      details.appendChild(summary);
+
+      const content = document.createElement('div');
+      content.className = 'workout-result';
+      content.innerHTML =
+        `<p><strong>1RM:</strong> Smulgere ${prog.oneRmSnatch}kg · Aruncare ${prog.oneRmCleanJerk}kg${prog.oneRmSquat ? ` · Genoflexiune spate ${prog.oneRmSquat}kg` : ''}<br>` +
+        `<strong>Durată:</strong> ${prog.weeks} săpt. · <strong>Antrenamente/săpt.:</strong> ${prog.daysPerWeek} · <strong>Nivel:</strong> ${escapeHtml(prog.level || '')}</p>` +
+        renderMarkdown(prog.planText || '');
+      details.appendChild(content);
+
+      container.appendChild(details);
+    });
+  }
+
+  document.getElementById('olympic-reset-program-btn').addEventListener('click', () => {
+    if (!confirm('Renunți la programul curent? Istoricul antrenamentelor deja făcute rămâne salvat, iar planul trece în arhivă.')) return;
+    const program = lsGet(OLYMPIC_PROGRAM_KEY, null);
+    if (program) {
+      const archive = lsGet(OLYMPIC_PROGRAM_ARCHIVE_KEY, []);
+      archive.unshift({ ...program, endedAt: new Date().toISOString() });
+      lsSet(OLYMPIC_PROGRAM_ARCHIVE_KEY, archive);
+    }
+    lsSet(OLYMPIC_PROGRAM_KEY, null);
+    renderOlympicProgramView();
+    renderOlympicProgramArchive();
+  });
+
+  let olympicTodayPreview = null;
+
+  document.getElementById('olympic-generate-today-btn').addEventListener('click', async () => {
+    const program = lsGet(OLYMPIC_PROGRAM_KEY, null);
+    if (!program) return;
+    const btn = document.getElementById('olympic-generate-today-btn');
+    const status = document.getElementById('olympic-generate-today-status');
+    const preview = document.getElementById('olympic-today-preview');
+    btn.disabled = true;
+    document.getElementById('olympic-today-finish-wrap').style.display = 'none';
+    status.textContent = '';
+    showQuote('olympic-today-quote');
+    preview.innerHTML = '';
+    try {
+      const { weekNumber, dayInWeek } = olympicProgramProgress(program);
+      const now = new Date();
+      const dayName = RO_DAYS[now.getDay()];
+      const dateStr = localDateStr(now);
+      const messages = [
+        { role: 'system', content: OLYMPIC_DAILY_SYSTEM_PROMPT },
+        { role: 'user', content: buildOlympicDailyUserPrompt(program, weekNumber, dayInWeek, dayName, dateStr) }
+      ];
+      const result = await generateWithFallback(messages);
+      olympicTodayPreview = { ...result, day: dayName, date: dateStr, programWeek: weekNumber, programDay: dayInWeek };
+      preview.innerHTML = renderMarkdown(result.content);
+      document.getElementById('olympic-today-finish-wrap').style.display = 'flex';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('olympic-today-quote');
+    }
+  });
+
+  document.getElementById('olympic-today-finish-btn').addEventListener('click', async () => {
+    if (!olympicTodayPreview) return;
+    const status = document.getElementById('olympic-today-finish-status');
+    const entry = { ...olympicTodayPreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    const history = lsGet(OLYMPIC_PROGRAM_HISTORY_KEY, []);
+    history.unshift(entry);
+    lsSet(OLYMPIC_PROGRAM_HISTORY_KEY, history);
+
+    const program = lsGet(OLYMPIC_PROGRAM_KEY, null);
+    if (program) {
+      program.dayIndex += 1;
+      lsSet(OLYMPIC_PROGRAM_KEY, program);
+    }
+
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    document.getElementById('olympic-today-finish-wrap').style.display = 'none';
+    renderWodHistory('olympic-program-history', OLYMPIC_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
+    renderOlympicProgramView();
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+
+    const muscles = await classifyMuscles(entry.content);
+    if (muscles.length) {
+      const all = lsGet(OLYMPIC_PROGRAM_HISTORY_KEY, []);
+      const found = all.find(e => e.generatedAt === entry.generatedAt);
+      if (found) {
+        found.muscleGroups = muscles;
+        lsSet(OLYMPIC_PROGRAM_HISTORY_KEY, all);
+        renderWodHistory('olympic-program-history', OLYMPIC_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
+        renderHome();
+      }
+    }
+  });
+
+  renderWodHistory('olympic-program-history', OLYMPIC_PROGRAM_HISTORY_KEY, e => `Săpt. ${e.programWeek}, ziua ${e.programDay} — ${e.day}, ${e.date}`);
+  renderOlympicProgramView();
+  renderOlympicProgramArchive();
+
+  // ============================================================
   // 7. Statistici — grafice anuale (antrenamente/lună, km/lună)
   // ============================================================
 
@@ -3521,7 +4273,9 @@ Generează antrenamentul concret de azi.`;
     const crossfitProgram = lsGet(CROSSFIT_PROGRAM_HISTORY_KEY, []);
     const bbProgram = lsGet(BB_PROGRAM_HISTORY_KEY, []);
     const bbCustom = lsGet(BB_CUSTOM_HISTORY_KEY, []);
-    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom];
+    const sheikoProgram = lsGet(SHEIKO_PROGRAM_HISTORY_KEY, []);
+    const olympicProgram = lsGet(OLYMPIC_PROGRAM_HISTORY_KEY, []);
+    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram];
 
     const workoutsPerMonth = new Array(12).fill(0);
     allWorkouts.forEach(e => {
@@ -3567,7 +4321,9 @@ Generează antrenamentul concret de azi.`;
     const crossfitProgram = lsGet(CROSSFIT_PROGRAM_HISTORY_KEY, []);
     const bbProgram = lsGet(BB_PROGRAM_HISTORY_KEY, []);
     const bbCustom = lsGet(BB_CUSTOM_HISTORY_KEY, []);
-    const all = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom];
+    const sheikoProgram = lsGet(SHEIKO_PROGRAM_HISTORY_KEY, []);
+    const olympicProgram = lsGet(OLYMPIC_PROGRAM_HISTORY_KEY, []);
+    const all = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram];
 
     const workoutsToday = all.filter(e => e.date === today).length;
     const workoutsMonth = all.filter(e => e.date.startsWith(monthPrefix)).length;
