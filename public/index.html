@@ -149,25 +149,14 @@
   .settings-shortcut.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 700; }
 
   @media (max-width: 700px) {
-    .settings-shortcut {
+    .settings-shortcut,
+    #logout-btn, #login-open-btn {
       height: 40px;
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
       box-sizing: border-box;
     }
-    #logout-btn, #login-open-btn {
-      flex-direction: column;
-      justify-content: center;
-      gap: 2px;
-      height: auto;
-      min-height: 44px;
-      padding: 5px 12px;
-      border-radius: 16px;
-      box-sizing: border-box;
-    }
-    #logout-btn .btn-icon, #login-open-btn .btn-icon { font-size: 16px; line-height: 1; }
-    #logout-btn .btn-label, #login-open-btn .btn-label { font-size: 10px; line-height: 1; }
     .theme-toggle {
       height: 40px;
       box-sizing: border-box;
@@ -634,7 +623,6 @@
     gap: 6px;
   }
   #logout-btn:hover, #login-open-btn:hover { background: var(--surface-2); color: var(--text); transform: none; box-shadow: none; }
-  #logout-btn .btn-icon { filter: brightness(1.6) saturate(.55); }
   #admin-link {
     display: inline-block;
     margin: 0 10px 12px 0;
@@ -675,7 +663,7 @@
       <button type="button" class="settings-shortcut active" data-tab="home">🏠 Acasă</button>
       <button type="button" class="settings-shortcut" data-tab="settings">⚙️ Setări</button>
       <button type="button" id="login-open-btn" title="Intră / Creează cont" class="hidden"><span class="btn-icon">🔐</span><span class="btn-label">Cont</span></button>
-      <button type="button" id="logout-btn" title="Ieși din cont" class="hidden"><span class="btn-icon">🚪</span><span class="btn-label">Delogare</span></button>
+      <button type="button" id="logout-btn" title="Ieși din cont" class="hidden"><span class="btn-icon">←</span><span class="btn-label">Delogare</span></button>
       <div class="theme-toggle" id="theme-toggle">
         <button type="button" data-theme-choice="light" title="Mod luminos">☀️</button>
         <button type="button" data-theme-choice="dark" title="Mod întunecat">🌙</button>
