@@ -4586,6 +4586,9 @@ Generează antrenamentul concret de azi.`;
         document.getElementById('app-title').textContent = personalizedTitle;
         document.title = personalizedTitle;
       }
+    } else {
+      document.getElementById('app-title').textContent = 'One more rep';
+      document.title = 'One more rep';
     }
     refreshHeaderAuthState(me.ok);
     initApp();
