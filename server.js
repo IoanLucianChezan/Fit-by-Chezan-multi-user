@@ -114,7 +114,7 @@ app.post(
     if (existing) {
       return res.status(409).json({ error: 'Exista deja un cont cu acest username.' });
     }
-    const defaultLimit = Number(process.env.DEFAULT_USER_AI_LIMIT) || 5;
+    const defaultLimit = Number(process.env.DEFAULT_USER_AI_LIMIT) || 20;
     const hash = hashPassword(password);
     const created = await one(
       'INSERT INTO users (username, password_hash, role, ai_daily_limit, active) VALUES ($1, $2, $3, $4, true) RETURNING id',

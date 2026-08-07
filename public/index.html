@@ -149,14 +149,25 @@
   .settings-shortcut.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 700; }
 
   @media (max-width: 700px) {
-    .settings-shortcut,
-    #logout-btn, #login-open-btn {
+    .settings-shortcut {
       height: 40px;
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
       box-sizing: border-box;
     }
+    #logout-btn, #login-open-btn {
+      flex-direction: column;
+      justify-content: center;
+      gap: 1px;
+      height: auto;
+      min-height: 46px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      box-sizing: border-box;
+    }
+    #logout-btn .btn-icon, #login-open-btn .btn-icon { font-size: 15px; line-height: 1; }
+    #logout-btn .btn-label, #login-open-btn .btn-label { font-size: 10.5px; line-height: 1.1; white-space: nowrap; }
     .theme-toggle {
       height: 40px;
       box-sizing: border-box;
