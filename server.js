@@ -24,6 +24,12 @@ const ah = (fn) => (req, res, next) => fn(req, res, next).catch(next);
 
 app.use(express.json({ limit: '15mb' })); // poze base64 la transcriere pot fi mari
 app.use(cookieParser());
+
+// endpoint minim, fara auth, doar pentru ping-uri de tip "keep-alive" (raspuns mic, nu incarca DB)
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ============================================================
