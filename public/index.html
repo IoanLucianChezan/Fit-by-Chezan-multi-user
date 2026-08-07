@@ -613,7 +613,7 @@
     </div>
   </div>
 
-  <h1>Fit by Chezan</h1>
+  <h1 id="app-title">Fit by Chezan</h1>
 
   <div class="header-row">
     <p>No rest days. Pain is temporary, progress is permanent.</p>
@@ -633,7 +633,7 @@
     <button data-tab="workout">One time Workout</button>
     <button data-tab="program-crossfit">Program Crossfit</button>
     <button data-tab="program-bodybuilding">Program Bodybuilding</button>
-    <button data-tab="program-weightlifting">Program Weightlifting</button>
+    <button data-tab="program-weightlifting">Program Lifting</button>
     <button data-tab="nutrition">Nutriție</button>
   </nav>
 
@@ -661,7 +661,7 @@
 
     <div class="card">
       <h2>Mușchi lucrați azi</h2>
-      <p class="hint">Din antrenamentele finalizate azi (One time Workout, Program Crossfit, Program Bodybuilding, Program Weightlifting).</p>
+      <p class="hint">Din antrenamentele finalizate azi (One time Workout, Program Crossfit, Program Bodybuilding, Program Lifting).</p>
       <div class="muscle-map">
         <figure>
           <svg viewBox="0 0 220 460" xmlns="http://www.w3.org/2000/svg" id="mm-front">
@@ -4547,6 +4547,11 @@ Generează antrenamentul concret de azi.`;
     if (me.ok) {
       const dataRes = syncRequest('GET', '/api/data');
       __dataStore = dataRes.ok ? dataRes.data : {};
+      if (me.data.role !== 'admin' && me.data.username) {
+        const personalizedTitle = `Fit by ${me.data.username}`;
+        document.getElementById('app-title').textContent = personalizedTitle;
+        document.title = personalizedTitle;
+      }
     }
     refreshHeaderAuthState(me.ok);
     initApp();
