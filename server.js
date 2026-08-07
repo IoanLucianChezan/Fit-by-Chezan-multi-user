@@ -30,6 +30,42 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true });
 });
 
+// ============================================================
+// Rate limiting simplu pe login (in-memory, per username) - previne
+// ghicirea automata a parolelor prin incercari repetate
+// ============================================================
+
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const loginAttempts = new Map();
+
+function checkLoginRateLimit(username) {
+  const key = String(username || '').toLowerCase();
+  const now = Date.now();
+  const entry = loginAttempts.get(key);
+  if (!entry || now - entry.firstAttemptAt > LOGIN_WINDOW_MS) return { blocked: false };
+  if (entry.count >= LOGIN_MAX_ATTEMPTS) {
+    const retryAfterMinutes = Math.ceil((LOGIN_WINDOW_MS - (now - entry.firstAttemptAt)) / 60000);
+    return { blocked: true, retryAfterMinutes };
+  }
+  return { blocked: false };
+}
+
+function recordFailedLogin(username) {
+  const key = String(username || '').toLowerCase();
+  const now = Date.now();
+  const entry = loginAttempts.get(key);
+  if (!entry || now - entry.firstAttemptAt > LOGIN_WINDOW_MS) {
+    loginAttempts.set(key, { count: 1, firstAttemptAt: now });
+  } else {
+    entry.count += 1;
+  }
+}
+
+function clearLoginAttempts(username) {
+  loginAttempts.delete(String(username || '').toLowerCase());
+}
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ============================================================
@@ -43,10 +79,18 @@ app.post(
     if (!username || !password) {
       return res.status(400).json({ error: 'Username si parola sunt obligatorii.' });
     }
+    const limit = checkLoginRateLimit(username);
+    if (limit.blocked) {
+      return res.status(429).json({
+        error: `Prea multe incercari esuate pentru acest cont. Incearca din nou peste ${limit.retryAfterMinutes} minute.`
+      });
+    }
     const user = await one('SELECT * FROM users WHERE username = $1', [username]);
     if (!user || !user.active || !verifyPassword(password, user.password_hash)) {
+      recordFailedLogin(username);
       return res.status(401).json({ error: 'Username sau parola gresita.' });
     }
+    clearLoginAttempts(username);
     const token = signToken(user);
     setSessionCookie(res, token);
     res.json({ username: user.username, role: user.role });
