@@ -163,14 +163,20 @@
 
   @media (max-width: 700px) {
     nav {
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      justify-content: flex-start;
-      scrollbar-width: none;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
     }
-    nav::-webkit-scrollbar { display: none; }
-    nav button { flex: 0 0 auto; }
+    nav button {
+      flex: none;
+      width: 100%;
+      min-width: 0;
+      padding: 10px 4px;
+      font-size: 12.5px;
+      line-height: 1.2;
+      white-space: normal;
+      overflow-wrap: break-word;
+    }
   }
   nav button {
     padding: 13px 20px;
@@ -630,10 +636,10 @@
   </div>
 
   <nav id="tabs">
-    <button data-tab="workout">One time Workout</button>
-    <button data-tab="program-crossfit">Program Crossfit</button>
-    <button data-tab="program-bodybuilding">Program Bodybuilding</button>
-    <button data-tab="program-weightlifting">Program Lifting</button>
+    <button data-tab="workout">One time</button>
+    <button data-tab="program-crossfit">Crossfit</button>
+    <button data-tab="program-bodybuilding">Bodybuilding</button>
+    <button data-tab="program-weightlifting">Lifting</button>
     <button data-tab="nutrition">Nutriție</button>
   </nav>
 
