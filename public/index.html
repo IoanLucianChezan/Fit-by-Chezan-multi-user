@@ -830,24 +830,28 @@
       <h2>Antrenament Bodybuilding (personalizat)</h2>
       <p class="hint">Un singur antrenament, adaptat nivelului și split-ului tău. Presupune acces la o sală dotată.</p>
 
-      <div class="settings-field">
-        <label for="bb-custom-level">Nivel</label>
-        <select id="bb-custom-level">
-          <option value="Începător">Începător</option>
-          <option value="Intermediar" selected>Intermediar</option>
-          <option value="Avansat">Avansat</option>
-        </select>
-      </div>
-      <div class="settings-field">
-        <label for="bb-custom-split">Split preferat</label>
-        <select id="bb-custom-split">
-          <option value="AI alege">Las AI să aleagă</option>
-          <option value="Push/Pull/Legs">Push/Pull/Legs</option>
-          <option value="Upper/Lower">Upper/Lower</option>
-          <option value="Full body">Full body</option>
-          <option value="O grupă pe zi (bro split)">O grupă pe zi (bro split)</option>
-        </select>
-      </div>
+      <details class="manual-entry">
+        <summary><h2>Configurare</h2></summary>
+
+        <div class="settings-field">
+          <label for="bb-custom-level">Nivel</label>
+          <select id="bb-custom-level">
+            <option value="Începător">Începător</option>
+            <option value="Intermediar" selected>Intermediar</option>
+            <option value="Avansat">Avansat</option>
+          </select>
+        </div>
+        <div class="settings-field">
+          <label for="bb-custom-split">Split preferat</label>
+          <select id="bb-custom-split">
+            <option value="AI alege">Las AI să aleagă</option>
+            <option value="Push/Pull/Legs">Push/Pull/Legs</option>
+            <option value="Upper/Lower">Upper/Lower</option>
+            <option value="Full body">Full body</option>
+            <option value="O grupă pe zi (bro split)">O grupă pe zi (bro split)</option>
+          </select>
+        </div>
+      </details>
 
       <div class="workout-actions" style="margin-top:16px;">
         <button type="button" id="bb-custom-generate-btn" class="btn-big">🔄 Generează antrenament</button>
@@ -901,60 +905,58 @@
 
     <div class="card">
       <h2>Istoric</h2>
-      <p class="hint">Toate antrenamentele finalizate din acest tab (Antrenament, Easy WOD, Hero WOD), într-un singur istoric.</p>
+      <p class="hint">Toate antrenamentele finalizate din acest tab (Antrenament, Bodybuilding personalizat, Easy WOD, Hero WOD, introducere manuală, alergări), într-un singur istoric.</p>
       <div id="custom-workout-history"></div>
     </div>
 
     <div class="card">
-      <h2>Adaugă manual</h2>
-      <div class="mode-toggle">
-        <button type="button" id="manual-mode-workout" class="mode-toggle-btn active">🏋️ Antrenament</button>
-        <button type="button" id="manual-mode-run" class="mode-toggle-btn">🏃 Alergare</button>
+      <h2>Antrenament introducere manuală</h2>
+      <p class="hint">Scrie liber un antrenament, transcrie o poză, sau notează o alergare.</p>
+
+      <div class="workout-actions">
+        <button type="button" id="manual-open-btn" class="btn-big">📝 Adaugă antrenament manual</button>
       </div>
 
-      <div id="manual-workout-panel">
-        <p class="hint">Scrie liber antrenamentul, sau încarcă/lipește o poză ca AI să o transcrie automat în text.</p>
-
-        <div class="paste-zone" id="manual-paste-zone" tabindex="0">📋 Apasă aici și dă Paste (Ctrl+V) cu o poză a antrenamentului</div>
-        <div class="actions-row" style="display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap;">
-          <input type="file" id="manual-photo-input" accept="image/*" style="display:none;">
-          <button type="button" id="manual-photo-btn">📷 Încarcă poză</button>
-          <span id="manual-photo-status"></span>
+      <div id="manual-entry-panel" style="display:none; margin-top:16px;">
+        <div class="mode-toggle">
+          <button type="button" id="manual-mode-workout" class="mode-toggle-btn active">🏋️ Antrenament</button>
+          <button type="button" id="manual-mode-run" class="mode-toggle-btn">🏃 Alergare</button>
         </div>
 
-        <textarea id="manual-workout-text" rows="10" style="width:100%; margin-top:14px; font-family:inherit;" placeholder="Descrie antrenamentul (exerciții, seturi, repetări, greutăți)..."></textarea>
+        <div id="manual-workout-panel">
+          <p class="hint">Scrie liber antrenamentul, sau încarcă/lipește o poză ca AI să o transcrie automat în text.</p>
 
-        <div class="workout-actions" style="margin-top:16px;">
-          <button type="button" id="manual-workout-finish-btn" class="btn-big btn-finish">✓ Marchează ca finalizat</button>
-          <span id="manual-workout-finish-status"></span>
+          <div class="paste-zone" id="manual-paste-zone" tabindex="0">📋 Apasă aici și dă Paste (Ctrl+V) cu o poză a antrenamentului</div>
+          <div class="actions-row" style="display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <input type="file" id="manual-photo-input" accept="image/*" style="display:none;">
+            <button type="button" id="manual-photo-btn">📷 Încarcă poză</button>
+            <span id="manual-photo-status"></span>
+          </div>
+
+          <textarea id="manual-workout-text" rows="10" style="width:100%; margin-top:14px; font-family:inherit;" placeholder="Descrie antrenamentul (exerciții, seturi, repetări, greutăți)..."></textarea>
+
+          <div class="workout-actions" style="margin-top:16px;">
+            <button type="button" id="manual-workout-finish-btn" class="btn-big btn-finish">✓ Marchează ca finalizat</button>
+            <span id="manual-workout-finish-status"></span>
+          </div>
+        </div>
+
+        <div id="manual-run-panel" style="display:none;">
+          <p class="hint">Introdu distanța și pace-ul pentru alergarea de azi.</p>
+          <div class="settings-field">
+            <label for="manual-run-km">Distanță (km)</label>
+            <input type="number" id="manual-run-km" step="0.01" min="0">
+          </div>
+          <div class="settings-field">
+            <label for="manual-run-pace">Pace (min/km)</label>
+            <input type="text" id="manual-run-pace" placeholder="ex: 5:30">
+          </div>
+          <div class="workout-actions">
+            <button type="button" id="manual-run-save-btn" class="btn-big btn-finish">✓ Salvează alergarea</button>
+            <span id="manual-run-save-status"></span>
+          </div>
         </div>
       </div>
-
-      <div id="manual-run-panel" style="display:none;">
-        <p class="hint">Introdu distanța și pace-ul pentru alergarea de azi.</p>
-        <div class="settings-field">
-          <label for="manual-run-km">Distanță (km)</label>
-          <input type="number" id="manual-run-km" step="0.01" min="0">
-        </div>
-        <div class="settings-field">
-          <label for="manual-run-pace">Pace (min/km)</label>
-          <input type="text" id="manual-run-pace" placeholder="ex: 5:30">
-        </div>
-        <div class="workout-actions">
-          <button type="button" id="manual-run-save-btn" class="btn-big btn-finish">✓ Salvează alergarea</button>
-          <span id="manual-run-save-status"></span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Istoric antrenamente manuale</h2>
-      <div id="manual-workout-history"></div>
-    </div>
-
-    <div class="card">
-      <h2>Istoric alergări</h2>
-      <div id="manual-run-history"></div>
     </div>
   </section>
 
@@ -2420,16 +2422,18 @@ obiectului JSON.`;
     });
   }
 
-  // Istoric unificat pentru tab-ul Custom Workout: combină cele 4 surse
-  // (Antrenament/Bodybuilding personalizat/Easy WOD/Hero WOD) într-o singură listă, sortată descrescător.
+  // Istoric unificat pentru tab-ul Custom Workout: combină toate sursele
+  // (Antrenament/Bodybuilding personalizat/Easy WOD/Hero WOD/introducere manuală/alergări)
+  // într-o singură listă, sortată descrescător.
   function renderMergedWorkoutHistory() {
-    const sourceKeys = [WORKOUT_LOG_KEY, BB_CUSTOM_HISTORY_KEY, EASY_HISTORY_KEY, HERO_HISTORY_KEY];
+    const workoutKeys = [WORKOUT_LOG_KEY, BB_CUSTOM_HISTORY_KEY, EASY_HISTORY_KEY, HERO_HISTORY_KEY, MANUAL_HISTORY_KEY];
     const container = document.getElementById('custom-workout-history');
     const merged = [];
-    sourceKeys.forEach(key => {
-      lsGet(key, []).forEach(entry => merged.push({ ...entry, _sourceKey: key }));
+    workoutKeys.forEach(key => {
+      lsGet(key, []).forEach(entry => merged.push({ ...entry, _sourceKey: key, _kind: 'workout' }));
     });
-    merged.sort((a, b) => new Date(b.generatedAt) - new Date(a.generatedAt));
+    lsGet(RUNS_KEY, []).forEach(entry => merged.push({ ...entry, _sourceKey: RUNS_KEY, _kind: 'run' }));
+    merged.sort((a, b) => new Date(b.generatedAt || b.savedAt) - new Date(a.generatedAt || a.savedAt));
 
     container.innerHTML = '';
     if (!merged.length) {
@@ -2437,6 +2441,24 @@ obiectului JSON.`;
       return;
     }
     merged.forEach(entry => {
+      if (entry._kind === 'run') {
+        const item = document.createElement('div');
+        item.className = 'meal-history-item';
+        item.innerHTML = `
+          <div>🏃 ${escapeHtml(entry.date)} — ${entry.km} km${entry.pace ? ` @ ${escapeHtml(entry.pace)}/km` : ''}</div>
+          <div class="history-actions"><button type="button" class="delete-btn">Șterge</button></div>
+        `;
+        item.querySelector('.delete-btn').addEventListener('click', () => {
+          if (!confirm('Ștergi această alergare?')) return;
+          const remaining = lsGet(RUNS_KEY, []).filter(r => r.savedAt !== entry.savedAt);
+          lsSet(RUNS_KEY, remaining);
+          renderMergedWorkoutHistory();
+          renderHome();
+        });
+        container.appendChild(item);
+        return;
+      }
+
       const details = document.createElement('details');
       details.className = 'history-item';
       const summary = document.createElement('summary');
@@ -2787,8 +2809,6 @@ Generează un Hero WOD sau Girl/benchmark WOD cunoscut.${avoidClause}`;
     }
   });
 
-  renderMergedWorkoutHistory();
-
   // ============================================================
   // 6. Adaugă manual — antrenament (text/poză) + alergare
   // ============================================================
@@ -2802,6 +2822,15 @@ Generează un Hero WOD sau Girl/benchmark WOD cunoscut.${avoidClause}`;
     { id: 'hamstrings', level: 'medium' },
     { id: 'glutes', level: 'medium' }
   ];
+
+  document.getElementById('manual-open-btn').addEventListener('click', () => {
+    document.getElementById('manual-entry-panel').style.display = '';
+    document.getElementById('manual-open-btn').style.display = 'none';
+  });
+  function collapseManualEntryPanel() {
+    document.getElementById('manual-entry-panel').style.display = 'none';
+    document.getElementById('manual-open-btn').style.display = '';
+  }
 
   document.getElementById('manual-mode-workout').addEventListener('click', () => {
     document.getElementById('manual-mode-workout').classList.add('active');
@@ -2886,7 +2915,8 @@ clar, fără introduceri sau explicații.`;
     showScreenFlash();
     showCelebration();
     textarea.value = '';
-    renderWodHistory('manual-workout-history', MANUAL_HISTORY_KEY, e => `${e.day}, ${e.date}`);
+    collapseManualEntryPanel();
+    renderMergedWorkoutHistory();
     renderHome();
     setTimeout(() => { status.textContent = ''; }, 2000);
 
@@ -2897,39 +2927,11 @@ clar, fără introduceri sau explicații.`;
       if (found) {
         found.muscleGroups = muscles;
         lsSet(MANUAL_HISTORY_KEY, all);
-        renderWodHistory('manual-workout-history', MANUAL_HISTORY_KEY, e => `${e.day}, ${e.date}`);
+        renderMergedWorkoutHistory();
         renderHome();
       }
     }
   });
-
-  renderWodHistory('manual-workout-history', MANUAL_HISTORY_KEY, e => `${e.day}, ${e.date}`);
-
-  function renderRunHistory() {
-    const container = document.getElementById('manual-run-history');
-    const runs = lsGet(RUNS_KEY, []);
-    container.innerHTML = '';
-    if (!runs.length) {
-      container.innerHTML = '<p class="hint">Nicio alergare înregistrată încă.</p>';
-      return;
-    }
-    runs.forEach(run => {
-      const item = document.createElement('div');
-      item.className = 'meal-history-item';
-      item.innerHTML = `
-        <div>${escapeHtml(run.date)} — ${run.km} km${run.pace ? ` @ ${escapeHtml(run.pace)}/km` : ''}</div>
-        <div class="history-actions"><button type="button" class="delete-btn">Șterge</button></div>
-      `;
-      item.querySelector('.delete-btn').addEventListener('click', () => {
-        if (!confirm('Ștergi această alergare?')) return;
-        const all = lsGet(RUNS_KEY, []).filter(r => r.savedAt !== run.savedAt);
-        lsSet(RUNS_KEY, all);
-        renderRunHistory();
-        renderHome();
-      });
-      container.appendChild(item);
-    });
-  }
 
   document.getElementById('manual-run-save-btn').addEventListener('click', () => {
     const status = document.getElementById('manual-run-save-status');
@@ -2953,12 +2955,13 @@ clar, fără introduceri sau explicații.`;
     status.textContent = 'Salvat!';
     showScreenFlash();
     showCelebration();
-    renderRunHistory();
+    collapseManualEntryPanel();
+    renderMergedWorkoutHistory();
     renderHome();
     setTimeout(() => { status.textContent = ''; }, 2000);
   });
 
-  renderRunHistory();
+  renderMergedWorkoutHistory();
 
   // ============================================================
   // Program Crossfit — generat AI pe săptămâni, antrenamentul zilnic
