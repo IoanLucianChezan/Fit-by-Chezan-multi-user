@@ -912,7 +912,8 @@
       </div>
 
       <div id="manual-entry-panel" style="display:none; margin-top:16px;">
-        <div class="mode-toggle">
+        <button type="button" id="manual-close-btn" class="settings-shortcut">← Înapoi</button>
+        <div class="mode-toggle" style="margin-top:10px;">
           <button type="button" id="manual-mode-workout" class="mode-toggle-btn active">🏋️ Antrenament</button>
           <button type="button" id="manual-mode-run" class="mode-toggle-btn">🏃 Alergare</button>
         </div>
@@ -2831,6 +2832,7 @@ Generează un Hero WOD sau Girl/benchmark WOD cunoscut.${avoidClause}`;
     document.getElementById('manual-entry-panel').style.display = 'none';
     document.getElementById('manual-open-btn').style.display = '';
   }
+  document.getElementById('manual-close-btn').addEventListener('click', collapseManualEntryPanel);
 
   document.getElementById('manual-mode-workout').addEventListener('click', () => {
     document.getElementById('manual-mode-workout').classList.add('active');
