@@ -1,9 +1,9 @@
-name: Keep Render awake
+name: Ping app to keep Render awake
 
 on:
+  workflow_dispatch: {}
   schedule:
     - cron: '*/10 * * * *'
-  workflow_dispatch: {}
 
 jobs:
   ping:
