@@ -1976,18 +1976,60 @@ obiectului JSON.`;
     dayMeals.forEach(meal => {
       const item = document.createElement('div');
       item.className = 'meal-history-item';
-      item.innerHTML = `
-        <div>${escapeHtml(meal.text)}</div>
-        <div class="meal-macros">${Math.round(meal.calories)} kcal · P ${Math.round(meal.protein_g)}g · C ${Math.round(meal.carbs_g)}g · G ${Math.round(meal.fat_g)}g</div>
-        <div class="history-actions"><button type="button" class="delete-btn">Șterge</button></div>
-      `;
-      item.querySelector('.delete-btn').addEventListener('click', () => {
-        const all = lsGet(MEALS_KEY, []).filter(m => m.savedAt !== meal.savedAt);
-        lsSet(MEALS_KEY, all);
-        renderNutritionCalendar();
-        renderNutritionSummary();
-        renderHome();
-      });
+
+      function renderView() {
+        item.innerHTML = `
+          <div>${escapeHtml(meal.text)}</div>
+          <div class="meal-macros">${Math.round(meal.calories)} kcal · P ${Math.round(meal.protein_g)}g · C ${Math.round(meal.carbs_g)}g · G ${Math.round(meal.fat_g)}g</div>
+          <div class="history-actions">
+            <button type="button" class="settings-shortcut edit-btn">Editează</button>
+            <button type="button" class="delete-btn">Șterge</button>
+          </div>
+        `;
+        item.querySelector('.edit-btn').addEventListener('click', renderEdit);
+        item.querySelector('.delete-btn').addEventListener('click', () => {
+          if (!confirm('Ștergi această masă?')) return;
+          const all = lsGet(MEALS_KEY, []).filter(m => m.savedAt !== meal.savedAt);
+          lsSet(MEALS_KEY, all);
+          renderNutritionCalendar();
+          renderNutritionSummary();
+          renderHome();
+        });
+      }
+
+      function renderEdit() {
+        item.innerHTML = `
+          <textarea class="edit-text" rows="2" style="width:100%; font-family:inherit;">${escapeHtml(meal.text)}</textarea>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+            <label style="font-size:12px;">Calorii<br><input type="number" class="edit-calories" value="${Math.round(meal.calories)}" style="width:90px;"></label>
+            <label style="font-size:12px;">Proteine (g)<br><input type="number" class="edit-protein" value="${Math.round(meal.protein_g)}" style="width:90px;"></label>
+            <label style="font-size:12px;">Carbo (g)<br><input type="number" class="edit-carbs" value="${Math.round(meal.carbs_g)}" style="width:90px;"></label>
+            <label style="font-size:12px;">Grăsimi (g)<br><input type="number" class="edit-fat" value="${Math.round(meal.fat_g)}" style="width:90px;"></label>
+          </div>
+          <div class="history-actions" style="margin-top:8px;">
+            <button type="button" class="save-edit-btn">Salvează</button>
+            <button type="button" class="settings-shortcut cancel-edit-btn">Anulează</button>
+          </div>
+        `;
+        item.querySelector('.save-edit-btn').addEventListener('click', () => {
+          const all = lsGet(MEALS_KEY, []);
+          const found = all.find(m => m.savedAt === meal.savedAt);
+          if (found) {
+            found.text = item.querySelector('.edit-text').value.trim() || found.text;
+            found.calories = Number(item.querySelector('.edit-calories').value) || 0;
+            found.protein_g = Number(item.querySelector('.edit-protein').value) || 0;
+            found.carbs_g = Number(item.querySelector('.edit-carbs').value) || 0;
+            found.fat_g = Number(item.querySelector('.edit-fat').value) || 0;
+            lsSet(MEALS_KEY, all);
+            Object.assign(meal, found);
+          }
+          renderNutritionSummary();
+          renderHome();
+        });
+        item.querySelector('.cancel-edit-btn').addEventListener('click', renderView);
+      }
+
+      renderView();
       historyContainer.appendChild(item);
     });
   }
@@ -2042,6 +2084,58 @@ obiectului JSON.`;
   // Istoric generic pentru Easy WOD / Hero WOD
   // ============================================================
 
+  // Adaugă butoane "Editează" (text brut, direct în content) și "Șterge" (cu confirmare)
+  // pe un <summary> dintr-un istoric de tip antrenament (details/summary/content markdown).
+  function attachHistoryItemControls(summary, contentEl, entry, { onSaveContent, onDelete }) {
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'settings-shortcut';
+    editBtn.textContent = 'Editează';
+    let editing = false;
+    editBtn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (!editing) {
+        editing = true;
+        editBtn.textContent = 'Anulează editarea';
+        contentEl.innerHTML = '';
+        const textarea = document.createElement('textarea');
+        textarea.value = entry.content;
+        textarea.rows = 14;
+        textarea.style.width = '100%';
+        textarea.style.fontFamily = 'inherit';
+        contentEl.appendChild(textarea);
+        const saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.textContent = 'Salvează';
+        saveBtn.style.marginTop = '8px';
+        saveBtn.addEventListener('click', (ev2) => {
+          ev2.preventDefault();
+          ev2.stopPropagation();
+          onSaveContent(textarea.value);
+        });
+        contentEl.appendChild(saveBtn);
+      } else {
+        editing = false;
+        editBtn.textContent = 'Editează';
+        contentEl.innerHTML = renderMarkdown(entry.content);
+      }
+    });
+    summary.appendChild(editBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'delete-btn';
+    delBtn.textContent = 'Șterge';
+    delBtn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (!confirm('Sigur ștergi acest antrenament?')) return;
+      onDelete();
+    });
+    summary.appendChild(delBtn);
+  }
+
   function renderWodHistory(containerId, storageKey, titleFn) {
     const container = document.getElementById(containerId);
     const history = lsGet(storageKey, []);
@@ -2060,22 +2154,29 @@ obiectului JSON.`;
       titleSpan.textContent = titleFn(entry);
       summary.appendChild(titleSpan);
 
-      const delBtn = document.createElement('button');
-      delBtn.type = 'button'; delBtn.className = 'delete-btn'; delBtn.textContent = 'Șterge';
-      delBtn.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        const all = lsGet(storageKey, []).filter(e => e.generatedAt !== entry.generatedAt);
-        lsSet(storageKey, all);
-        renderWodHistory(containerId, storageKey, titleFn);
-        renderHome();
-      });
-      summary.appendChild(delBtn);
-      details.appendChild(summary);
-
       const content = document.createElement('div');
       content.className = 'workout-result';
       content.innerHTML = renderMarkdown(entry.content);
+
+      attachHistoryItemControls(summary, content, entry, {
+        onSaveContent: (newContent) => {
+          const all = lsGet(storageKey, []);
+          const found = all.find(e => e.generatedAt === entry.generatedAt);
+          if (found) {
+            found.content = newContent;
+            entry.content = newContent;
+            lsSet(storageKey, all);
+          }
+          renderWodHistory(containerId, storageKey, titleFn);
+        },
+        onDelete: () => {
+          const all = lsGet(storageKey, []).filter(e => e.generatedAt !== entry.generatedAt);
+          lsSet(storageKey, all);
+          renderWodHistory(containerId, storageKey, titleFn);
+          renderHome();
+        }
+      });
+      details.appendChild(summary);
       details.appendChild(content);
 
       const normalizedMuscles = normalizeMuscleEntry(entry.muscleGroups);
@@ -2118,22 +2219,29 @@ obiectului JSON.`;
       titleSpan.textContent = entry.heroName || `${entry.day}, ${entry.date}`;
       summary.appendChild(titleSpan);
 
-      const delBtn = document.createElement('button');
-      delBtn.type = 'button'; delBtn.className = 'delete-btn'; delBtn.textContent = 'Șterge';
-      delBtn.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        const remaining = lsGet(entry._sourceKey, []).filter(e => e.generatedAt !== entry.generatedAt);
-        lsSet(entry._sourceKey, remaining);
-        renderMergedWorkoutHistory();
-        renderHome();
-      });
-      summary.appendChild(delBtn);
-      details.appendChild(summary);
-
       const content = document.createElement('div');
       content.className = 'workout-result';
       content.innerHTML = renderMarkdown(entry.content);
+
+      attachHistoryItemControls(summary, content, entry, {
+        onSaveContent: (newContent) => {
+          const all = lsGet(entry._sourceKey, []);
+          const found = all.find(e => e.generatedAt === entry.generatedAt);
+          if (found) {
+            found.content = newContent;
+            entry.content = newContent;
+            lsSet(entry._sourceKey, all);
+          }
+          renderMergedWorkoutHistory();
+        },
+        onDelete: () => {
+          const remaining = lsGet(entry._sourceKey, []).filter(e => e.generatedAt !== entry.generatedAt);
+          lsSet(entry._sourceKey, remaining);
+          renderMergedWorkoutHistory();
+          renderHome();
+        }
+      });
+      details.appendChild(summary);
       details.appendChild(content);
 
       const normalizedMuscles = normalizeMuscleEntry(entry.muscleGroups);
@@ -2586,6 +2694,7 @@ clar, fără introduceri sau explicații.`;
         <div class="history-actions"><button type="button" class="delete-btn">Șterge</button></div>
       `;
       item.querySelector('.delete-btn').addEventListener('click', () => {
+        if (!confirm('Ștergi această alergare?')) return;
         const all = lsGet(RUNS_KEY, []).filter(r => r.savedAt !== run.savedAt);
         lsSet(RUNS_KEY, all);
         renderRunHistory();
