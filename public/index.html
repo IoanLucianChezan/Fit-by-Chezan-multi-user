@@ -1241,6 +1241,28 @@
       <h2>Km alergați pe lună</h2>
       <div id="stats-km-chart" class="stats-chart"></div>
     </div>
+
+    <div class="card">
+      <h2>Progres exerciții</h2>
+      <p class="hint">Notează manual cât ai ridicat la un exercițiu, ca să vezi evoluția în timp.</p>
+
+      <div class="row">
+        <input type="text" id="exercise-log-name" placeholder="Exercițiu (ex: Genoflexiuni)" list="exercise-log-names">
+        <input type="number" id="exercise-log-weight" placeholder="Greutate (kg)" step="0.5" min="0" style="max-width:130px;">
+        <input type="number" id="exercise-log-reps" placeholder="Repetări" step="1" min="0" style="max-width:110px;">
+        <input type="date" id="exercise-log-date" style="max-width:150px;">
+      </div>
+      <datalist id="exercise-log-names"></datalist>
+      <button type="button" id="exercise-log-add-btn">+ Adaugă notare</button>
+      <span id="exercise-log-status"></span>
+
+      <div class="settings-field" style="margin-top:16px;">
+        <label for="exercise-log-select">Vezi progresul pentru</label>
+        <select id="exercise-log-select"></select>
+      </div>
+      <div id="exercise-log-chart" class="stats-chart"></div>
+      <div id="exercise-log-history" style="margin-top:10px;"></div>
+    </div>
   </section>
 
   <!-- ================= SETĂRI ================= -->
@@ -3311,6 +3333,170 @@ Generează antrenamentul concret de azi.`;
     svg += `</svg>`;
     return svg;
   }
+
+  function buildLineChart(points, formatFn) {
+    if (!points.length) return '<p class="hint">Nicio notare încă pentru acest exercițiu.</p>';
+    const width = 780, height = 240, baseline = 200, topPad = 30, sidePad = 24;
+    const values = points.map(p => p.value);
+    const maxVal = Math.max(...values);
+    const minVal = Math.min(...values);
+    const range = maxVal - minVal || 1;
+    const usableWidth = width - sidePad * 2;
+    const slot = points.length > 1 ? usableWidth / (points.length - 1) : 0;
+    const labelEvery = Math.max(1, Math.ceil(points.length / 8));
+    const coords = points.map((p, i) => {
+      const x = points.length > 1 ? sidePad + i * slot : width / 2;
+      const y = baseline - ((p.value - minVal) / range) * (baseline - topPad);
+      return { x, y, ...p };
+    });
+    const pathD = coords.map((c, i) => `${i === 0 ? 'M' : 'L'}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ');
+    let svg = `<svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" role="img">`;
+    svg += `<line x1="0" y1="${baseline}" x2="${width}" y2="${baseline}" stroke="var(--border)" stroke-width="1" />`;
+    svg += `<path d="${pathD}" fill="none" stroke="var(--primary)" stroke-width="2.5" />`;
+    coords.forEach((c, i) => {
+      svg += `<circle class="stats-bar stats-bar-workout" cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="5"><title>${escapeHtml(c.label)}: ${escapeHtml(formatFn(c.value))}</title></circle>`;
+      svg += `<text class="stats-chart-value" x="${c.x.toFixed(1)}" y="${(c.y - 14).toFixed(1)}" text-anchor="middle">${escapeHtml(formatFn(c.value))}</text>`;
+      if (i % labelEvery === 0 || i === coords.length - 1) {
+        svg += `<text class="stats-chart-label" x="${c.x.toFixed(1)}" y="${(baseline + 20).toFixed(1)}" text-anchor="middle">${escapeHtml(c.label)}</text>`;
+      }
+    });
+    svg += `</svg>`;
+    return svg;
+  }
+
+  // ============================================================
+  // Progres exerciții (notare manuală: greutate x repetări în timp)
+  // ============================================================
+
+  const EXERCISE_LOGS_KEY = 'fw_exercise_logs';
+
+  function distinctExerciseNames() {
+    const logs = lsGet(EXERCISE_LOGS_KEY, []);
+    return [...new Set(logs.map(l => l.exercise))].sort((a, b) => a.localeCompare(b));
+  }
+
+  function refreshExerciseDatalist() {
+    const datalist = document.getElementById('exercise-log-names');
+    datalist.innerHTML = distinctExerciseNames().map(name => `<option value="${escapeHtml(name)}"></option>`).join('');
+  }
+
+  function refreshExerciseSelect(preferredName) {
+    const select = document.getElementById('exercise-log-select');
+    const names = distinctExerciseNames();
+    const previous = preferredName || select.value;
+    select.innerHTML = '';
+    if (!names.length) {
+      select.innerHTML = '<option value="">(nicio notare încă)</option>';
+      return;
+    }
+    names.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      select.appendChild(opt);
+    });
+    select.value = names.includes(previous) ? previous : names[names.length - 1];
+  }
+
+  function renderExerciseProgress() {
+    const select = document.getElementById('exercise-log-select');
+    const exercise = select.value;
+    const chartEl = document.getElementById('exercise-log-chart');
+    const historyEl = document.getElementById('exercise-log-history');
+    if (!exercise) {
+      chartEl.innerHTML = '';
+      historyEl.innerHTML = '';
+      return;
+    }
+    const logs = lsGet(EXERCISE_LOGS_KEY, [])
+      .filter(l => l.exercise === exercise)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const points = logs.map(l => ({ label: l.date.slice(5), value: Number(l.weight_kg) || 0 }));
+    chartEl.innerHTML = buildLineChart(points, v => `${v} kg`);
+
+    historyEl.innerHTML = '';
+    [...logs].reverse().forEach(log => {
+      const item = document.createElement('div');
+      item.className = 'meal-history-item';
+
+      function renderView() {
+        item.innerHTML = `
+          <div>${escapeHtml(log.date)} — ${log.weight_kg} kg × ${log.reps} reps</div>
+          <div class="history-actions">
+            <button type="button" class="settings-shortcut edit-btn">Editează</button>
+            <button type="button" class="delete-btn">Șterge</button>
+          </div>
+        `;
+        item.querySelector('.edit-btn').addEventListener('click', renderEdit);
+        item.querySelector('.delete-btn').addEventListener('click', () => {
+          if (!confirm('Ștergi această notare?')) return;
+          const all = lsGet(EXERCISE_LOGS_KEY, []).filter(l => l.savedAt !== log.savedAt);
+          lsSet(EXERCISE_LOGS_KEY, all);
+          refreshExerciseDatalist();
+          refreshExerciseSelect(exercise);
+          renderExerciseProgress();
+        });
+      }
+
+      function renderEdit() {
+        item.innerHTML = `
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+            <label style="font-size:12px;">Dată<br><input type="date" class="edit-date" value="${escapeHtml(log.date)}"></label>
+            <label style="font-size:12px;">Greutate (kg)<br><input type="number" class="edit-weight" value="${log.weight_kg}" step="0.5" style="width:90px;"></label>
+            <label style="font-size:12px;">Repetări<br><input type="number" class="edit-reps" value="${log.reps}" step="1" style="width:80px;"></label>
+          </div>
+          <div class="history-actions" style="margin-top:8px;">
+            <button type="button" class="save-edit-btn">Salvează</button>
+            <button type="button" class="settings-shortcut cancel-edit-btn">Anulează</button>
+          </div>
+        `;
+        item.querySelector('.save-edit-btn').addEventListener('click', () => {
+          const all = lsGet(EXERCISE_LOGS_KEY, []);
+          const found = all.find(l => l.savedAt === log.savedAt);
+          if (found) {
+            found.date = item.querySelector('.edit-date').value || found.date;
+            found.weight_kg = Number(item.querySelector('.edit-weight').value) || 0;
+            found.reps = Number(item.querySelector('.edit-reps').value) || 0;
+            lsSet(EXERCISE_LOGS_KEY, all);
+          }
+          renderExerciseProgress();
+        });
+        item.querySelector('.cancel-edit-btn').addEventListener('click', renderView);
+      }
+
+      renderView();
+      historyEl.appendChild(item);
+    });
+  }
+
+  document.getElementById('exercise-log-date').value = todayStr();
+
+  document.getElementById('exercise-log-add-btn').addEventListener('click', () => {
+    const status = document.getElementById('exercise-log-status');
+    const name = document.getElementById('exercise-log-name').value.trim();
+    const weight = Number(document.getElementById('exercise-log-weight').value);
+    const reps = Number(document.getElementById('exercise-log-reps').value);
+    const date = document.getElementById('exercise-log-date').value || todayStr();
+    if (!name) { status.textContent = 'Completează numele exercițiului.'; return; }
+    if (!weight && weight !== 0) { status.textContent = 'Completează greutatea.'; return; }
+    const logs = lsGet(EXERCISE_LOGS_KEY, []);
+    logs.push({ exercise: name, weight_kg: weight, reps: reps || 0, date, savedAt: new Date().toISOString() });
+    lsSet(EXERCISE_LOGS_KEY, logs);
+    document.getElementById('exercise-log-weight').value = '';
+    document.getElementById('exercise-log-reps').value = '';
+    status.textContent = 'Adăugat.';
+    setTimeout(() => { status.textContent = ''; }, 2000);
+    refreshExerciseDatalist();
+    refreshExerciseSelect(name);
+    renderExerciseProgress();
+  });
+
+  document.getElementById('exercise-log-select').addEventListener('change', renderExerciseProgress);
+
+  refreshExerciseDatalist();
+  refreshExerciseSelect();
+  renderExerciseProgress();
 
   function populateStatsYearSelect() {
     const select = document.getElementById('stats-year-select');
