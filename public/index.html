@@ -600,7 +600,7 @@
   <div id="login-overlay" class="hidden">
     <div class="login-box">
       <button type="button" id="login-close" title="Închide">✕</button>
-      <h1>Fit by Chezan</h1>
+      <h1>Respect the process</h1>
       <p id="login-hint">Autentifică-te ca să folosești AI-ul și să-ți salvezi datele.</p>
       <input type="text" id="login-username" placeholder="Username" autocomplete="username">
       <input type="password" id="login-password" placeholder="Parolă" autocomplete="current-password">
@@ -825,6 +825,7 @@
 
       <div class="workout-actions" id="workout-finish-wrap" style="display:none;">
         <button type="button" id="workout-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <button type="button" id="workout-back-btn" class="settings-shortcut">← Înapoi</button>
         <span id="workout-finish-status"></span>
       </div>
     </div>
@@ -866,6 +867,7 @@
 
       <div class="workout-actions" id="bb-custom-finish-wrap" style="display:none;">
         <button type="button" id="bb-custom-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <button type="button" id="bb-custom-back-btn" class="settings-shortcut">← Înapoi</button>
         <span id="bb-custom-finish-status"></span>
       </div>
     </div>
@@ -884,6 +886,7 @@
 
       <div class="workout-actions" id="easy-finish-wrap" style="display:none;">
         <button type="button" id="easy-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <button type="button" id="easy-back-btn" class="settings-shortcut">← Înapoi</button>
         <span id="easy-finish-status"></span>
       </div>
     </div>
@@ -902,6 +905,7 @@
 
       <div class="workout-actions" id="hero-finish-wrap" style="display:none;">
         <button type="button" id="hero-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <button type="button" id="hero-back-btn" class="settings-shortcut">← Înapoi</button>
         <span id="hero-finish-status"></span>
       </div>
     </div>
@@ -1412,6 +1416,8 @@
 
   <!-- ================= 7. STATISTICI ================= -->
   <section id="stats">
+    <button type="button" data-tab="home" class="settings-shortcut">← Înapoi</button>
+
     <div class="card">
       <h2>Statistici anuale</h2>
       <div class="settings-field stats-year-field">
@@ -1979,6 +1985,13 @@ Generează antrenamentul de azi.`;
       btn.disabled = false;
       clearQuote('workout-generate-quote');
     }
+  });
+
+  document.getElementById('workout-back-btn').addEventListener('click', () => {
+    workoutPreview = null;
+    document.getElementById('workout-preview').innerHTML = '';
+    document.getElementById('workout-finish-wrap').style.display = 'none';
+    document.getElementById('workout-generate-status').textContent = '';
   });
 
   document.getElementById('workout-finish-btn').addEventListener('click', async () => {
@@ -2586,6 +2599,13 @@ Generează antrenamentul de azi.`;
     }
   });
 
+  document.getElementById('bb-custom-back-btn').addEventListener('click', () => {
+    bbCustomPreview = null;
+    document.getElementById('bb-custom-preview').innerHTML = '';
+    document.getElementById('bb-custom-finish-wrap').style.display = 'none';
+    document.getElementById('bb-custom-generate-status').textContent = '';
+  });
+
   document.getElementById('bb-custom-finish-btn').addEventListener('click', async () => {
     if (!bbCustomPreview) return;
     const status = document.getElementById('bb-custom-finish-status');
@@ -2682,6 +2702,13 @@ Generează un antrenament bodyweight nou, pe saltea, de 15-30 de minute, cu un f
       btn.disabled = false;
       clearQuote('easy-generate-quote');
     }
+  });
+
+  document.getElementById('easy-back-btn').addEventListener('click', () => {
+    easyWorkoutPreview = null;
+    document.getElementById('easy-workout-preview').innerHTML = '';
+    document.getElementById('easy-finish-wrap').style.display = 'none';
+    document.getElementById('easy-generate-status').textContent = '';
   });
 
   document.getElementById('easy-finish-btn').addEventListener('click', async () => {
@@ -2783,6 +2810,13 @@ Generează un Hero WOD sau Girl/benchmark WOD cunoscut.${avoidClause}`;
       btn.disabled = false;
       clearQuote('hero-generate-quote');
     }
+  });
+
+  document.getElementById('hero-back-btn').addEventListener('click', () => {
+    heroWorkoutPreview = null;
+    document.getElementById('hero-workout-preview').innerHTML = '';
+    document.getElementById('hero-finish-wrap').style.display = 'none';
+    document.getElementById('hero-generate-status').textContent = '';
   });
 
   document.getElementById('hero-finish-btn').addEventListener('click', async () => {
