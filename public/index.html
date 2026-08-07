@@ -827,6 +827,43 @@
     </div>
 
     <div class="card">
+      <h2>Antrenament Bodybuilding (personalizat)</h2>
+      <p class="hint">Un singur antrenament, adaptat nivelului și split-ului tău. Presupune acces la o sală dotată.</p>
+
+      <div class="settings-field">
+        <label for="bb-custom-level">Nivel</label>
+        <select id="bb-custom-level">
+          <option value="Începător">Începător</option>
+          <option value="Intermediar" selected>Intermediar</option>
+          <option value="Avansat">Avansat</option>
+        </select>
+      </div>
+      <div class="settings-field">
+        <label for="bb-custom-split">Split preferat</label>
+        <select id="bb-custom-split">
+          <option value="AI alege">Las AI să aleagă</option>
+          <option value="Push/Pull/Legs">Push/Pull/Legs</option>
+          <option value="Upper/Lower">Upper/Lower</option>
+          <option value="Full body">Full body</option>
+          <option value="O grupă pe zi (bro split)">O grupă pe zi (bro split)</option>
+        </select>
+      </div>
+
+      <div class="workout-actions" style="margin-top:16px;">
+        <button type="button" id="bb-custom-generate-btn" class="btn-big">🔄 Generează antrenament</button>
+        <span id="bb-custom-generate-status"></span>
+      </div>
+
+      <div id="bb-custom-generate-quote" class="motivational-quote"></div>
+      <div id="bb-custom-preview" class="workout-result"></div>
+
+      <div class="workout-actions" id="bb-custom-finish-wrap" style="display:none;">
+        <button type="button" id="bb-custom-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <span id="bb-custom-finish-status"></span>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Easy WOD (bodyweight)</h2>
       <p class="hint">Antrenament pe saltea, fără echipament — flotări, genoflexiuni, abdomene, plank, triceps. Format variat (EMOM, AMRAP, seturi, circuit, tabata), 15-30 minute.</p>
 
@@ -2055,10 +2092,10 @@ obiectului JSON.`;
     });
   }
 
-  // Istoric unificat pentru tab-ul Custom Workout: combină cele 3 surse
-  // (Antrenament/Easy WOD/Hero WOD) într-o singură listă, sortată descrescător.
+  // Istoric unificat pentru tab-ul Custom Workout: combină cele 4 surse
+  // (Antrenament/Bodybuilding personalizat/Easy WOD/Hero WOD) într-o singură listă, sortată descrescător.
   function renderMergedWorkoutHistory() {
-    const sourceKeys = [WORKOUT_LOG_KEY, EASY_HISTORY_KEY, HERO_HISTORY_KEY];
+    const sourceKeys = [WORKOUT_LOG_KEY, BB_CUSTOM_HISTORY_KEY, EASY_HISTORY_KEY, HERO_HISTORY_KEY];
     const container = document.getElementById('custom-workout-history');
     const merged = [];
     sourceKeys.forEach(key => {
@@ -2112,6 +2149,109 @@ obiectului JSON.`;
       container.appendChild(details);
     });
   }
+
+  // ============================================================
+  // Antrenament Bodybuilding (personalizat) — un singur antrenament,
+  // fără echipament/skills de configurat, doar nivel + split
+  // ============================================================
+
+  const BB_CUSTOM_HISTORY_KEY = 'fw_bb_custom_history';
+  const BB_CUSTOM_CONFIG_KEY = 'fw_bb_custom_config';
+
+  const BB_CUSTOM_SYSTEM_PROMPT = `Ești un antrenor de bodybuilding expert, pentru cineva care se
+antrenează într-o sală de fitness complet dotată (gantere, bară, aparate, cabluri).
+
+Primești nivelul de experiență al utilizatorului și split-ul preferat (sau "las AI să aleagă").
+
+Sarcina ta: generează UN SINGUR antrenament bodybuilding complet pentru azi, coerent cu split-ul
+ales (dacă split-ul e "las AI să aleagă", alege tu o grupă/combinație tipică, variată față de o zi
+tipică). Pentru fiecare exercițiu inclus: numele exercițiului, seturi × repetări, timp de pauză
+recomandat, și intensitate (RPE sau %1RM aproximativ) — NU inventa greutăți absolute în kg,
+utilizatorul nu are un istoric de 1RM disponibil. Include:
+- Încălzire scurtă specifică grupei/grupelor vizate
+- Parte principală (exercițiile, în ordine logică: compuse mari primele, apoi izolare)
+- Cooldown/stretching scurt
+- Notă de tehnică/siguranță concisă
+
+Răspunde direct, formatat clar (markdown, tabel sau listă per exercițiu), fără introduceri.`;
+
+  function buildBbCustomUserPrompt(level, split, dayName, dateStr) {
+    return `Ziua curentă: ${dayName}, ${dateStr}
+Nivel: ${level}
+Split preferat: ${split === 'AI alege' ? 'lasă AI să aleagă ce grupă/grupe lucrează azi' : split}
+
+Generează antrenamentul de azi.`;
+  }
+
+  function loadBbCustomConfigForm() {
+    const cfg = lsGet(BB_CUSTOM_CONFIG_KEY, { level: 'Intermediar', split: 'AI alege' });
+    document.getElementById('bb-custom-level').value = cfg.level;
+    document.getElementById('bb-custom-split').value = cfg.split;
+  }
+  loadBbCustomConfigForm();
+
+  let bbCustomPreview = null;
+
+  document.getElementById('bb-custom-generate-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('bb-custom-generate-btn');
+    const status = document.getElementById('bb-custom-generate-status');
+    const preview = document.getElementById('bb-custom-preview');
+    btn.disabled = true;
+    document.getElementById('bb-custom-finish-wrap').style.display = 'none';
+    status.textContent = '';
+    showQuote('bb-custom-generate-quote');
+    preview.innerHTML = '';
+    try {
+      const level = document.getElementById('bb-custom-level').value;
+      const split = document.getElementById('bb-custom-split').value;
+      lsSet(BB_CUSTOM_CONFIG_KEY, { level, split });
+      const now = new Date();
+      const dayName = RO_DAYS[now.getDay()];
+      const dateStr = localDateStr(now);
+      const messages = [
+        { role: 'system', content: BB_CUSTOM_SYSTEM_PROMPT },
+        { role: 'user', content: buildBbCustomUserPrompt(level, split, dayName, dateStr) }
+      ];
+      const result = await generateWithFallback(messages);
+      bbCustomPreview = { ...result, day: dayName, date: dateStr };
+      preview.innerHTML = renderMarkdown(result.content);
+      status.textContent = '';
+      document.getElementById('bb-custom-finish-wrap').style.display = 'flex';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('bb-custom-generate-quote');
+    }
+  });
+
+  document.getElementById('bb-custom-finish-btn').addEventListener('click', async () => {
+    if (!bbCustomPreview) return;
+    const status = document.getElementById('bb-custom-finish-status');
+    const entry = { ...bbCustomPreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    const history = lsGet(BB_CUSTOM_HISTORY_KEY, []);
+    history.unshift(entry);
+    lsSet(BB_CUSTOM_HISTORY_KEY, history);
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    document.getElementById('bb-custom-finish-wrap').style.display = 'none';
+    renderMergedWorkoutHistory();
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+
+    const muscles = await classifyMuscles(entry.content);
+    if (muscles.length) {
+      const all = lsGet(BB_CUSTOM_HISTORY_KEY, []);
+      const found = all.find(e => e.generatedAt === entry.generatedAt);
+      if (found) {
+        found.muscleGroups = muscles;
+        lsSet(BB_CUSTOM_HISTORY_KEY, all);
+        renderMergedWorkoutHistory();
+        renderHome();
+      }
+    }
+  });
 
   // ============================================================
   // 4. Easy WOD
@@ -2961,7 +3101,8 @@ Generează antrenamentul concret de azi.`;
     const runs = lsGet(RUNS_KEY, []);
     const crossfitProgram = lsGet(CROSSFIT_PROGRAM_HISTORY_KEY, []);
     const bbProgram = lsGet(BB_PROGRAM_HISTORY_KEY, []);
-    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram];
+    const bbCustom = lsGet(BB_CUSTOM_HISTORY_KEY, []);
+    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom];
 
     const workoutsPerMonth = new Array(12).fill(0);
     allWorkouts.forEach(e => {
@@ -3006,7 +3147,8 @@ Generează antrenamentul concret de azi.`;
     const runs = lsGet(RUNS_KEY, []);
     const crossfitProgram = lsGet(CROSSFIT_PROGRAM_HISTORY_KEY, []);
     const bbProgram = lsGet(BB_PROGRAM_HISTORY_KEY, []);
-    const all = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram];
+    const bbCustom = lsGet(BB_CUSTOM_HISTORY_KEY, []);
+    const all = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom];
 
     const workoutsToday = all.filter(e => e.date === today).length;
     const workoutsMonth = all.filter(e => e.date.startsWith(monthPrefix)).length;
