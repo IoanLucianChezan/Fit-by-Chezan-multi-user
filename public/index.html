@@ -148,11 +148,37 @@
   .settings-shortcut:hover { background: var(--surface-2); color: var(--text); transform: none; box-shadow: none; }
   .settings-shortcut.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 700; }
 
+  @media (max-width: 700px) {
+    .settings-shortcut,
+    #logout-btn, #login-open-btn {
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      box-sizing: border-box;
+    }
+    .theme-toggle {
+      height: 40px;
+      box-sizing: border-box;
+    }
+    .theme-toggle button {
+      height: 100% !important;
+      aspect-ratio: 1 / 1;
+      min-width: 0 !important;
+      width: auto;
+      padding: 0 !important;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .nav-scroll-wrap { position: relative; margin: 24px 0; }
+
   nav {
     display: flex;
     align-items: center;
     gap: 4px;
-    margin: 24px 0;
     padding: 6px;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -163,20 +189,27 @@
 
   @media (max-width: 700px) {
     nav {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 6px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      justify-content: flex-start;
+      scrollbar-width: none;
     }
-    nav button {
-      flex: none;
-      width: 100%;
-      min-width: 0;
-      padding: 10px 4px;
-      font-size: 12.5px;
-      line-height: 1.2;
-      white-space: normal;
-      overflow-wrap: break-word;
+    nav::-webkit-scrollbar { display: none; }
+    nav button { flex: 0 0 auto; }
+    .nav-scroll-wrap::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 34px;
+      border-radius: 0 14px 14px 0;
+      background: linear-gradient(to right, transparent, var(--surface) 65%);
+      pointer-events: none;
+      transition: opacity .2s;
     }
+    .nav-scroll-wrap.nav-at-end::after { opacity: 0; }
   }
   nav button {
     padding: 13px 20px;
@@ -635,13 +668,14 @@
     </div>
   </div>
 
-  <nav id="tabs">
-    <button data-tab="workout">One time</button>
-    <button data-tab="program-crossfit">Crossfit</button>
-    <button data-tab="program-bodybuilding">Bodybuilding</button>
-    <button data-tab="program-weightlifting">Lifting</button>
-    <button data-tab="nutrition">Nutriție</button>
-  </nav>
+  <div class="nav-scroll-wrap">
+    <nav id="tabs">
+      <button data-tab="workout">One time</button>
+      <button data-tab="program-crossfit">Crossfit</button>
+      <button data-tab="program-bodybuilding">Bodybuilding</button>
+      <button data-tab="program-weightlifting">Lifting</button>
+    </nav>
+  </div>
 
   <!-- ================= 1. HOME ================= -->
   <section id="home" class="active">
@@ -663,6 +697,10 @@
         <div class="stat-label">Km alergați luna asta</div>
         <div class="stat-value" id="stat-run-km-month">–</div>
       </div>
+    </div>
+
+    <div class="card">
+      <button type="button" data-tab="nutrition" class="btn-big" style="width:100%;">🍽️ Nutriție</button>
     </div>
 
     <div class="card">
@@ -976,6 +1014,8 @@
 
   <!-- ================= 3. NUTRIȚIE ================= -->
   <section id="nutrition">
+    <button type="button" data-tab="home" class="settings-shortcut">← Înapoi</button>
+
     <div class="card">
       <h2>Adaugă masă</h2>
       <p class="hint">Descrie o masă (o masă = o intrare).</p>
@@ -1583,6 +1623,20 @@
       if (btn.dataset.tab === 'stats') renderStatsCharts();
     });
   });
+
+  // --- Indiciu vizual scroll orizontal meniu (mobil) ---
+  (function () {
+    const navEl = document.getElementById('tabs');
+    const wrapEl = document.querySelector('.nav-scroll-wrap');
+    if (!navEl || !wrapEl) return;
+    function updateNavFade() {
+      const atEnd = navEl.scrollWidth - navEl.clientWidth <= navEl.scrollLeft + 2;
+      wrapEl.classList.toggle('nav-at-end', atEnd);
+    }
+    navEl.addEventListener('scroll', updateNavFade);
+    window.addEventListener('resize', updateNavFade);
+    updateNavFade();
+  })();
 
   // --- Temă light/dark ---
   const THEME_KEY = 'fw_theme';
