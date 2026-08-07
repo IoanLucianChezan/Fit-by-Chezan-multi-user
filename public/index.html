@@ -619,7 +619,6 @@
     <p>No rest days. Pain is temporary, progress is permanent.</p>
     <div class="header-actions">
       <button type="button" class="settings-shortcut active" data-tab="home">🏠 Acasă</button>
-      <button type="button" class="settings-shortcut" data-tab="stats">📊 Statistici</button>
       <button type="button" class="settings-shortcut" data-tab="settings">⚙️ Setări</button>
       <button type="button" id="login-open-btn" title="Intră / Creează cont" class="hidden">🔐 Cont</button>
       <button type="button" id="logout-btn" title="Ieși din cont" class="hidden">🚪 Ieși din cont</button>
@@ -631,11 +630,11 @@
   </div>
 
   <nav id="tabs">
-    <button data-tab="workout">Custom Workout</button>
-    <button data-tab="nutrition">Nutriție</button>
+    <button data-tab="workout">One time Workout</button>
     <button data-tab="program-crossfit">Program Crossfit</button>
     <button data-tab="program-bodybuilding">Program Bodybuilding</button>
     <button data-tab="program-weightlifting">Program Weightlifting</button>
+    <button data-tab="nutrition">Nutriție</button>
   </nav>
 
   <!-- ================= 1. HOME ================= -->
@@ -662,7 +661,7 @@
 
     <div class="card">
       <h2>Mușchi lucrați azi</h2>
-      <p class="hint">Din antrenamentele finalizate azi (Custom Workout, Program Crossfit, Program Bodybuilding, Program Weightlifting).</p>
+      <p class="hint">Din antrenamentele finalizate azi (One time Workout, Program Crossfit, Program Bodybuilding, Program Weightlifting).</p>
       <div class="muscle-map">
         <figure>
           <svg viewBox="0 0 220 460" xmlns="http://www.w3.org/2000/svg" id="mm-front">
@@ -782,6 +781,10 @@
         <span><i class="swatch-medium"></i> Moderat</span>
         <span><i class="swatch-high"></i> Intens</span>
       </div>
+    </div>
+
+    <div class="card">
+      <button type="button" data-tab="stats" class="btn-big" style="width:100%;">📊 Vezi Statistici</button>
     </div>
   </section>
 
