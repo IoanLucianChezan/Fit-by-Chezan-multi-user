@@ -144,43 +144,60 @@
     padding: 8px 14px;
     font-size: 13px;
     font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
   .settings-shortcut:hover { background: var(--surface-2); color: var(--text); transform: none; box-shadow: none; }
   .settings-shortcut.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 700; }
 
   @media (max-width: 700px) {
-    .settings-shortcut {
-      height: 40px;
+    .header-actions { width: 100%; }
+    .settings-shortcut[data-tab="home"] {
+      height: 48px;
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
       box-sizing: border-box;
+      padding: 8px 18px;
+      font-size: 14px;
     }
+    .settings-shortcut[data-tab="settings"] {
+      margin-left: auto;
+    }
+    .settings-shortcut[data-tab="settings"],
     #logout-btn, #login-open-btn {
-      flex-direction: column;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
       justify-content: center;
-      gap: 1px;
-      height: auto;
-      min-height: 46px;
-      padding: 5px 14px;
       border-radius: 999px;
       box-sizing: border-box;
     }
-    #logout-btn .btn-icon, #login-open-btn .btn-icon { font-size: 15px; line-height: 1; }
-    #logout-btn .btn-label, #login-open-btn .btn-label { font-size: 13px; font-weight: 500; line-height: 1.1; white-space: nowrap; }
+    .settings-shortcut[data-tab="settings"] .btn-label,
+    #logout-btn .btn-label, #login-open-btn .btn-label { display: none; }
+    .settings-shortcut[data-tab="settings"] .btn-icon,
+    #logout-btn .btn-icon, #login-open-btn .btn-icon { font-size: 16px; line-height: 1; }
     .theme-toggle {
-      height: 40px;
-      box-sizing: border-box;
+      background: none;
+      border: none;
+      padding: 0;
+      gap: 8px;
     }
     .theme-toggle button {
-      height: 100% !important;
-      aspect-ratio: 1 / 1;
+      width: 38px;
+      height: 38px;
       min-width: 0 !important;
-      width: auto;
       padding: 0 !important;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-sizing: border-box;
     }
   }
 
@@ -672,7 +689,7 @@
     <p>No rest days. Pain is temporary, progress is permanent.</p>
     <div class="header-actions">
       <button type="button" class="settings-shortcut active" data-tab="home">🏠 Acasă</button>
-      <button type="button" class="settings-shortcut" data-tab="settings">⚙️ Setări</button>
+      <button type="button" class="settings-shortcut" data-tab="settings" title="Setări"><span class="btn-icon">⚙️</span><span class="btn-label">Setări</span></button>
       <button type="button" id="login-open-btn" title="Intră / Creează cont" class="hidden"><span class="btn-icon">🔐</span><span class="btn-label">Cont</span></button>
       <button type="button" id="logout-btn" title="Ieși din cont" class="hidden"><span class="btn-icon">←</span><span class="btn-label">Delog</span></button>
       <div class="theme-toggle" id="theme-toggle">
