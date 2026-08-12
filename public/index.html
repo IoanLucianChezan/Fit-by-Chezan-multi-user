@@ -467,6 +467,7 @@
   }
   .btn-big:hover { background: linear-gradient(135deg, var(--primary-hover), var(--accent)); transform: translateY(-1px); }
   .btn-finish { background: var(--primary); font-size: 16px; padding: 12px 24px; }
+  .btn-execute { background: linear-gradient(135deg, var(--accent), var(--primary)); font-size: 16px; padding: 12px 24px; }
   .workout-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 16px; }
 
   .mode-toggle { display: flex; gap: 6px; margin-bottom: 16px; }
@@ -576,6 +577,9 @@
   .config-subsection { margin-bottom: 16px; }
   .config-subsection h3 { font-size: 14px; margin-bottom: 6px; }
 
+  .checkbox-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; margin-bottom: 8px; cursor: pointer; color: var(--text); }
+  .checkbox-row input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--accent); }
+
   .nutrition-summary { margin-bottom: 16px; }
   .nutrition-summary-row { margin-bottom: 12px; }
   .nutrition-summary-row .label-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
@@ -637,6 +641,47 @@
   .login-switch { margin-top: 14px; font-size: 13px; }
   .login-switch a { color: var(--accent); text-decoration: none; cursor: pointer; }
   .login-switch a:hover { text-decoration: underline; }
+
+  #hiit-timer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+  }
+  .timer-box {
+    position: relative;
+    width: min(360px, 92vw);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 32px 24px 24px;
+    text-align: center;
+  }
+  #hiit-timer-close {
+    position: absolute; top: 10px; right: 10px;
+    width: 28px; height: 28px; padding: 0;
+    background: transparent; border: none; box-shadow: none;
+    color: var(--text-muted); font-size: 14px;
+  }
+  #hiit-timer-close:hover { background: var(--surface-2); transform: none; box-shadow: none; }
+  .timer-ring-wrap { position: relative; width: min(260px, 70vw); height: min(260px, 70vw); margin: 0 auto; }
+  .timer-ring-svg { width: 100%; height: 100%; transform-origin: center; }
+  .timer-ring-bg { fill: none; stroke: var(--surface-2); stroke-width: 10; }
+  .timer-ring-progress { fill: none; stroke: var(--accent); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset .18s linear; }
+  .timer-ring-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px;
+  }
+  .timer-time { font-size: 40px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+  .timer-phase { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
+  .timer-exercise { margin-top: 18px; font-size: 20px; font-weight: 700; color: var(--text); }
+  .timer-progress-text { margin-top: 6px; font-size: 13px; color: var(--text-muted); }
+  .timer-controls { display: flex; justify-content: center; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
   #logout-btn, #login-open-btn {
     background: var(--surface);
     color: var(--text-muted);
@@ -679,6 +724,28 @@
       <div id="login-error"></div>
       <div class="login-switch">
         <a href="#" id="login-switch-link">Nu ai cont? Creează unul</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="hiit-timer-overlay" class="hidden">
+    <div class="timer-box">
+      <button type="button" id="hiit-timer-close" title="Închide">✕</button>
+      <div class="timer-ring-wrap">
+        <svg viewBox="0 0 200 200" class="timer-ring-svg">
+          <circle cx="100" cy="100" r="90" class="timer-ring-bg"></circle>
+          <circle cx="100" cy="100" r="90" class="timer-ring-progress" id="hiit-ring-progress" transform="rotate(-90 100 100)"></circle>
+        </svg>
+        <div class="timer-ring-center">
+          <div class="timer-time" id="hiit-timer-time">00:00</div>
+          <div class="timer-phase" id="hiit-timer-phase"></div>
+        </div>
+      </div>
+      <div class="timer-exercise" id="hiit-timer-exercise"></div>
+      <div class="timer-progress-text" id="hiit-timer-progress-text"></div>
+      <div class="timer-controls">
+        <button type="button" id="hiit-timer-pause" class="settings-shortcut">⏸ Pauză</button>
+        <button type="button" id="hiit-timer-stop" class="settings-shortcut">⏹ Oprește</button>
       </div>
     </div>
   </div>
@@ -865,6 +932,61 @@
 
   <!-- ================= 2. CUSTOM WORKOUT ================= -->
   <section id="workout">
+    <div class="card">
+      <h2>HIIT</h2>
+      <p class="hint">Antrenament pe intervale, cu cronometru integrat. Alege nivelul, tipurile de exerciții și, opțional, echipamentul disponibil.</p>
+
+      <details class="manual-entry">
+        <summary><h2>Configurare</h2></summary>
+
+        <div class="settings-field">
+          <label for="hiit-level">Nivel</label>
+          <select id="hiit-level">
+            <option value="Începător">Începător</option>
+            <option value="Intermediar" selected>Intermediar</option>
+            <option value="Avansat">Avansat</option>
+          </select>
+        </div>
+
+        <div class="config-subsection">
+          <h3>Tip de exercițiu</h3>
+          <p class="hint">Bifează una sau mai multe categorii — AI alege exercițiile concrete din categoriile bifate.</p>
+          <label class="checkbox-row"><input type="checkbox" class="hiit-type" value="cardio" data-label="Cardio fără echipament" checked> Cardio fără echipament <span class="hint">(burpees, mountain climbers, high knees, jumping jacks)</span></label>
+          <label class="checkbox-row"><input type="checkbox" class="hiit-type" value="strength" data-label="Forță/putere"> Forță/putere <span class="hint">(squats, lunges, push-ups, kettlebell swings)</span></label>
+          <label class="checkbox-row"><input type="checkbox" class="hiit-type" value="core" data-label="Core"> Core <span class="hint">(plank variations, Russian twists, leg raises)</span></label>
+          <label class="checkbox-row"><input type="checkbox" class="hiit-type" value="explosive" data-label="Full body/explozive"> Full body/explozive <span class="hint">(box jumps, thrusters, battle ropes)</span></label>
+          <label class="checkbox-row"><input type="checkbox" class="hiit-type" value="kettlebell" data-label="Kettlebell"> Kettlebell <span class="hint">(clean, snatch, swing, goblet squat, press)</span></label>
+        </div>
+
+        <div class="config-subsection">
+          <h3>Echipamente</h3>
+          <p class="hint">Ce echipamente ai disponibile (ex: Kettlebell — 16kg). Lasă gol pentru doar greutate corporală.</p>
+          <div id="hiit-equipment-list"></div>
+          <button type="button" id="hiit-add-equipment">+ Adaugă echipament</button>
+        </div>
+
+        <div class="settings-field">
+          <label for="hiit-limitations">Limitări / accidentări (opțional)</label>
+          <input type="text" id="hiit-limitations" placeholder="Ex: genunchi sensibil, evit box jumps">
+        </div>
+      </details>
+
+      <div class="workout-actions" style="margin-top:16px;">
+        <button type="button" id="hiit-generate-btn" class="btn-big">🔄 Generează antrenament</button>
+        <span id="hiit-generate-status"></span>
+      </div>
+
+      <div id="hiit-generate-quote" class="motivational-quote"></div>
+      <div id="hiit-preview" class="workout-result"></div>
+
+      <div class="workout-actions" id="hiit-finish-wrap" style="display:none;">
+        <button type="button" id="hiit-execute-btn" class="btn-big btn-execute">▶️ Execută antrenamentul</button>
+        <button type="button" id="hiit-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <button type="button" id="hiit-back-btn" class="settings-shortcut">← Înapoi</button>
+        <span id="hiit-finish-status"></span>
+      </div>
+    </div>
+
     <div class="card">
       <h2>Antrenament (stil CrossFit / functional)</h2>
       <p class="hint">Generat pe baza echipamentului și skill-urilor tale. Contează în statisticile de pe Home și în silueta musculară.</p>
@@ -2117,6 +2239,286 @@ Generează antrenamentul de azi.`;
   });
 
   // ============================================================
+  // HIIT — generare (JSON structurat) + execuție cu cronometru
+  // ============================================================
+
+  const HIIT_HISTORY_KEY = 'fw_hiit_history';
+
+  const HIIT_SYSTEM_PROMPT = `Ești un antrenor personal expert în HIIT (High-Intensity Interval Training).
+Primești nivelul utilizatorului, categoriile de exerciții preferate, echipamentul disponibil (dacă
+există) și eventuale limitări/accidentări.
+
+Sarcina ta: alege exerciții concrete DOAR din categoriile bifate de utilizator, potrivite nivelului
+lui, respectând strict limitările indicate (nu propune niciodată un exercițiu incompatibil cu o
+limitare menționată). Dacă nu are echipament specificat pentru o categorie care necesită echipament
+(ex: kettlebell), nu alege exerciții din acea categorie sau adaptează-le la greutate corporală.
+
+Răspunde STRICT cu un obiect JSON valid, fără text în plus, fără markdown, fără backtick-uri, în
+formatul exact:
+{
+  "title": "titlu scurt descriptiv",
+  "warmupSeconds": număr întreg (0 dacă nu recomanzi încălzire separată, altfel 30-120),
+  "rounds": număr întreg de runde (2-6, adaptat nivelului),
+  "workSeconds": secunde de lucru per exercițiu (20-60, adaptat nivelului),
+  "restSeconds": secunde de pauză între exerciții (10-40, adaptat nivelului),
+  "exercises": [4-8 nume de exerciții concrete, în ordinea în care ar trebui făcute într-o rundă],
+  "notes": "1-2 propoziții cu sfaturi de tehnică/siguranță pentru acest circuit"
+}`;
+
+  function collectHiitConfig() {
+    return {
+      level: document.getElementById('hiit-level').value,
+      types: [...document.querySelectorAll('.hiit-type:checked')].map(cb => cb.dataset.label || cb.value),
+      equipment: collectList('hiit-equipment-list'),
+      limitations: document.getElementById('hiit-limitations').value.trim()
+    };
+  }
+
+  function buildHiitUserPrompt(config, dayName, dateStr) {
+    const typesText = config.types.length ? config.types.join(', ') : 'oricare (alege tu)';
+    const equipmentText = config.equipment.length
+      ? config.equipment.map(i => `- ${i.name}${i.detail ? `: ${i.detail}` : ''}`).join('\n')
+      : '(niciun echipament - doar greutate corporală)';
+    return `Ziua curentă: ${dayName}, ${dateStr}
+Nivel: ${config.level}
+Categorii de exerciții preferate: ${typesText}
+Echipamente disponibile:
+${equipmentText}
+Limitări: ${config.limitations || '(niciuna)'}
+
+Generează circuitul HIIT de azi.`;
+  }
+
+  function buildHiitIntervals(plan) {
+    const intervals = [];
+    if (plan.warmupSeconds > 0) {
+      intervals.push({ exercise: 'Încălzire', seconds: plan.warmupSeconds, type: 'warmup' });
+    }
+    const exercises = plan.exercises.length ? plan.exercises : ['Antrenament'];
+    for (let round = 1; round <= plan.rounds; round++) {
+      exercises.forEach((ex, i) => {
+        intervals.push({ exercise: ex, seconds: plan.workSeconds, type: 'work' });
+        const isVeryLast = round === plan.rounds && i === exercises.length - 1;
+        if (!isVeryLast && plan.restSeconds > 0) {
+          intervals.push({ exercise: 'Pauză', seconds: plan.restSeconds, type: 'rest' });
+        }
+      });
+    }
+    return intervals;
+  }
+
+  function buildHiitMarkdown(plan) {
+    const lines = [];
+    lines.push(`## ${plan.title || 'HIIT'}`);
+    lines.push('');
+    lines.push(`**Format:** ${plan.rounds} runde x (${plan.workSeconds}s lucru / ${plan.restSeconds}s pauză)`);
+    if (plan.warmupSeconds > 0) lines.push(`**Încălzire:** ${plan.warmupSeconds}s`);
+    lines.push('');
+    lines.push('**Exerciții (în ordine, per rundă):**');
+    plan.exercises.forEach((ex, i) => lines.push(`${i + 1}. ${ex}`));
+    if (plan.notes) {
+      lines.push('');
+      lines.push(`**Note:** ${plan.notes}`);
+    }
+    return lines.join('\n');
+  }
+
+  document.getElementById('hiit-add-equipment').addEventListener('click', () => addRow('hiit-equipment-list'));
+
+  let hiitPreview = null;
+
+  document.getElementById('hiit-generate-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('hiit-generate-btn');
+    const status = document.getElementById('hiit-generate-status');
+    const preview = document.getElementById('hiit-preview');
+    btn.disabled = true;
+    document.getElementById('hiit-finish-wrap').style.display = 'none';
+    status.textContent = '';
+    showQuote('hiit-generate-quote');
+    preview.innerHTML = '';
+    try {
+      const config = collectHiitConfig();
+      const now = new Date();
+      const dayName = RO_DAYS[now.getDay()];
+      const dateStr = localDateStr(now);
+      const messages = [
+        { role: 'system', content: HIIT_SYSTEM_PROMPT },
+        { role: 'user', content: buildHiitUserPrompt(config, dayName, dateStr) }
+      ];
+      const result = await generateWithFallback(messages);
+      const match = result.content.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('Răspunsul AI nu a putut fi interpretat. Încearcă din nou.');
+      const plan = JSON.parse(match[0]);
+      plan.rounds = Math.max(1, Number(plan.rounds) || 3);
+      plan.workSeconds = Math.max(5, Number(plan.workSeconds) || 40);
+      plan.restSeconds = Math.max(0, Number(plan.restSeconds) || 20);
+      plan.warmupSeconds = Math.max(0, Number(plan.warmupSeconds) || 0);
+      plan.exercises = Array.isArray(plan.exercises) ? plan.exercises.filter(Boolean) : [];
+      const intervals = buildHiitIntervals(plan);
+      const content = buildHiitMarkdown(plan);
+      hiitPreview = { content, day: dayName, date: dateStr, intervals, planTitle: plan.title };
+      preview.innerHTML = renderMarkdown(content);
+      status.textContent = '';
+      document.getElementById('hiit-finish-wrap').style.display = 'flex';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('hiit-generate-quote');
+    }
+  });
+
+  document.getElementById('hiit-back-btn').addEventListener('click', () => {
+    hiitPreview = null;
+    document.getElementById('hiit-preview').innerHTML = '';
+    document.getElementById('hiit-finish-wrap').style.display = 'none';
+    document.getElementById('hiit-generate-status').textContent = '';
+  });
+
+  document.getElementById('hiit-finish-btn').addEventListener('click', async () => {
+    if (!hiitPreview) return;
+    const status = document.getElementById('hiit-finish-status');
+    const entry = { ...hiitPreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    const log = lsGet(HIIT_HISTORY_KEY, []);
+    log.unshift(entry);
+    lsSet(HIIT_HISTORY_KEY, log);
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    document.getElementById('hiit-finish-wrap').style.display = 'none';
+    renderMergedWorkoutHistory();
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+
+    const muscles = await classifyMuscles(entry.content);
+    if (muscles.length) {
+      const all = lsGet(HIIT_HISTORY_KEY, []);
+      const found = all.find(e => e.generatedAt === entry.generatedAt);
+      if (found) {
+        found.muscleGroups = muscles;
+        lsSet(HIIT_HISTORY_KEY, all);
+        renderMergedWorkoutHistory();
+        renderHome();
+      }
+    }
+  });
+
+  // --- Cronometru execuție HIIT ---
+
+  const HIIT_RING_CIRCUMFERENCE = 2 * Math.PI * 90;
+  const hiitTimer = {
+    intervals: [],
+    idx: 0,
+    intervalStart: 0,
+    pausedAt: 0,
+    pausedTotal: 0,
+    paused: false,
+    tickId: null
+  };
+
+  function hiitFormatTime(totalSeconds) {
+    const s = Math.max(0, Math.ceil(totalSeconds));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+  }
+
+  function hiitPhaseLabel(type) {
+    if (type === 'rest') return 'Pauză';
+    if (type === 'warmup') return 'Încălzire';
+    return 'Lucru';
+  }
+
+  function hiitCountWorkIntervals(intervals) {
+    return intervals.filter(iv => iv.type === 'work').length;
+  }
+
+  function hiitRenderTick() {
+    const cur = hiitTimer.intervals[hiitTimer.idx];
+    if (!cur) return;
+    const elapsedMs = hiitTimer.paused
+      ? (hiitTimer.pausedAt - hiitTimer.intervalStart - hiitTimer.pausedTotal)
+      : (Date.now() - hiitTimer.intervalStart - hiitTimer.pausedTotal);
+    const elapsed = elapsedMs / 1000;
+    const remaining = cur.seconds - elapsed;
+    if (remaining <= 0 && !hiitTimer.paused) {
+      hiitStartInterval(hiitTimer.idx + 1);
+      return;
+    }
+    document.getElementById('hiit-timer-time').textContent = hiitFormatTime(remaining);
+    document.getElementById('hiit-timer-exercise').textContent = cur.exercise;
+    document.getElementById('hiit-timer-phase').textContent = hiitPhaseLabel(cur.type);
+
+    const progress = Math.min(1, Math.max(0, elapsed / cur.seconds));
+    document.getElementById('hiit-ring-progress').style.strokeDashoffset =
+      String(HIIT_RING_CIRCUMFERENCE * (1 - progress));
+
+    const totalWork = hiitCountWorkIntervals(hiitTimer.intervals);
+    const doneWork = hiitCountWorkIntervals(hiitTimer.intervals.slice(0, hiitTimer.idx + 1));
+    document.getElementById('hiit-timer-progress-text').textContent =
+      `Exercițiu ${Math.min(doneWork, totalWork)} / ${totalWork}`;
+  }
+
+  function hiitStartInterval(idx) {
+    if (idx >= hiitTimer.intervals.length) { hiitTimerComplete(); return; }
+    hiitTimer.idx = idx;
+    hiitTimer.intervalStart = Date.now();
+    hiitTimer.pausedTotal = 0;
+    hiitTimer.paused = false;
+    document.getElementById('hiit-timer-pause').textContent = '⏸ Pauză';
+    hiitRenderTick();
+  }
+
+  function hiitTick() {
+    if (hiitTimer.paused) return;
+    hiitRenderTick();
+  }
+
+  function hiitTimerComplete() {
+    if (hiitTimer.tickId) { clearInterval(hiitTimer.tickId); hiitTimer.tickId = null; }
+    document.getElementById('hiit-timer-time').textContent = '✓';
+    document.getElementById('hiit-timer-exercise').textContent = 'Antrenament complet!';
+    document.getElementById('hiit-timer-phase').textContent = '';
+    document.getElementById('hiit-timer-progress-text').textContent = '';
+    document.getElementById('hiit-ring-progress').style.strokeDashoffset = '0';
+    showCelebration();
+    showScreenFlash();
+  }
+
+  function hiitCloseTimer() {
+    if (hiitTimer.tickId) { clearInterval(hiitTimer.tickId); hiitTimer.tickId = null; }
+    document.getElementById('hiit-timer-overlay').classList.add('hidden');
+  }
+
+  document.getElementById('hiit-execute-btn').addEventListener('click', () => {
+    if (!hiitPreview || !hiitPreview.intervals || !hiitPreview.intervals.length) return;
+    hiitTimer.intervals = hiitPreview.intervals;
+    const ring = document.getElementById('hiit-ring-progress');
+    ring.style.strokeDasharray = String(HIIT_RING_CIRCUMFERENCE);
+    ring.style.strokeDashoffset = String(HIIT_RING_CIRCUMFERENCE);
+    document.getElementById('hiit-timer-overlay').classList.remove('hidden');
+    if (hiitTimer.tickId) clearInterval(hiitTimer.tickId);
+    hiitTimer.tickId = setInterval(hiitTick, 200);
+    hiitStartInterval(0);
+  });
+
+  document.getElementById('hiit-timer-pause').addEventListener('click', () => {
+    const btn = document.getElementById('hiit-timer-pause');
+    if (hiitTimer.paused) {
+      hiitTimer.pausedTotal += Date.now() - hiitTimer.pausedAt;
+      hiitTimer.paused = false;
+      btn.textContent = '⏸ Pauză';
+    } else {
+      hiitTimer.paused = true;
+      hiitTimer.pausedAt = Date.now();
+      btn.textContent = '▶ Continuă';
+    }
+  });
+
+  document.getElementById('hiit-timer-stop').addEventListener('click', hiitCloseTimer);
+  document.getElementById('hiit-timer-close').addEventListener('click', hiitCloseTimer);
+
+  // ============================================================
   // Calendar generic (folosit la Nutriție)
   // ============================================================
 
@@ -2537,7 +2939,7 @@ obiectului JSON.`;
   // (Antrenament/Bodybuilding personalizat/Easy WOD/Hero WOD/introducere manuală/alergări)
   // într-o singură listă, sortată descrescător.
   function renderMergedWorkoutHistory() {
-    const workoutKeys = [WORKOUT_LOG_KEY, BB_CUSTOM_HISTORY_KEY, EASY_HISTORY_KEY, HERO_HISTORY_KEY, MANUAL_HISTORY_KEY];
+    const workoutKeys = [WORKOUT_LOG_KEY, BB_CUSTOM_HISTORY_KEY, EASY_HISTORY_KEY, HERO_HISTORY_KEY, MANUAL_HISTORY_KEY, HIIT_HISTORY_KEY];
     const container = document.getElementById('custom-workout-history');
     const merged = [];
     workoutKeys.forEach(key => {
@@ -4411,7 +4813,8 @@ Generează antrenamentul concret de azi.`;
     const bbCustom = lsGet(BB_CUSTOM_HISTORY_KEY, []);
     const sheikoProgram = lsGet(SHEIKO_PROGRAM_HISTORY_KEY, []);
     const olympicProgram = lsGet(OLYMPIC_PROGRAM_HISTORY_KEY, []);
-    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram];
+    const hiit = lsGet(HIIT_HISTORY_KEY, []);
+    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram, ...hiit];
 
     const workoutsPerMonth = new Array(12).fill(0);
     allWorkouts.forEach(e => {
@@ -4459,7 +4862,8 @@ Generează antrenamentul concret de azi.`;
     const bbCustom = lsGet(BB_CUSTOM_HISTORY_KEY, []);
     const sheikoProgram = lsGet(SHEIKO_PROGRAM_HISTORY_KEY, []);
     const olympicProgram = lsGet(OLYMPIC_PROGRAM_HISTORY_KEY, []);
-    const all = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram];
+    const hiit = lsGet(HIIT_HISTORY_KEY, []);
+    const all = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram, ...hiit];
 
     const workoutsToday = all.filter(e => e.date === today).length;
     const workoutsMonth = all.filter(e => e.date.startsWith(monthPrefix)).length;
