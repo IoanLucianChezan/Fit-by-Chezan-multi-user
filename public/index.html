@@ -970,6 +970,11 @@
           <label for="hiit-limitations">Limitări / accidentări (opțional)</label>
           <input type="text" id="hiit-limitations" placeholder="Ex: genunchi sensibil, evit box jumps">
         </div>
+
+        <div class="config-subsection">
+          <h3>Radio</h3>
+          <label class="checkbox-row"><input type="checkbox" id="hiit-radio-toggle"> 📻 Pornește radio online în timpul antrenamentului <span class="hint">(Antenne Workout Hits)</span></label>
+        </div>
       </details>
 
       <div class="workout-actions" style="margin-top:16px;">
@@ -2416,6 +2421,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
   // --- Cronometru execuție HIIT ---
 
   const HIIT_RING_CIRCUMFERENCE = 2 * Math.PI * 90;
+  const HIIT_PAUSE_COLOR = '#eab308';
   const hiitTimer = {
     intervals: [],
     idx: 0,
@@ -2427,62 +2433,90 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     wakeLock: null
   };
 
-  // --- Sunete cronometru (generate, fără fișiere audio) ---
-  let hiitAudioCtx = null;
-  let hiitAudioUnlocked = false;
-  function hiitGetAudioCtx() {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return null;
-    if (!hiitAudioCtx) hiitAudioCtx = new Ctx();
-    return hiitAudioCtx;
+  // --- Sunete cronometru (WAV generat în memorie, redat prin <audio> — mai
+  // fiabil pe iOS/Safari decât AudioContext + oscilator direct pe destination) ---
+  function hiitBuildBeepWav(tones, sampleRate = 8000) {
+    const segments = tones.map(t => ({
+      freq: t.freq,
+      n: Math.round(t.duration * sampleRate),
+      gapN: Math.round((t.gap || 0.03) * sampleRate)
+    }));
+    const totalSamples = segments.reduce((sum, s) => sum + s.n + s.gapN, 0);
+    const samples = new Int16Array(totalSamples);
+    let offset = 0;
+    segments.forEach(s => {
+      const attack = Math.max(1, Math.round(sampleRate * 0.005));
+      const release = Math.max(1, Math.round(sampleRate * 0.03));
+      for (let i = 0; i < s.n; i++) {
+        const t = i / sampleRate;
+        const env = Math.min(1, i / attack) * Math.min(1, (s.n - i) / release);
+        const wave = Math.sign(Math.sin(2 * Math.PI * s.freq * t));
+        samples[offset + i] = Math.round(wave * env * 0.55 * 32767);
+      }
+      offset += s.n + s.gapN;
+    });
+    const dataSize = samples.length * 2;
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+    function writeStr(off, str) { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); }
+    writeStr(0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); writeStr(8, 'WAVE');
+    writeStr(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+    writeStr(36, 'data'); view.setUint32(40, dataSize, true);
+    new Int16Array(buffer, 44).set(samples);
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return 'data:audio/wav;base64,' + btoa(binary);
   }
-  // iOS/Safari (și unele WebView-uri Android) blochează redarea audio programatică
-  // (din setInterval, nu direct dintr-un tap) până când contextul e "deblocat" printr-un
-  // sunet redat direct într-un gest de atingere. Redăm un buffer silențios la primul tap
-  // oriunde pe pagină, ca AudioContext-ul să fie deja pornit până ajungem la cronometru.
-  function hiitUnlockAudio() {
-    const ctx = hiitGetAudioCtx();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-    if (hiitAudioUnlocked) return;
+
+  let hiitSoundStart, hiitSoundTransition, hiitSoundComplete;
+  function hiitInitSounds() {
+    if (hiitSoundStart) return;
+    hiitSoundStart = new Audio(hiitBuildBeepWav([{ freq: 880, duration: 0.16 }, { freq: 1046, duration: 0.24 }]));
+    hiitSoundTransition = new Audio(hiitBuildBeepWav([{ freq: 720, duration: 0.22 }]));
+    hiitSoundComplete = new Audio(hiitBuildBeepWav([{ freq: 660, duration: 0.16 }, { freq: 880, duration: 0.16 }, { freq: 1175, duration: 0.32 }]));
+    [hiitSoundStart, hiitSoundTransition, hiitSoundComplete].forEach(a => { a.preload = 'auto'; a.volume = 1; });
+  }
+  function hiitPlaySound(audio) {
+    if (!audio) return;
     try {
-      const buffer = ctx.createBuffer(1, 1, 22050);
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(ctx.destination);
-      source.start(0);
-      hiitAudioUnlocked = true;
+      audio.currentTime = 0;
+      const p = audio.play();
+      if (p && p.catch) p.catch(() => { /* redare blocată - ignorăm */ });
     } catch (err) { /* ignorăm */ }
+  }
+  // Prima redare TREBUIE declanșată direct dintr-un gest de atingere (nu din setInterval);
+  // odată reușită, iOS permite și redările ulterioare programatice pe același element.
+  function hiitUnlockAudio() {
+    hiitInitSounds();
+    hiitPlaySound(hiitSoundTransition);
+    if (hiitSoundTransition) hiitSoundTransition.pause();
   }
   document.addEventListener('touchend', hiitUnlockAudio, { once: true });
   document.addEventListener('click', hiitUnlockAudio, { once: true });
 
-  function hiitPlayTone(freq, duration, when = 0, volume = 0.45) {
-    const ctx = hiitGetAudioCtx();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-    try {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'square';
-      osc.frequency.value = freq;
-      const t0 = ctx.currentTime + when;
-      gain.gain.setValueAtTime(0.0001, t0);
-      gain.gain.exponentialRampToValueAtTime(volume, t0 + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(t0);
-      osc.stop(t0 + duration + 0.03);
-    } catch (err) { /* audio indisponibil - ignorăm */ }
+  function hiitBeepStart() { hiitInitSounds(); hiitPlaySound(hiitSoundStart); }
+  function hiitBeepTransition() { hiitInitSounds(); hiitPlaySound(hiitSoundTransition); }
+  function hiitBeepComplete() { hiitInitSounds(); hiitPlaySound(hiitSoundComplete); }
+
+  // --- Radio online opțional, în timpul execuției ---
+  const HIIT_RADIO_STREAM_URL = 'https://mp3channels.webradio.antenne.de/workout-hits';
+  let hiitRadioAudio = null;
+  function hiitStartRadio() {
+    if (!document.getElementById('hiit-radio-toggle').checked) return;
+    if (!hiitRadioAudio) {
+      hiitRadioAudio = new Audio(HIIT_RADIO_STREAM_URL);
+      hiitRadioAudio.preload = 'none';
+      hiitRadioAudio.volume = 0.6;
+    }
+    const p = hiitRadioAudio.play();
+    if (p && p.catch) p.catch(() => { /* stream indisponibil - ignorăm */ });
   }
-  function hiitBeepStart() {
-    hiitUnlockAudio();
-    hiitPlayTone(880, 0.16, 0);
-    hiitPlayTone(1046, 0.24, 0.2);
+  function hiitStopRadio() {
+    if (hiitRadioAudio) { hiitRadioAudio.pause(); hiitRadioAudio.currentTime = 0; }
   }
-  function hiitBeepTransition() { hiitPlayTone(720, 0.2, 0); }
-  function hiitBeepComplete() { hiitPlayTone(660, 0.16, 0); hiitPlayTone(880, 0.16, 0.16); hiitPlayTone(1175, 0.32, 0.32); }
 
   // --- Ecran mereu pornit cât timp rulează cronometrul ---
   async function hiitRequestWakeLock() {
@@ -2556,7 +2590,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     const progress = Math.min(1, Math.max(0, elapsed / cur.seconds));
     const ring = document.getElementById('hiit-ring-progress');
     ring.style.strokeDashoffset = String(HIIT_RING_CIRCUMFERENCE * (1 - progress));
-    ring.style.stroke = hiitRingColor(progress);
+    ring.style.stroke = hiitTimer.paused ? HIIT_PAUSE_COLOR : hiitRingColor(progress);
 
     const totalWork = hiitCountWorkIntervals(hiitTimer.intervals);
     const doneWork = hiitCountWorkIntervals(hiitTimer.intervals.slice(0, hiitTimer.idx + 1));
@@ -2583,6 +2617,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
   function hiitTimerComplete() {
     if (hiitTimer.tickId) { clearInterval(hiitTimer.tickId); hiitTimer.tickId = null; }
     hiitReleaseWakeLock();
+    hiitStopRadio();
     hiitBeepComplete();
     document.getElementById('hiit-timer-time').textContent = '✓';
     document.getElementById('hiit-timer-exercise').textContent = 'Antrenament complet!';
@@ -2596,6 +2631,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
   function hiitCloseTimer() {
     if (hiitTimer.tickId) { clearInterval(hiitTimer.tickId); hiitTimer.tickId = null; }
     hiitReleaseWakeLock();
+    hiitStopRadio();
     document.getElementById('hiit-timer-overlay').classList.add('hidden');
   }
 
@@ -2610,6 +2646,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     hiitTimer.tickId = setInterval(hiitTick, 200);
     hiitBeepStart();
     hiitRequestWakeLock();
+    hiitStartRadio();
     hiitStartInterval(0, false);
   });
 
@@ -2624,6 +2661,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
       hiitTimer.pausedAt = Date.now();
       btn.textContent = '▶ Continuă';
     }
+    hiitRenderTick();
   });
 
   document.getElementById('hiit-timer-next').addEventListener('click', () => {
