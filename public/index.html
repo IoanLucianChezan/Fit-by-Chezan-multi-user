@@ -662,12 +662,12 @@
     text-align: center;
   }
   #hiit-timer-close {
-    position: absolute; top: 10px; right: 10px;
-    width: 28px; height: 28px; padding: 0;
-    background: transparent; border: none; box-shadow: none;
-    color: var(--text-muted); font-size: 14px;
+    position: absolute; top: 8px; right: 8px;
+    width: 44px; height: 44px; padding: 0;
+    background: var(--surface-2); border: 1px solid var(--border); box-shadow: none;
+    color: var(--text); font-size: 20px; border-radius: 999px;
   }
-  #hiit-timer-close:hover { background: var(--surface-2); transform: none; box-shadow: none; }
+  #hiit-timer-close:hover { background: var(--danger-soft); color: var(--danger); transform: none; box-shadow: none; }
   .timer-ring-wrap { position: relative; width: min(260px, 70vw); height: min(260px, 70vw); margin: 0 auto; }
   .timer-ring-svg { width: 100%; height: 100%; transform-origin: center; }
   .timer-ring-bg { fill: none; stroke: var(--surface-2); stroke-width: 10; }
@@ -745,6 +745,7 @@
       <div class="timer-progress-text" id="hiit-timer-progress-text"></div>
       <div class="timer-controls">
         <button type="button" id="hiit-timer-pause" class="settings-shortcut">⏸ Pauză</button>
+        <button type="button" id="hiit-timer-next" class="settings-shortcut">⏭ Următorul</button>
         <button type="button" id="hiit-timer-stop" class="settings-shortcut">⏹ Oprește</button>
       </div>
     </div>
@@ -2266,10 +2267,18 @@ formatul exact:
 }`;
 
   function collectHiitConfig() {
+    const typeCheckboxes = [...document.querySelectorAll('.hiit-type:checked')];
+    const types = typeCheckboxes.map(cb => cb.dataset.label || cb.value);
+    const equipment = collectList('hiit-equipment-list');
+    const kettlebellChecked = typeCheckboxes.some(cb => cb.value === 'kettlebell');
+    const hasKettlebellEquipment = equipment.some(i => /kettlebell/i.test(i.name));
+    if (kettlebellChecked && !hasKettlebellEquipment) {
+      equipment.push({ name: 'Kettlebell', detail: 'categorie bifată, presupune disponibil' });
+    }
     return {
       level: document.getElementById('hiit-level').value,
-      types: [...document.querySelectorAll('.hiit-type:checked')].map(cb => cb.dataset.label || cb.value),
-      equipment: collectList('hiit-equipment-list'),
+      types,
+      equipment,
       limitations: document.getElementById('hiit-limitations').value.trim()
     };
   }
@@ -2286,7 +2295,9 @@ Echipamente disponibile:
 ${equipmentText}
 Limitări: ${config.limitations || '(niciuna)'}
 
-Generează circuitul HIIT de azi.`;
+Generează circuitul HIIT de azi. Dacă printre categoriile preferate se află "Kettlebell", folosește
+kettlebell-ul disponibil pentru majoritatea exercițiilor din acea rundă (nu-l ignora în favoarea
+altor categorii, chiar dacă utilizatorul a bifat și alte categorii).`;
   }
 
   function buildHiitIntervals(plan) {
@@ -2413,8 +2424,59 @@ Generează circuitul HIIT de azi.`;
     pausedAt: 0,
     pausedTotal: 0,
     paused: false,
-    tickId: null
+    tickId: null,
+    wakeLock: null
   };
+
+  // --- Sunete cronometru (generate, fără fișiere audio) ---
+  let hiitAudioCtx = null;
+  function hiitGetAudioCtx() {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    if (!hiitAudioCtx) hiitAudioCtx = new Ctx();
+    if (hiitAudioCtx.state === 'suspended') hiitAudioCtx.resume();
+    return hiitAudioCtx;
+  }
+  function hiitPlayTone(freq, duration, when = 0, volume = 0.22) {
+    const ctx = hiitGetAudioCtx();
+    if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t0 = ctx.currentTime + when;
+      gain.gain.setValueAtTime(volume, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t0);
+      osc.stop(t0 + duration + 0.02);
+    } catch (err) { /* audio indisponibil - ignorăm */ }
+  }
+  function hiitBeepStart() { hiitPlayTone(880, 0.15, 0); hiitPlayTone(1046, 0.22, 0.18); }
+  function hiitBeepTransition() { hiitPlayTone(660, 0.16, 0); }
+  function hiitBeepComplete() { hiitPlayTone(660, 0.15, 0); hiitPlayTone(880, 0.15, 0.15); hiitPlayTone(1175, 0.3, 0.3); }
+
+  // --- Ecran mereu pornit cât timp rulează cronometrul ---
+  async function hiitRequestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        hiitTimer.wakeLock = await navigator.wakeLock.request('screen');
+      }
+    } catch (err) { console.warn('Wake Lock indisponibil:', err.message); }
+  }
+  async function hiitReleaseWakeLock() {
+    if (hiitTimer.wakeLock) {
+      try { await hiitTimer.wakeLock.release(); } catch (err) { /* ignorăm */ }
+      hiitTimer.wakeLock = null;
+    }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && hiitTimer.tickId && !hiitTimer.wakeLock) {
+      hiitRequestWakeLock();
+    }
+  });
 
   function hiitFormatTime(totalSeconds) {
     const s = Math.max(0, Math.ceil(totalSeconds));
@@ -2459,8 +2521,9 @@ Generează circuitul HIIT de azi.`;
       `Exercițiu ${Math.min(doneWork, totalWork)} / ${totalWork}`;
   }
 
-  function hiitStartInterval(idx) {
+  function hiitStartInterval(idx, playBeep = true) {
     if (idx >= hiitTimer.intervals.length) { hiitTimerComplete(); return; }
+    if (playBeep && idx > 0) hiitBeepTransition();
     hiitTimer.idx = idx;
     hiitTimer.intervalStart = Date.now();
     hiitTimer.pausedTotal = 0;
@@ -2476,6 +2539,8 @@ Generează circuitul HIIT de azi.`;
 
   function hiitTimerComplete() {
     if (hiitTimer.tickId) { clearInterval(hiitTimer.tickId); hiitTimer.tickId = null; }
+    hiitReleaseWakeLock();
+    hiitBeepComplete();
     document.getElementById('hiit-timer-time').textContent = '✓';
     document.getElementById('hiit-timer-exercise').textContent = 'Antrenament complet!';
     document.getElementById('hiit-timer-phase').textContent = '';
@@ -2487,6 +2552,7 @@ Generează circuitul HIIT de azi.`;
 
   function hiitCloseTimer() {
     if (hiitTimer.tickId) { clearInterval(hiitTimer.tickId); hiitTimer.tickId = null; }
+    hiitReleaseWakeLock();
     document.getElementById('hiit-timer-overlay').classList.add('hidden');
   }
 
@@ -2499,7 +2565,9 @@ Generează circuitul HIIT de azi.`;
     document.getElementById('hiit-timer-overlay').classList.remove('hidden');
     if (hiitTimer.tickId) clearInterval(hiitTimer.tickId);
     hiitTimer.tickId = setInterval(hiitTick, 200);
-    hiitStartInterval(0);
+    hiitBeepStart();
+    hiitRequestWakeLock();
+    hiitStartInterval(0, false);
   });
 
   document.getElementById('hiit-timer-pause').addEventListener('click', () => {
@@ -2513,6 +2581,11 @@ Generează circuitul HIIT de azi.`;
       hiitTimer.pausedAt = Date.now();
       btn.textContent = '▶ Continuă';
     }
+  });
+
+  document.getElementById('hiit-timer-next').addEventListener('click', () => {
+    if (!hiitTimer.tickId) return;
+    hiitStartInterval(hiitTimer.idx + 1);
   });
 
   document.getElementById('hiit-timer-stop').addEventListener('click', hiitCloseTimer);
