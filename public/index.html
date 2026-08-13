@@ -642,7 +642,7 @@
   .login-switch a { color: var(--accent); text-decoration: none; cursor: pointer; }
   .login-switch a:hover { text-decoration: underline; }
 
-  #hiit-timer-overlay, #challenge-timer-overlay {
+  #hiit-timer-overlay, #challenge-timer-overlay, #custom-timer-overlay {
     position: fixed;
     inset: 0;
     z-index: 9999;
@@ -661,13 +661,13 @@
     padding: 32px 24px 24px;
     text-align: center;
   }
-  #hiit-timer-close {
+  #hiit-timer-close, #challenge-timer-close, #custom-timer-close {
     position: absolute; top: 8px; right: 8px;
     width: 44px; height: 44px; padding: 0;
     background: var(--surface-2); border: 1px solid var(--border); box-shadow: none;
     color: var(--text); font-size: 20px; border-radius: 999px;
   }
-  #hiit-timer-close:hover { background: var(--danger-soft); color: var(--danger); transform: none; box-shadow: none; }
+  #hiit-timer-close:hover, #challenge-timer-close:hover, #custom-timer-close:hover { background: var(--danger-soft); color: var(--danger); transform: none; box-shadow: none; }
   .timer-ring-wrap { position: relative; width: min(260px, 70vw); height: min(260px, 70vw); margin: 0 auto; }
   .timer-ring-svg { width: 100%; height: 100%; transform-origin: center; }
   .timer-ring-bg { fill: none; stroke: var(--surface-2); stroke-width: 10; }
@@ -779,6 +779,29 @@
     </div>
   </div>
 
+  <div id="custom-timer-overlay" class="hidden">
+    <div class="timer-box">
+      <button type="button" id="custom-timer-close" title="Închide">✕</button>
+      <div class="timer-ring-wrap">
+        <svg viewBox="0 0 200 200" class="timer-ring-svg">
+          <circle cx="100" cy="100" r="90" class="timer-ring-bg"></circle>
+          <circle cx="100" cy="100" r="90" class="timer-ring-progress" id="custom-timer-ring-progress" transform="rotate(-90 100 100)"></circle>
+        </svg>
+        <div class="timer-ring-center">
+          <div class="timer-time" id="custom-timer-time">00:00</div>
+          <div class="timer-phase" id="custom-timer-phase"></div>
+        </div>
+      </div>
+      <div class="timer-exercise" id="custom-timer-exercise"></div>
+      <div class="timer-progress-text" id="custom-timer-progress-text"></div>
+      <div class="timer-next-hint" id="custom-timer-next-hint"></div>
+      <div class="timer-controls">
+        <button type="button" id="custom-timer-pause" class="settings-shortcut">⏸ Pauză</button>
+        <button type="button" id="custom-timer-next" class="settings-shortcut">⏭ Următorul</button>
+      </div>
+    </div>
+  </div>
+
   <h1 id="app-title">Fit by Chezan</h1>
 
   <div class="header-row">
@@ -801,6 +824,7 @@
       <button data-tab="program-crossfit">Crossfit</button>
       <button data-tab="program-bodybuilding">Bodybuilding</button>
       <button data-tab="program-weightlifting">Lifting</button>
+      <button data-tab="timer">Timer</button>
     </nav>
   </div>
 
@@ -1686,6 +1710,48 @@
         <h2>Programe anterioare</h2>
         <p class="hint">Planurile programelor la care ai renunțat rămân aici — le poți revedea sau șterge definitiv.</p>
         <div id="olympic-program-archive"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TIMER ================= -->
+  <section id="timer">
+    <div class="card">
+      <h2>Timer</h2>
+      <p class="hint">Cronometru configurabil pentru orice exercițiu — seturi, repetări, timp de lucru și pauză. Nu se salvează în istoric sau statistici.</p>
+
+      <div class="settings-field">
+        <label for="timer-exercise-name">Exercițiu (opțional)</label>
+        <input type="text" id="timer-exercise-name" placeholder="Ex: Genoflexiuni">
+      </div>
+      <div class="settings-field">
+        <label for="timer-reps">Repetări per set (opțional)</label>
+        <input type="number" id="timer-reps" min="1" placeholder="Ex: 12">
+      </div>
+      <div class="settings-field">
+        <label for="timer-sets">Seturi</label>
+        <input type="number" id="timer-sets" min="1" value="3">
+      </div>
+      <div class="settings-field">
+        <label for="timer-work-seconds">Timp exercițiu (secunde)</label>
+        <input type="number" id="timer-work-seconds" min="1" value="40">
+      </div>
+      <div class="settings-field">
+        <label for="timer-rest-seconds">Timp pauză (secunde)</label>
+        <input type="number" id="timer-rest-seconds" min="0" value="20">
+      </div>
+      <div class="settings-field">
+        <label for="timer-warmup-seconds">Încălzire (secunde, opțional)</label>
+        <input type="number" id="timer-warmup-seconds" min="0" value="0">
+      </div>
+
+      <div class="config-subsection">
+        <h3>Radio</h3>
+        <label class="checkbox-row"><input type="checkbox" id="timer-radio-toggle"> 📻 Pornește radio online în timpul cronometrului <span class="hint">(Antenne Workout Hits)</span></label>
+      </div>
+
+      <div class="workout-actions" style="margin-top:16px;">
+        <button type="button" id="timer-start-btn" class="btn-big btn-execute">▶️ Începe cronometrul</button>
       </div>
     </div>
   </section>
@@ -2660,6 +2726,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     if (document.visibilityState !== 'visible') return;
     if (hiitTimer.tickId && !hiitTimer.wakeLock) requestWakeLock(hiitTimer);
     if (challengeTimer.tickId && !challengeTimer.wakeLock) requestWakeLock(challengeTimer);
+    if (customTimer.tickId && !customTimer.wakeLock) requestWakeLock(customTimer);
   });
 
   function hiitFormatTime(totalSeconds) {
@@ -3073,6 +3140,152 @@ Generează challenge-ul de azi (sub 6 minute).`;
   });
 
   document.getElementById('challenge-timer-close').addEventListener('click', challengeCloseTimer);
+
+  // ============================================================
+  // Timer — cronometru configurabil manual (seturi/repetări/timp lucru/pauză),
+  // fără AI, fără istoric/statistici. Reutilizează motorul vizual + sunete/radio/
+  // wake-lock de la HIIT.
+  // ============================================================
+
+  const customTimer = {
+    intervals: [],
+    idx: 0,
+    intervalStart: 0,
+    pausedAt: 0,
+    pausedTotal: 0,
+    paused: false,
+    tickId: null,
+    wakeLock: null
+  };
+
+  function customTimerNextLabel() {
+    for (let i = customTimer.idx + 1; i < customTimer.intervals.length; i++) {
+      if (customTimer.intervals[i].type === 'work') return customTimer.intervals[i].exercise;
+    }
+    return null;
+  }
+
+  function customTimerRenderTick() {
+    const cur = customTimer.intervals[customTimer.idx];
+    if (!cur) return;
+    const elapsedMs = customTimer.paused
+      ? (customTimer.pausedAt - customTimer.intervalStart - customTimer.pausedTotal)
+      : (Date.now() - customTimer.intervalStart - customTimer.pausedTotal);
+    const elapsed = elapsedMs / 1000;
+    const remaining = cur.seconds - elapsed;
+    if (remaining <= 0 && !customTimer.paused) {
+      customTimerStartInterval(customTimer.idx + 1);
+      return;
+    }
+    document.getElementById('custom-timer-time').textContent = hiitFormatTime(remaining);
+    document.getElementById('custom-timer-exercise').textContent = cur.exercise;
+    document.getElementById('custom-timer-phase').textContent = hiitPhaseLabel(cur.type);
+
+    const progress = Math.min(1, Math.max(0, elapsed / cur.seconds));
+    const ring = document.getElementById('custom-timer-ring-progress');
+    ring.style.strokeDashoffset = String(HIIT_RING_CIRCUMFERENCE * (1 - progress));
+    ring.style.stroke = (customTimer.paused || cur.type === 'rest') ? HIIT_PAUSE_COLOR : hiitRingColor(progress);
+
+    const totalWork = hiitCountWorkIntervals(customTimer.intervals);
+    const doneWork = hiitCountWorkIntervals(customTimer.intervals.slice(0, customTimer.idx + 1));
+    document.getElementById('custom-timer-progress-text').textContent =
+      `Set ${Math.min(doneWork, totalWork)} / ${totalWork}`;
+
+    const nextLabel = customTimerNextLabel();
+    document.getElementById('custom-timer-next-hint').textContent = nextLabel ? `Urmează: ${nextLabel}` : '';
+  }
+
+  function customTimerStartInterval(idx, playBeep = true) {
+    if (idx >= customTimer.intervals.length) { customTimerComplete(); return; }
+    if (playBeep && idx > 0) hiitBeepTransition();
+    customTimer.idx = idx;
+    customTimer.intervalStart = Date.now();
+    customTimer.pausedTotal = 0;
+    customTimer.paused = false;
+    document.getElementById('custom-timer-pause').textContent = '⏸ Pauză';
+    customTimerRenderTick();
+  }
+
+  function customTimerTick() {
+    if (customTimer.paused) return;
+    customTimerRenderTick();
+  }
+
+  function customTimerComplete() {
+    if (customTimer.tickId) { clearInterval(customTimer.tickId); customTimer.tickId = null; }
+    releaseWakeLock(customTimer);
+    stopRadio();
+    hiitStopKeepAlive();
+    hiitBeepComplete();
+    document.getElementById('custom-timer-time').textContent = '✓';
+    document.getElementById('custom-timer-exercise').textContent = 'Gata!';
+    document.getElementById('custom-timer-phase').textContent = '';
+    document.getElementById('custom-timer-progress-text').textContent = '';
+    document.getElementById('custom-timer-next-hint').textContent = '';
+    document.getElementById('custom-timer-ring-progress').style.strokeDashoffset = '0';
+    showCelebration();
+    showScreenFlash();
+  }
+
+  function customTimerClose() {
+    if (customTimer.tickId) { clearInterval(customTimer.tickId); customTimer.tickId = null; }
+    releaseWakeLock(customTimer);
+    stopRadio();
+    hiitStopKeepAlive();
+    document.getElementById('custom-timer-overlay').classList.add('hidden');
+  }
+
+  document.getElementById('timer-start-btn').addEventListener('click', () => {
+    const exerciseName = document.getElementById('timer-exercise-name').value.trim();
+    const reps = document.getElementById('timer-reps').value.trim();
+    const sets = Math.max(1, Number(document.getElementById('timer-sets').value) || 1);
+    const workSeconds = Math.max(1, Number(document.getElementById('timer-work-seconds').value) || 30);
+    const restSeconds = Math.max(0, Number(document.getElementById('timer-rest-seconds').value) || 0);
+    const warmupSeconds = Math.max(0, Number(document.getElementById('timer-warmup-seconds').value) || 0);
+
+    const label = exerciseName ? (reps ? `${exerciseName} × ${reps}` : exerciseName) : 'Exercițiu';
+    const intervals = [];
+    if (warmupSeconds > 0) intervals.push({ exercise: 'Încălzire', seconds: warmupSeconds, type: 'warmup' });
+    for (let round = 1; round <= sets; round++) {
+      intervals.push({ exercise: label, seconds: workSeconds, type: 'work' });
+      if (round < sets && restSeconds > 0) intervals.push({ exercise: 'Pauză', seconds: restSeconds, type: 'rest' });
+    }
+    if (!intervals.length) return;
+
+    customTimer.intervals = intervals;
+    const ring = document.getElementById('custom-timer-ring-progress');
+    ring.style.strokeDasharray = String(HIIT_RING_CIRCUMFERENCE);
+    ring.style.strokeDashoffset = String(HIIT_RING_CIRCUMFERENCE);
+    document.getElementById('custom-timer-overlay').classList.remove('hidden');
+    if (customTimer.tickId) clearInterval(customTimer.tickId);
+    customTimer.tickId = setInterval(customTimerTick, 200);
+    hiitBeepStart();
+    hiitStartKeepAlive();
+    requestWakeLock(customTimer);
+    startRadio('timer-radio-toggle');
+    customTimerStartInterval(0, false);
+  });
+
+  document.getElementById('custom-timer-pause').addEventListener('click', () => {
+    const btn = document.getElementById('custom-timer-pause');
+    if (customTimer.paused) {
+      customTimer.pausedTotal += Date.now() - customTimer.pausedAt;
+      customTimer.paused = false;
+      btn.textContent = '⏸ Pauză';
+    } else {
+      customTimer.paused = true;
+      customTimer.pausedAt = Date.now();
+      btn.textContent = '▶ Continuă';
+    }
+    customTimerRenderTick();
+  });
+
+  document.getElementById('custom-timer-next').addEventListener('click', () => {
+    if (!customTimer.tickId) return;
+    customTimerStartInterval(customTimer.idx + 1);
+  });
+
+  document.getElementById('custom-timer-close').addEventListener('click', customTimerClose);
 
   // ============================================================
   // Calendar generic (folosit la Nutriție)
