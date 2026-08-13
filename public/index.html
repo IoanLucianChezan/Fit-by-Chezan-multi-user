@@ -126,6 +126,10 @@
     color: transparent;
   }
 
+  #app-subtitle { margin: 0 0 14px; font-size: 14px; color: var(--text-muted); }
+  #app-subtitle-login { color: var(--accent); font-weight: 800; text-decoration: none; cursor: pointer; }
+  #app-subtitle-login:hover { text-decoration: underline; }
+
   .header-row {
     display: flex;
     align-items: center;
@@ -803,6 +807,7 @@
   </div>
 
   <h1 id="app-title">Fit by Chezan</h1>
+  <p id="app-subtitle" class="hidden"><a href="#" id="app-subtitle-login">Login</a>. Apoi burpees. Zero efort să te loghezi. Restul... vezi tu.</p>
 
   <div class="header-row">
     <p>No rest days. Pain is temporary, progress is permanent.</p>
@@ -5799,6 +5804,11 @@ Generează antrenamentul concret de azi.`;
     setAuthMode('login');
     document.getElementById('login-overlay').classList.remove('hidden');
   });
+  document.getElementById('app-subtitle-login').addEventListener('click', (e) => {
+    e.preventDefault();
+    setAuthMode('login');
+    document.getElementById('login-overlay').classList.remove('hidden');
+  });
   document.getElementById('login-close').addEventListener('click', closeLoginOverlay);
   document.getElementById('login-switch-link').addEventListener('click', (e) => {
     e.preventDefault();
@@ -5848,6 +5858,7 @@ Generează antrenamentul concret de azi.`;
     } else {
       document.getElementById('app-title').textContent = 'One more rep';
       document.title = 'One more rep';
+      document.getElementById('app-subtitle').classList.remove('hidden');
     }
     refreshHeaderAuthState(me.ok);
     initApp();
