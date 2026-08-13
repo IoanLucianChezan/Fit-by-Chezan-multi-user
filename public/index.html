@@ -126,7 +126,6 @@
     color: transparent;
   }
 
-  #app-subtitle { margin: 0 0 14px; font-size: 14px; color: var(--text-muted); }
   #app-subtitle-login { color: var(--accent); font-weight: 800; text-decoration: none; cursor: pointer; }
   #app-subtitle-login:hover { text-decoration: underline; }
 
@@ -807,10 +806,12 @@
   </div>
 
   <h1 id="app-title">Fit by Chezan</h1>
-  <p id="app-subtitle" class="hidden"><a href="#" id="app-subtitle-login">Login</a>. Apoi burpees. Zero efort să te loghezi. Restul... vezi tu.</p>
 
   <div class="header-row">
-    <p>No rest days. Pain is temporary, progress is permanent.</p>
+    <p>
+      <span id="header-tagline-default">No rest days. Pain is temporary, progress is permanent.</span>
+      <span id="header-tagline-guest" class="hidden"><a href="#" id="app-subtitle-login">Login</a>. Apoi burpees. Zero efort să te loghezi. Restul... vezi tu.</span>
+    </p>
     <div class="header-actions">
       <button type="button" class="settings-shortcut active" data-tab="home">🏠 Acasă</button>
       <button type="button" class="settings-shortcut" data-tab="settings" title="Setări"><span class="btn-icon">⚙️</span><span class="btn-label">Setări</span></button>
@@ -5858,7 +5859,8 @@ Generează antrenamentul concret de azi.`;
     } else {
       document.getElementById('app-title').textContent = 'One more rep';
       document.title = 'One more rep';
-      document.getElementById('app-subtitle').classList.remove('hidden');
+      document.getElementById('header-tagline-default').classList.add('hidden');
+      document.getElementById('header-tagline-guest').classList.remove('hidden');
     }
     refreshHeaderAuthState(me.ok);
     initApp();
