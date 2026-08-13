@@ -677,9 +677,9 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 2px;
   }
-  .timer-time { font-size: 40px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+  .timer-time { font-size: 44px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
   .timer-phase { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
-  .timer-exercise { margin-top: 18px; font-size: 20px; font-weight: 700; color: var(--text); }
+  .timer-exercise { margin-top: 18px; font-size: 23px; font-weight: 700; color: var(--text); }
   .timer-progress-text { margin-top: 6px; font-size: 13px; color: var(--text-muted); }
   .timer-controls { display: flex; justify-content: center; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
   #logout-btn, #login-open-btn {
@@ -746,7 +746,6 @@
       <div class="timer-controls">
         <button type="button" id="hiit-timer-pause" class="settings-shortcut">⏸ Pauză</button>
         <button type="button" id="hiit-timer-next" class="settings-shortcut">⏭ Următorul</button>
-        <button type="button" id="hiit-timer-stop" class="settings-shortcut">⏹ Oprește</button>
       </div>
     </div>
   </div>
@@ -2590,7 +2589,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     const progress = Math.min(1, Math.max(0, elapsed / cur.seconds));
     const ring = document.getElementById('hiit-ring-progress');
     ring.style.strokeDashoffset = String(HIIT_RING_CIRCUMFERENCE * (1 - progress));
-    ring.style.stroke = hiitTimer.paused ? HIIT_PAUSE_COLOR : hiitRingColor(progress);
+    ring.style.stroke = (hiitTimer.paused || cur.type === 'rest') ? HIIT_PAUSE_COLOR : hiitRingColor(progress);
 
     const totalWork = hiitCountWorkIntervals(hiitTimer.intervals);
     const doneWork = hiitCountWorkIntervals(hiitTimer.intervals.slice(0, hiitTimer.idx + 1));
@@ -2669,7 +2668,6 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     hiitStartInterval(hiitTimer.idx + 1);
   });
 
-  document.getElementById('hiit-timer-stop').addEventListener('click', hiitCloseTimer);
   document.getElementById('hiit-timer-close').addEventListener('click', hiitCloseTimer);
 
   // ============================================================
