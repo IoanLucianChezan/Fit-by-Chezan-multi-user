@@ -2587,6 +2587,43 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
   function hiitBeepTransition() { hiitInitSounds(); hiitPlaySound(hiitSoundTransition); }
   function hiitBeepComplete() { hiitInitSounds(); hiitPlaySound(hiitSoundComplete); }
 
+  // --- Loop silențios care ține "sesiunea audio" a telefonului activă cât timp rulează
+  // cronometrul. Fără radio pornit, browserul (mai ales iOS) reblochează redarea
+  // programatică (din setInterval, nu dintr-un tap direct) după un timp de tăcere -
+  // exact motivul pentru care beep-urile de tranziție tăceau când radio era oprit, dar
+  // funcționau cu radio pornit (radio-ul, redat continuu, ținea sesiunea deschisă). Acest
+  // loop reproduce același efect, dar local (fără trafic de date) și fără sunet audibil.
+  let hiitKeepAliveAudio = null;
+  function hiitBuildSilentLoopWav(durationSec = 1, sampleRate = 8000) {
+    const n = Math.round(durationSec * sampleRate);
+    const dataSize = n * 2;
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+    function writeStr(off, str) { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); }
+    writeStr(0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); writeStr(8, 'WAVE');
+    writeStr(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+    writeStr(36, 'data'); view.setUint32(40, dataSize, true);
+    // eșantioane rămân 0 (tăcere completă) - doar starea de "redare activă" contează
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return 'data:audio/wav;base64,' + btoa(binary);
+  }
+  function hiitStartKeepAlive() {
+    if (!hiitKeepAliveAudio) {
+      hiitKeepAliveAudio = new Audio(hiitBuildSilentLoopWav());
+      hiitKeepAliveAudio.loop = true;
+      hiitKeepAliveAudio.volume = 0.01;
+    }
+    const p = hiitKeepAliveAudio.play();
+    if (p && p.catch) p.catch(() => { /* ignorăm */ });
+  }
+  function hiitStopKeepAlive() {
+    if (hiitKeepAliveAudio) { hiitKeepAliveAudio.pause(); hiitKeepAliveAudio.currentTime = 0; }
+  }
+
   // --- Radio online opțional, în timpul execuției (partajat între HIIT și Challenge) ---
   const RADIO_STREAM_URL = 'https://mp3channels.webradio.antenne.de/workout-hits';
   let sharedRadioAudio = null;
@@ -2715,6 +2752,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     if (hiitTimer.tickId) { clearInterval(hiitTimer.tickId); hiitTimer.tickId = null; }
     releaseWakeLock(hiitTimer);
     stopRadio();
+    hiitStopKeepAlive();
     hiitBeepComplete();
     document.getElementById('hiit-timer-time').textContent = '✓';
     document.getElementById('hiit-timer-exercise').textContent = 'Antrenament complet!';
@@ -2729,6 +2767,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     if (hiitTimer.tickId) { clearInterval(hiitTimer.tickId); hiitTimer.tickId = null; }
     releaseWakeLock(hiitTimer);
     stopRadio();
+    hiitStopKeepAlive();
     document.getElementById('hiit-timer-overlay').classList.add('hidden');
   }
 
@@ -2742,6 +2781,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     if (hiitTimer.tickId) clearInterval(hiitTimer.tickId);
     hiitTimer.tickId = setInterval(hiitTick, 200);
     hiitBeepStart();
+    hiitStartKeepAlive();
     requestWakeLock(hiitTimer);
     startRadio('hiit-radio-toggle');
     hiitStartInterval(0, false);
@@ -2974,6 +3014,7 @@ Generează challenge-ul de azi (sub 6 minute).`;
     if (challengeTimer.tickId) { clearInterval(challengeTimer.tickId); challengeTimer.tickId = null; }
     releaseWakeLock(challengeTimer);
     stopRadio();
+    hiitStopKeepAlive();
     hiitBeepComplete();
     document.getElementById('challenge-timer-time').textContent = '✓';
     document.getElementById('challenge-timer-phase').textContent = '';
@@ -2984,6 +3025,7 @@ Generează challenge-ul de azi (sub 6 minute).`;
     if (challengeTimer.tickId) { clearInterval(challengeTimer.tickId); challengeTimer.tickId = null; }
     releaseWakeLock(challengeTimer);
     stopRadio();
+    hiitStopKeepAlive();
     document.getElementById('challenge-timer-overlay').classList.add('hidden');
   }
 
@@ -3010,6 +3052,7 @@ Generează challenge-ul de azi (sub 6 minute).`;
     if (challengeTimer.tickId) clearInterval(challengeTimer.tickId);
     challengeTimer.tickId = setInterval(challengeTick, 200);
     hiitBeepStart();
+    hiitStartKeepAlive();
     requestWakeLock(challengeTimer);
     startRadio('challenge-radio-toggle');
     challengeRenderTick();
