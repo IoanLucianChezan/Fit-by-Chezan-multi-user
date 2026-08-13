@@ -1154,6 +1154,41 @@
     </div>
 
     <div class="card">
+      <h2>Hyrox/Spartan</h2>
+      <p class="hint">Antrenament hibrid alergare + exerciții, stil Hyrox/Spartan (ex: alergare 1km, 100 flotări, alergare 1km, 100 genoflexiuni...). Fără echipament, AI folosește exerciții cu greutate corporală.</p>
+
+      <details class="manual-entry">
+        <summary><h2>Configurare</h2></summary>
+
+        <div class="config-subsection">
+          <h3>Echipamente</h3>
+          <p class="hint">Ce echipamente ai disponibile (ex: Kettlebell — 16kg, Sanie, Minge medicinală). Lasă gol pentru doar greutate corporală.</p>
+          <div id="hyrox-equipment-list"></div>
+          <button type="button" id="hyrox-add-equipment">+ Adaugă echipament</button>
+        </div>
+
+        <div class="settings-field">
+          <label for="hyrox-limitations">Limitări / accidentări (opțional)</label>
+          <input type="text" id="hyrox-limitations" placeholder="Ex: genunchi sensibil, evit alergare lungă">
+        </div>
+      </details>
+
+      <div class="workout-actions" style="margin-top:16px;">
+        <button type="button" id="hyrox-generate-btn" class="btn-big">🔄 Generează antrenament</button>
+        <span id="hyrox-generate-status"></span>
+      </div>
+
+      <div id="hyrox-generate-quote" class="motivational-quote"></div>
+      <div id="hyrox-preview" class="workout-result"></div>
+
+      <div class="workout-actions" id="hyrox-finish-wrap" style="display:none;">
+        <button type="button" id="hyrox-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <button type="button" id="hyrox-back-btn" class="settings-shortcut">← Înapoi</button>
+        <span id="hyrox-finish-status"></span>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Antrenament Bodybuilding (personalizat)</h2>
       <p class="hint">Un singur antrenament, adaptat nivelului și split-ului tău. Presupune acces la o sală dotată.</p>
 
@@ -3284,6 +3319,125 @@ Generează challenge-ul de azi (sub 6 minute).`;
   document.getElementById('custom-timer-close').addEventListener('click', customTimerClose);
 
   // ============================================================
+  // Hyrox/Spartan — antrenament hibrid alergare + exerciții
+  // ============================================================
+
+  const HYROX_HISTORY_KEY = 'fw_hyrox_history';
+
+  const HYROX_SYSTEM_PROMPT = `Ești un antrenor expert în antrenamente stil Hyrox/Spartan Race -
+alergare alternată cu exerciții funcționale intense, gen "alergare 1km, 100 flotări, alergare 1km,
+100 genoflexiuni, alergare 1km, 80 burpees...".
+
+Primești echipamentele disponibile ale utilizatorului și eventuale limitări/accidentări.
+
+Sarcina ta: generează un antrenament complet, alternând segmente de alergare (distanțe variabile -
+400m, 800m, 1km, 1.6km etc., alege tu, pot varia în cadrul aceluiași antrenament) cu stații de
+exerciții funcționale intense (repetări mari, gen 50-100 per stație). Minim 4-6 stații de alergare
+alternate cu exerciții.
+
+Dacă utilizatorul NU are niciun echipament specificat, folosește exclusiv exerciții cu greutate
+corporală (burpees, genoflexiuni, flotări, lunges, mountain climbers, jumping jacks, sit-ups, plank
+etc.).
+
+Dacă utilizatorul ARE echipamente specificate, include stații care folosesc acel echipament (ex:
+sanie împinsă/trasă, wall balls cu minge medicinală, kettlebell swings, vâslit etc.), alternate cu
+segmentele de alergare.
+
+Include:
+- Încălzire scurtă
+- Antrenamentul principal (alternanța alergare/stație, clar numerotată)
+- Cooldown/stretching scurt
+- Notă de tehnică/siguranță concisă
+
+Răspunde direct, formatat clar (listă numerotată per stație), fără introduceri sau explicații despre
+cum ai gândit.`;
+
+  function buildHyroxUserPrompt(config, dayName, dateStr) {
+    const equipmentText = config.equipment.length
+      ? config.equipment.map(i => `- ${i.name}${i.detail ? `: ${i.detail}` : ''}`).join('\n')
+      : '(niciun echipament - doar greutate corporală)';
+    return `Ziua curentă: ${dayName}, ${dateStr}
+Echipamente disponibile:
+${equipmentText}
+Limitări: ${config.limitations || '(niciuna)'}
+
+Generează antrenamentul Hyrox/Spartan de azi.`;
+  }
+
+  document.getElementById('hyrox-add-equipment').addEventListener('click', () => addRow('hyrox-equipment-list'));
+
+  let hyroxPreview = null;
+
+  document.getElementById('hyrox-generate-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('hyrox-generate-btn');
+    const status = document.getElementById('hyrox-generate-status');
+    const preview = document.getElementById('hyrox-preview');
+    btn.disabled = true;
+    document.getElementById('hyrox-finish-wrap').style.display = 'none';
+    status.textContent = '';
+    showQuote('hyrox-generate-quote');
+    preview.innerHTML = '';
+    try {
+      const config = {
+        equipment: collectList('hyrox-equipment-list'),
+        limitations: document.getElementById('hyrox-limitations').value.trim()
+      };
+      const now = new Date();
+      const dayName = RO_DAYS[now.getDay()];
+      const dateStr = localDateStr(now);
+      const messages = [
+        { role: 'system', content: HYROX_SYSTEM_PROMPT },
+        { role: 'user', content: buildHyroxUserPrompt(config, dayName, dateStr) }
+      ];
+      const result = await generateWithFallback(messages);
+      hyroxPreview = { ...result, day: dayName, date: dateStr };
+      preview.innerHTML = renderMarkdown(result.content);
+      status.textContent = '';
+      document.getElementById('hyrox-finish-wrap').style.display = 'flex';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('hyrox-generate-quote');
+    }
+  });
+
+  document.getElementById('hyrox-back-btn').addEventListener('click', () => {
+    hyroxPreview = null;
+    document.getElementById('hyrox-preview').innerHTML = '';
+    document.getElementById('hyrox-finish-wrap').style.display = 'none';
+    document.getElementById('hyrox-generate-status').textContent = '';
+  });
+
+  document.getElementById('hyrox-finish-btn').addEventListener('click', async () => {
+    if (!hyroxPreview) return;
+    const status = document.getElementById('hyrox-finish-status');
+    const entry = { ...hyroxPreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    const log = lsGet(HYROX_HISTORY_KEY, []);
+    log.unshift(entry);
+    lsSet(HYROX_HISTORY_KEY, log);
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    document.getElementById('hyrox-finish-wrap').style.display = 'none';
+    renderMergedWorkoutHistory();
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+
+    const muscles = await classifyMuscles(entry.content);
+    if (muscles.length) {
+      const all = lsGet(HYROX_HISTORY_KEY, []);
+      const found = all.find(e => e.generatedAt === entry.generatedAt);
+      if (found) {
+        found.muscleGroups = muscles;
+        lsSet(HYROX_HISTORY_KEY, all);
+        renderMergedWorkoutHistory();
+        renderHome();
+      }
+    }
+  });
+
+  // ============================================================
   // Calendar generic (folosit la Nutriție)
   // ============================================================
 
@@ -3704,7 +3858,7 @@ obiectului JSON.`;
   // (Antrenament/Bodybuilding personalizat/Easy WOD/Hero WOD/introducere manuală/alergări)
   // într-o singură listă, sortată descrescător.
   function renderMergedWorkoutHistory() {
-    const workoutKeys = [WORKOUT_LOG_KEY, BB_CUSTOM_HISTORY_KEY, EASY_HISTORY_KEY, HERO_HISTORY_KEY, MANUAL_HISTORY_KEY, HIIT_HISTORY_KEY, CHALLENGE_HISTORY_KEY];
+    const workoutKeys = [WORKOUT_LOG_KEY, BB_CUSTOM_HISTORY_KEY, EASY_HISTORY_KEY, HERO_HISTORY_KEY, MANUAL_HISTORY_KEY, HIIT_HISTORY_KEY, CHALLENGE_HISTORY_KEY, HYROX_HISTORY_KEY];
     const container = document.getElementById('custom-workout-history');
     const merged = [];
     workoutKeys.forEach(key => {
@@ -5580,7 +5734,8 @@ Generează antrenamentul concret de azi.`;
     const olympicProgram = lsGet(OLYMPIC_PROGRAM_HISTORY_KEY, []);
     const hiit = lsGet(HIIT_HISTORY_KEY, []);
     const challenge = lsGet(CHALLENGE_HISTORY_KEY, []);
-    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram, ...hiit, ...challenge];
+    const hyrox = lsGet(HYROX_HISTORY_KEY, []);
+    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram, ...hiit, ...challenge, ...hyrox];
 
     const workoutsPerMonth = new Array(12).fill(0);
     allWorkouts.forEach(e => {
@@ -5630,7 +5785,8 @@ Generează antrenamentul concret de azi.`;
     const olympicProgram = lsGet(OLYMPIC_PROGRAM_HISTORY_KEY, []);
     const hiit = lsGet(HIIT_HISTORY_KEY, []);
     const challenge = lsGet(CHALLENGE_HISTORY_KEY, []);
-    const all = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram, ...hiit, ...challenge];
+    const hyrox = lsGet(HYROX_HISTORY_KEY, []);
+    const all = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram, ...hiit, ...challenge, ...hyrox];
 
     const workoutsToday = all.filter(e => e.date === today).length;
     const workoutsMonth = all.filter(e => e.date.startsWith(monthPrefix)).length;
