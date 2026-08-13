@@ -2561,6 +2561,18 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
 
   let hiitBufferStart = null, hiitBufferTransition = null, hiitBufferComplete = null;
   let hiitSoundsDecoding = null;
+  // decodeAudioData: pe Safari mai vechi varianta bazată pe Promise nu era fiabilă -
+  // trecem și callback-urile clasice (succes/eroare) ca variantă de rezervă; oricare
+  // reușește primul rezolvă promisiunea.
+  function hiitDecodeOne(ctx, wav) {
+    return new Promise((resolve) => {
+      try {
+        const maybePromise = ctx.decodeAudioData(wav, (buf) => resolve(buf), () => resolve(null));
+        if (maybePromise && maybePromise.then) maybePromise.then(resolve).catch(() => resolve(null));
+      } catch (err) { resolve(null); }
+    });
+  }
+
   function hiitDecodeSounds() {
     if (hiitSoundsDecoding) return hiitSoundsDecoding;
     const ctx = hiitGetAudioCtx();
@@ -2572,25 +2584,35 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
       { freq: 783.99, duration: 0.14 }, { freq: 1046.5, duration: 0.4 }
     ]);
     hiitSoundsDecoding = Promise.all([
-      ctx.decodeAudioData(startWav),
-      ctx.decodeAudioData(transitionWav),
-      ctx.decodeAudioData(completeWav)
+      hiitDecodeOne(ctx, startWav),
+      hiitDecodeOne(ctx, transitionWav),
+      hiitDecodeOne(ctx, completeWav)
     ]).then(([start, transition, complete]) => {
       hiitBufferStart = start; hiitBufferTransition = transition; hiitBufferComplete = complete;
-    }).catch(err => console.warn('Decodare sunete eșuată:', err.message));
+    });
     return hiitSoundsDecoding;
   }
 
+  // iOS suspendă automat AudioContext-ul după o vreme de tăcere (ex: pauza de 20-40s
+  // dintre exerciții) - dacă doar verificăm starea și pornim sursa fără să AȘTEPTĂM
+  // resume(), primele câteva sute de ms (uneori tot sunetul) se pierd în tăcere.
+  // Așteptăm explicit resume() înainte de a programa sursa.
   function hiitPlayBuffer(buffer) {
     const ctx = hiitGetAudioCtx();
     if (!ctx || !buffer) return;
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-    try {
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(ctx.destination);
-      source.start(0);
-    } catch (err) { /* ignorăm */ }
+    const schedule = () => {
+      try {
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+      } catch (err) { /* ignorăm */ }
+    };
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(schedule).catch(schedule);
+    } else {
+      schedule();
+    }
   }
 
   // Primul gest al utilizatorului (oriunde pe pagină) pornește AudioContext-ul și
@@ -2600,6 +2622,13 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     if (!ctx) return;
     if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     hiitDecodeSounds();
+  }
+
+  // Menține AudioContext-ul "treaz" cât timp rulează un cronometru, ca să nu se
+  // resuspende singur în pauzele lungi dintre beep-uri (vezi nota de la hiitPlayBuffer).
+  function hiitKeepAudioAwake() {
+    const ctx = hiitGetAudioCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
   }
   document.addEventListener('touchend', hiitUnlockAudio, { once: true });
   document.addEventListener('click', hiitUnlockAudio, { once: true });
@@ -2728,6 +2757,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
   }
 
   function hiitTick() {
+    hiitKeepAudioAwake();
     if (hiitTimer.paused) return;
     hiitRenderTick();
   }
@@ -2986,6 +3016,7 @@ Generează challenge-ul de azi (sub 6 minute).`;
   }
 
   function challengeTick() {
+    hiitKeepAudioAwake();
     if (challengeTimer.paused || challengeTimer.completed) return;
     challengeRenderTick();
   }
