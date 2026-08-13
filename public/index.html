@@ -2509,17 +2509,9 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     wakeLock: null
   };
 
-  // --- Sunete cronometru (Web Audio API - tonuri tip "clopoțel", armonice sinusoidale
-  // în loc de undă pătrată; pre-decodate din primul gest al utilizatorului, ca redarea
-  // efectivă (la Execută, la fiecare tranziție) să nu aibă nicio întârziere) ---
-  let hiitAudioCtx = null;
-  function hiitGetAudioCtx() {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return null;
-    if (!hiitAudioCtx) hiitAudioCtx = new Ctx();
-    return hiitAudioCtx;
-  }
-
+  // --- Sunete cronometru (WAV generat în memorie, redat prin <audio> - mai fiabil pe
+  // iOS/Safari decât AudioContext + buffer direct pe destination). Ton tip "clopoțel"
+  // (sinusoidă + 2 armonice mai slabe) în loc de undă pătrată brută. ---
   function hiitBuildChimeWav(notes, sampleRate = 44100) {
     const segments = notes.map(n => ({
       freq: n.freq,
@@ -2556,86 +2548,44 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
       const s = Math.max(-1, Math.min(1, samples[i]));
       view.setInt16(44 + i * 2, s < 0 ? s * 32768 : s * 32767, true);
     }
-    return buffer;
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return 'data:audio/wav;base64,' + btoa(binary);
   }
 
-  let hiitBufferStart = null, hiitBufferTransition = null, hiitBufferComplete = null;
-  let hiitSoundsDecoding = null;
-  // decodeAudioData: pe Safari mai vechi varianta bazată pe Promise nu era fiabilă -
-  // trecem și callback-urile clasice (succes/eroare) ca variantă de rezervă; oricare
-  // reușește primul rezolvă promisiunea.
-  function hiitDecodeOne(ctx, wav) {
-    return new Promise((resolve) => {
-      try {
-        const maybePromise = ctx.decodeAudioData(wav, (buf) => resolve(buf), () => resolve(null));
-        if (maybePromise && maybePromise.then) maybePromise.then(resolve).catch(() => resolve(null));
-      } catch (err) { resolve(null); }
-    });
-  }
-
-  function hiitDecodeSounds() {
-    if (hiitSoundsDecoding) return hiitSoundsDecoding;
-    const ctx = hiitGetAudioCtx();
-    if (!ctx) return Promise.resolve();
-    const startWav = hiitBuildChimeWav([{ freq: 523.25, duration: 0.16 }, { freq: 783.99, duration: 0.26 }]);
-    const transitionWav = hiitBuildChimeWav([{ freq: 659.25, duration: 0.3 }]);
-    const completeWav = hiitBuildChimeWav([
+  let hiitSoundStart, hiitSoundTransition, hiitSoundComplete;
+  function hiitInitSounds() {
+    if (hiitSoundStart) return;
+    hiitSoundStart = new Audio(hiitBuildChimeWav([{ freq: 523.25, duration: 0.16 }, { freq: 783.99, duration: 0.26 }]));
+    hiitSoundTransition = new Audio(hiitBuildChimeWav([{ freq: 659.25, duration: 0.3 }]));
+    hiitSoundComplete = new Audio(hiitBuildChimeWav([
       { freq: 523.25, duration: 0.14 }, { freq: 659.25, duration: 0.14 },
       { freq: 783.99, duration: 0.14 }, { freq: 1046.5, duration: 0.4 }
-    ]);
-    hiitSoundsDecoding = Promise.all([
-      hiitDecodeOne(ctx, startWav),
-      hiitDecodeOne(ctx, transitionWav),
-      hiitDecodeOne(ctx, completeWav)
-    ]).then(([start, transition, complete]) => {
-      hiitBufferStart = start; hiitBufferTransition = transition; hiitBufferComplete = complete;
-    });
-    return hiitSoundsDecoding;
+    ]));
+    [hiitSoundStart, hiitSoundTransition, hiitSoundComplete].forEach(a => { a.preload = 'auto'; a.volume = 1; });
   }
-
-  // iOS suspendă automat AudioContext-ul după o vreme de tăcere (ex: pauza de 20-40s
-  // dintre exerciții) - dacă doar verificăm starea și pornim sursa fără să AȘTEPTĂM
-  // resume(), primele câteva sute de ms (uneori tot sunetul) se pierd în tăcere.
-  // Așteptăm explicit resume() înainte de a programa sursa.
-  function hiitPlayBuffer(buffer) {
-    const ctx = hiitGetAudioCtx();
-    if (!ctx || !buffer) return;
-    const schedule = () => {
-      try {
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(ctx.destination);
-        source.start(0);
-      } catch (err) { /* ignorăm */ }
-    };
-    if (ctx.state === 'suspended') {
-      ctx.resume().then(schedule).catch(schedule);
-    } else {
-      schedule();
-    }
+  function hiitPlaySound(audio) {
+    if (!audio) return;
+    try {
+      audio.currentTime = 0;
+      const p = audio.play();
+      if (p && p.catch) p.catch(() => { /* redare blocată - ignorăm */ });
+    } catch (err) { /* ignorăm */ }
   }
-
-  // Primul gest al utilizatorului (oriunde pe pagină) pornește AudioContext-ul și
-  // declanșează decodarea sunetelor din timp, ca la Execută/tranziții să fie deja gata.
+  // Prima redare TREBUIE declanșată direct dintr-un gest de atingere (nu din setInterval);
+  // odată reușită, iOS permite și redările ulterioare programatice pe același element.
   function hiitUnlockAudio() {
-    const ctx = hiitGetAudioCtx();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-    hiitDecodeSounds();
-  }
-
-  // Menține AudioContext-ul "treaz" cât timp rulează un cronometru, ca să nu se
-  // resuspende singur în pauzele lungi dintre beep-uri (vezi nota de la hiitPlayBuffer).
-  function hiitKeepAudioAwake() {
-    const ctx = hiitGetAudioCtx();
-    if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+    hiitInitSounds();
+    hiitPlaySound(hiitSoundTransition);
+    if (hiitSoundTransition) hiitSoundTransition.pause();
   }
   document.addEventListener('touchend', hiitUnlockAudio, { once: true });
   document.addEventListener('click', hiitUnlockAudio, { once: true });
 
-  function hiitBeepStart() { hiitUnlockAudio(); hiitDecodeSounds().then(() => hiitPlayBuffer(hiitBufferStart)); }
-  function hiitBeepTransition() { hiitPlayBuffer(hiitBufferTransition); }
-  function hiitBeepComplete() { hiitPlayBuffer(hiitBufferComplete); }
+  function hiitBeepStart() { hiitInitSounds(); hiitPlaySound(hiitSoundStart); }
+  function hiitBeepTransition() { hiitInitSounds(); hiitPlaySound(hiitSoundTransition); }
+  function hiitBeepComplete() { hiitInitSounds(); hiitPlaySound(hiitSoundComplete); }
 
   // --- Radio online opțional, în timpul execuției (partajat între HIIT și Challenge) ---
   const RADIO_STREAM_URL = 'https://mp3channels.webradio.antenne.de/workout-hits';
@@ -2757,7 +2707,6 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
   }
 
   function hiitTick() {
-    hiitKeepAudioAwake();
     if (hiitTimer.paused) return;
     hiitRenderTick();
   }
@@ -3016,7 +2965,6 @@ Generează challenge-ul de azi (sub 6 minute).`;
   }
 
   function challengeTick() {
-    hiitKeepAudioAwake();
     if (challengeTimer.paused || challengeTimer.completed) return;
     challengeRenderTick();
   }
