@@ -22,13 +22,14 @@ const PORT = process.env.PORT || 3000;
 // scapa de try/catch repetitiv in fiecare ruta async - orice eroare ajunge la error handler-ul de la final
 const ah = (fn) => (req, res, next) => fn(req, res, next).catch(next);
 
-app.use(express.json({ limit: '15mb' })); // poze base64 la transcriere pot fi mari
-app.use(cookieParser());
-
-// endpoint minim, fara auth, doar pentru ping-uri de tip "keep-alive" (raspuns mic, nu incarca DB)
+// endpoint minim, fara auth, inregistrat inaintea oricarui middleware (nu depinde de
+// parsare json/cookies, nu atinge DB) - pentru ping-uri de tip "keep-alive"
 app.get('/api/health', (req, res) => {
   res.json({ ok: true });
 });
+
+app.use(express.json({ limit: '15mb' })); // poze base64 la transcriere pot fi mari
+app.use(cookieParser());
 
 // ============================================================
 // Rate limiting simplu pe login (in-memory, per username) - previne
@@ -395,13 +396,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Eroare de server.' });
 });
 
-initDb()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Fit by Chezan (multi-user) rulează pe http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('Nu am putut initializa baza de date:', err);
-    process.exit(1);
-  });
+// Ascultăm imediat, fără să așteptăm baza de date - /api/health nu are nevoie de DB,
+// și trebuie să răspundă rapid chiar și în timpul unui cold start (Render + Neon au
+// amândouă propriul lor "wake up"; dacă am aștepta DB-ul înainte de listen(), Render
+// întoarce propria pagină de eroare cât timp portul nu e deschis, ceea ce a dus la
+// erorile "ieșire prea mare" de la cron-job.org).
+app.listen(PORT, () => {
+  console.log(`Fit by Chezan (multi-user) rulează pe http://localhost:${PORT}`);
+});
+
+initDb().catch((err) => {
+  console.error('Nu am putut initializa baza de date:', err);
+});
