@@ -2461,10 +2461,13 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     document.getElementById('hiit-generate-status').textContent = '';
   });
 
-  document.getElementById('hiit-finish-btn').addEventListener('click', async () => {
+  // Extras într-o funcție separată ca să poată fi declanșat și automat la finalul
+  // natural al cronometrului (nu doar de la click manual pe "Finalizează").
+  async function hiitFinalizeWorkout() {
     if (!hiitPreview) return;
     const status = document.getElementById('hiit-finish-status');
     const entry = { ...hiitPreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    hiitPreview = null;
     const log = lsGet(HIIT_HISTORY_KEY, []);
     log.unshift(entry);
     lsSet(HIIT_HISTORY_KEY, log);
@@ -2487,7 +2490,9 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
         renderHome();
       }
     }
-  });
+  }
+
+  document.getElementById('hiit-finish-btn').addEventListener('click', hiitFinalizeWorkout);
 
   // --- Cronometru execuție HIIT ---
 
@@ -2738,8 +2743,7 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     document.getElementById('hiit-timer-progress-text').textContent = '';
     document.getElementById('hiit-timer-next-hint').textContent = '';
     document.getElementById('hiit-ring-progress').style.strokeDashoffset = '0';
-    showCelebration();
-    showScreenFlash();
+    hiitFinalizeWorkout();
   }
 
   function hiitCloseTimer() {
@@ -2911,10 +2915,13 @@ Generează challenge-ul de azi (sub 6 minute).`;
     document.getElementById('challenge-generate-status').textContent = '';
   });
 
-  document.getElementById('challenge-finish-btn').addEventListener('click', async () => {
+  // Extras într-o funcție separată ca să poată fi declanșat și automat la finalul
+  // natural al cronometrului (nu doar de la click manual pe "Finalizează").
+  async function challengeFinalizeWorkout() {
     if (!challengePreview) return;
     const status = document.getElementById('challenge-finish-status');
     const entry = { ...challengePreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    challengePreview = null;
     const log = lsGet(CHALLENGE_HISTORY_KEY, []);
     log.unshift(entry);
     lsSet(CHALLENGE_HISTORY_KEY, log);
@@ -2937,7 +2944,9 @@ Generează challenge-ul de azi (sub 6 minute).`;
         renderHome();
       }
     }
-  });
+  }
+
+  document.getElementById('challenge-finish-btn').addEventListener('click', challengeFinalizeWorkout);
 
   // --- Cronometru execuție Challenge (o singură "priză" - contra cronometru sau deschis) ---
   const challengeTimer = {
@@ -2989,8 +2998,7 @@ Generează challenge-ul de azi (sub 6 minute).`;
     hiitBeepComplete();
     document.getElementById('challenge-timer-time').textContent = '✓';
     document.getElementById('challenge-timer-phase').textContent = '';
-    showCelebration();
-    showScreenFlash();
+    challengeFinalizeWorkout();
   }
 
   function challengeCloseTimer() {
