@@ -750,6 +750,27 @@
     </div>
   </div>
 
+  <div id="challenge-timer-overlay" class="hidden">
+    <div class="timer-box">
+      <button type="button" id="challenge-timer-close" title="Închide">✕</button>
+      <div class="timer-ring-wrap">
+        <svg viewBox="0 0 200 200" class="timer-ring-svg">
+          <circle cx="100" cy="100" r="90" class="timer-ring-bg"></circle>
+          <circle cx="100" cy="100" r="90" class="timer-ring-progress" id="challenge-ring-progress" transform="rotate(-90 100 100)"></circle>
+        </svg>
+        <div class="timer-ring-center">
+          <div class="timer-time" id="challenge-timer-time">00:00</div>
+          <div class="timer-phase" id="challenge-timer-phase"></div>
+        </div>
+      </div>
+      <div class="timer-exercise" id="challenge-timer-exercise"></div>
+      <div class="timer-progress-text" id="challenge-timer-progress-text"></div>
+      <div class="timer-controls">
+        <button type="button" id="challenge-timer-pause" class="settings-shortcut">⏸ Pauză</button>
+      </div>
+    </div>
+  </div>
+
   <h1 id="app-title">Fit by Chezan</h1>
 
   <div class="header-row">
@@ -989,6 +1010,58 @@
         <button type="button" id="hiit-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
         <button type="button" id="hiit-back-btn" class="settings-shortcut">← Înapoi</button>
         <span id="hiit-finish-status"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Challenge</h2>
+      <p class="hint">Provocări scurte și intense, stil CrossFit — presupune acces la echipamentul necesar (bară de tracțiuni, gantere etc.). Cu cronometru integrat.</p>
+
+      <details class="manual-entry">
+        <summary><h2>Configurare</h2></summary>
+
+        <div class="settings-field">
+          <label for="challenge-level">Nivel</label>
+          <select id="challenge-level">
+            <option value="Începător">Începător</option>
+            <option value="Intermediar" selected>Intermediar</option>
+            <option value="Avansat">Avansat</option>
+          </select>
+        </div>
+
+        <div class="settings-field">
+          <label for="challenge-duration">Durată</label>
+          <select id="challenge-duration">
+            <option value="scurt">Scurt (sub 6 min)</option>
+            <option value="mediu" selected>Mediu (6-12 min)</option>
+            <option value="lung">Lung (peste 12 min)</option>
+          </select>
+        </div>
+
+        <div class="settings-field">
+          <label for="challenge-limitations">Limitări / accidentări (opțional)</label>
+          <input type="text" id="challenge-limitations" placeholder="Ex: umăr sensibil, evit tracțiuni">
+        </div>
+
+        <div class="config-subsection">
+          <h3>Radio</h3>
+          <label class="checkbox-row"><input type="checkbox" id="challenge-radio-toggle"> 📻 Pornește radio online în timpul challenge-ului <span class="hint">(Antenne Workout Hits)</span></label>
+        </div>
+      </details>
+
+      <div class="workout-actions" style="margin-top:16px;">
+        <button type="button" id="challenge-generate-btn" class="btn-big">🔄 Generează challenge</button>
+        <span id="challenge-generate-status"></span>
+      </div>
+
+      <div id="challenge-generate-quote" class="motivational-quote"></div>
+      <div id="challenge-preview" class="workout-result"></div>
+
+      <div class="workout-actions" id="challenge-finish-wrap" style="display:none;">
+        <button type="button" id="challenge-execute-btn" class="btn-big btn-execute">▶️ Execută challenge-ul</button>
+        <button type="button" id="challenge-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <button type="button" id="challenge-back-btn" class="settings-shortcut">← Înapoi</button>
+        <span id="challenge-finish-status"></span>
       </div>
     </div>
 
@@ -2500,41 +2573,42 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
   function hiitBeepTransition() { hiitInitSounds(); hiitPlaySound(hiitSoundTransition); }
   function hiitBeepComplete() { hiitInitSounds(); hiitPlaySound(hiitSoundComplete); }
 
-  // --- Radio online opțional, în timpul execuției ---
-  const HIIT_RADIO_STREAM_URL = 'https://mp3channels.webradio.antenne.de/workout-hits';
-  let hiitRadioAudio = null;
-  function hiitStartRadio() {
-    if (!document.getElementById('hiit-radio-toggle').checked) return;
-    if (!hiitRadioAudio) {
-      hiitRadioAudio = new Audio(HIIT_RADIO_STREAM_URL);
-      hiitRadioAudio.preload = 'none';
-      hiitRadioAudio.volume = 0.6;
+  // --- Radio online opțional, în timpul execuției (partajat între HIIT și Challenge) ---
+  const RADIO_STREAM_URL = 'https://mp3channels.webradio.antenne.de/workout-hits';
+  let sharedRadioAudio = null;
+  function startRadio(toggleId) {
+    const toggle = document.getElementById(toggleId);
+    if (!toggle || !toggle.checked) return;
+    if (!sharedRadioAudio) {
+      sharedRadioAudio = new Audio(RADIO_STREAM_URL);
+      sharedRadioAudio.preload = 'none';
+      sharedRadioAudio.volume = 0.6;
     }
-    const p = hiitRadioAudio.play();
+    const p = sharedRadioAudio.play();
     if (p && p.catch) p.catch(() => { /* stream indisponibil - ignorăm */ });
   }
-  function hiitStopRadio() {
-    if (hiitRadioAudio) { hiitRadioAudio.pause(); hiitRadioAudio.currentTime = 0; }
+  function stopRadio() {
+    if (sharedRadioAudio) { sharedRadioAudio.pause(); sharedRadioAudio.currentTime = 0; }
   }
 
-  // --- Ecran mereu pornit cât timp rulează cronometrul ---
-  async function hiitRequestWakeLock() {
+  // --- Ecran mereu pornit cât timp rulează un cronometru (partajat) ---
+  async function requestWakeLock(state) {
     try {
       if ('wakeLock' in navigator) {
-        hiitTimer.wakeLock = await navigator.wakeLock.request('screen');
+        state.wakeLock = await navigator.wakeLock.request('screen');
       }
     } catch (err) { console.warn('Wake Lock indisponibil:', err.message); }
   }
-  async function hiitReleaseWakeLock() {
-    if (hiitTimer.wakeLock) {
-      try { await hiitTimer.wakeLock.release(); } catch (err) { /* ignorăm */ }
-      hiitTimer.wakeLock = null;
+  async function releaseWakeLock(state) {
+    if (state.wakeLock) {
+      try { await state.wakeLock.release(); } catch (err) { /* ignorăm */ }
+      state.wakeLock = null;
     }
   }
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && hiitTimer.tickId && !hiitTimer.wakeLock) {
-      hiitRequestWakeLock();
-    }
+    if (document.visibilityState !== 'visible') return;
+    if (hiitTimer.tickId && !hiitTimer.wakeLock) requestWakeLock(hiitTimer);
+    if (challengeTimer.tickId && !challengeTimer.wakeLock) requestWakeLock(challengeTimer);
   });
 
   function hiitFormatTime(totalSeconds) {
@@ -2615,8 +2689,8 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
 
   function hiitTimerComplete() {
     if (hiitTimer.tickId) { clearInterval(hiitTimer.tickId); hiitTimer.tickId = null; }
-    hiitReleaseWakeLock();
-    hiitStopRadio();
+    releaseWakeLock(hiitTimer);
+    stopRadio();
     hiitBeepComplete();
     document.getElementById('hiit-timer-time').textContent = '✓';
     document.getElementById('hiit-timer-exercise').textContent = 'Antrenament complet!';
@@ -2629,8 +2703,8 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
 
   function hiitCloseTimer() {
     if (hiitTimer.tickId) { clearInterval(hiitTimer.tickId); hiitTimer.tickId = null; }
-    hiitReleaseWakeLock();
-    hiitStopRadio();
+    releaseWakeLock(hiitTimer);
+    stopRadio();
     document.getElementById('hiit-timer-overlay').classList.add('hidden');
   }
 
@@ -2644,8 +2718,8 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
     if (hiitTimer.tickId) clearInterval(hiitTimer.tickId);
     hiitTimer.tickId = setInterval(hiitTick, 200);
     hiitBeepStart();
-    hiitRequestWakeLock();
-    hiitStartRadio();
+    requestWakeLock(hiitTimer);
+    startRadio('hiit-radio-toggle');
     hiitStartInterval(0, false);
   });
 
@@ -2669,6 +2743,269 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
   });
 
   document.getElementById('hiit-timer-close').addEventListener('click', hiitCloseTimer);
+
+  // ============================================================
+  // Challenge — provocare unică stil CrossFit (JSON structurat) +
+  // cronometru (contra cronometru SAU cronometru deschis)
+  // ============================================================
+
+  const CHALLENGE_HISTORY_KEY = 'fw_challenge_history';
+  const CHALLENGE_DURATION_LABELS = {
+    scurt: 'Scurt (sub 6 minute)',
+    mediu: 'Mediu (6-12 minute)',
+    lung: 'Lung (peste 12 minute)'
+  };
+
+  const CHALLENGE_SYSTEM_PROMPT = `Ești un antrenor expert în provocări stil CrossFit ("challenges") -
+un singur efort intens, NU un antrenament cu mai multe exerciții rotative. Presupune că utilizatorul
+are acces la orice echipament necesar (bară de tracțiuni, gantere, bară olimpică etc.) - nu întreba
+despre echipament, alege orice exercițiu clasic de CrossFit.
+
+Primești nivelul utilizatorului, durata dorită (categorie) și eventuale limitări/accidentări.
+
+Tipuri posibile de challenge (alege UNUL, cel mai potrivit nivelului și duratei):
+1. "Contra cronometru" (countdown) - un număr fix de repetări dintr-un exercițiu sau mic combo,
+   cu un plafon de timp clar (ex: "100 de burpees în 5 minute"). Adaptează plafonul de timp la
+   categoria de durată: scurt = sub 6 minute, mediu = 6-12 minute, lung = peste 12 minute.
+2. "Cronometru deschis" (countup) - un volum mare de repetări (ex: "1000 flotări, 1000
+   genoflexiuni, 500 tracțiuni"), fără plafon de timp - utilizatorul cronometrează cât durează și
+   oprește manual la final. Alege volumul astfel încât timpul realist de finalizare să se
+   încadreze in categoria de durată aleasă.
+3. Tip "hold + penalizare" - o poziție statică ținută cât mai mult (ex: plank pe coate), cu o
+   penalizare mică de exerciții de făcut de fiecare dată când utilizatorul se oprește din poziție
+   (ex: "de fiecare dată când te oprești: 4 burpees, 6 abdomene, 6 genoflexiuni"). Poate fi
+   countdown (target de timp fix) sau countup (ține cât poți).
+
+Răspunde STRICT cu un obiect JSON valid, fără text în plus, fără markdown, fără backtick-uri, în
+formatul exact:
+{
+  "title": "titlu scurt (ex: '100 Burpees for Time')",
+  "mode": "countdown" sau "countup",
+  "timeCapSeconds": număr întreg de secunde (plafonul de timp, DOAR dacă mode e "countdown";
+    altfel pune 0),
+  "targetLabel": "descriere scurtă a ce trebuie făcut, afișată sub cronometru (ex: '100 Burpees',
+    '1000 Flotări + 1000 Genoflexiuni + 500 Tracțiuni', 'Plank pe coate')",
+  "penaltyNote": "penalizarea de făcut la fiecare oprire, sau text gol daca nu există",
+  "notes": "1-2 propoziții cu sfaturi de tehnică/siguranță pentru acest challenge"
+}`;
+
+  function collectChallengeConfig() {
+    return {
+      level: document.getElementById('challenge-level').value,
+      duration: document.getElementById('challenge-duration').value,
+      limitations: document.getElementById('challenge-limitations').value.trim()
+    };
+  }
+
+  function buildChallengeUserPrompt(config, dayName, dateStr) {
+    return `Ziua curentă: ${dayName}, ${dateStr}
+Nivel: ${config.level}
+Durată dorită: ${CHALLENGE_DURATION_LABELS[config.duration] || config.duration}
+Limitări: ${config.limitations || '(niciuna)'}
+
+Generează challenge-ul de azi.`;
+  }
+
+  function buildChallengeMarkdown(plan) {
+    const lines = [];
+    lines.push(`## ${plan.title || 'Challenge'}`);
+    lines.push('');
+    lines.push(`**Obiectiv:** ${plan.targetLabel}`);
+    lines.push(`**Format:** ${plan.mode === 'countdown'
+      ? `Contra cronometru — ${Math.round(plan.timeCapSeconds / 60)} min`
+      : 'Cronometru deschis (oprești manual la final)'}`);
+    if (plan.penaltyNote) lines.push(`**Penalizare la oprire:** ${plan.penaltyNote}`);
+    if (plan.notes) {
+      lines.push('');
+      lines.push(`**Note:** ${plan.notes}`);
+    }
+    return lines.join('\n');
+  }
+
+  let challengePreview = null;
+
+  document.getElementById('challenge-generate-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('challenge-generate-btn');
+    const status = document.getElementById('challenge-generate-status');
+    const preview = document.getElementById('challenge-preview');
+    btn.disabled = true;
+    document.getElementById('challenge-finish-wrap').style.display = 'none';
+    status.textContent = '';
+    showQuote('challenge-generate-quote');
+    preview.innerHTML = '';
+    try {
+      const config = collectChallengeConfig();
+      const now = new Date();
+      const dayName = RO_DAYS[now.getDay()];
+      const dateStr = localDateStr(now);
+      const messages = [
+        { role: 'system', content: CHALLENGE_SYSTEM_PROMPT },
+        { role: 'user', content: buildChallengeUserPrompt(config, dayName, dateStr) }
+      ];
+      const result = await generateWithFallback(messages);
+      const match = result.content.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('Răspunsul AI nu a putut fi interpretat. Încearcă din nou.');
+      const plan = JSON.parse(match[0]);
+      plan.mode = plan.mode === 'countup' ? 'countup' : 'countdown';
+      plan.timeCapSeconds = plan.mode === 'countdown' ? Math.max(30, Number(plan.timeCapSeconds) || 300) : 0;
+      plan.targetLabel = plan.targetLabel || 'Challenge';
+      plan.penaltyNote = plan.penaltyNote || '';
+      const content = buildChallengeMarkdown(plan);
+      challengePreview = {
+        content, day: dayName, date: dateStr,
+        mode: plan.mode, timeCapSeconds: plan.timeCapSeconds,
+        targetLabel: plan.targetLabel, penaltyNote: plan.penaltyNote, planTitle: plan.title
+      };
+      preview.innerHTML = renderMarkdown(content);
+      status.textContent = '';
+      document.getElementById('challenge-finish-wrap').style.display = 'flex';
+    } catch (err) {
+      status.textContent = `Eroare: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      clearQuote('challenge-generate-quote');
+    }
+  });
+
+  document.getElementById('challenge-back-btn').addEventListener('click', () => {
+    challengePreview = null;
+    document.getElementById('challenge-preview').innerHTML = '';
+    document.getElementById('challenge-finish-wrap').style.display = 'none';
+    document.getElementById('challenge-generate-status').textContent = '';
+  });
+
+  document.getElementById('challenge-finish-btn').addEventListener('click', async () => {
+    if (!challengePreview) return;
+    const status = document.getElementById('challenge-finish-status');
+    const entry = { ...challengePreview, generatedAt: new Date().toISOString(), muscleGroups: [] };
+    const log = lsGet(CHALLENGE_HISTORY_KEY, []);
+    log.unshift(entry);
+    lsSet(CHALLENGE_HISTORY_KEY, log);
+    status.textContent = 'Salvat!';
+    showScreenFlash();
+    showCelebration();
+    document.getElementById('challenge-finish-wrap').style.display = 'none';
+    renderMergedWorkoutHistory();
+    renderHome();
+    setTimeout(() => { status.textContent = ''; }, 2000);
+
+    const muscles = await classifyMuscles(entry.content);
+    if (muscles.length) {
+      const all = lsGet(CHALLENGE_HISTORY_KEY, []);
+      const found = all.find(e => e.generatedAt === entry.generatedAt);
+      if (found) {
+        found.muscleGroups = muscles;
+        lsSet(CHALLENGE_HISTORY_KEY, all);
+        renderMergedWorkoutHistory();
+        renderHome();
+      }
+    }
+  });
+
+  // --- Cronometru execuție Challenge (o singură "priză" - contra cronometru sau deschis) ---
+  const challengeTimer = {
+    mode: 'countdown',
+    timeCapSeconds: 300,
+    startedAt: 0,
+    pausedAt: 0,
+    pausedTotal: 0,
+    paused: false,
+    completed: false,
+    tickId: null,
+    wakeLock: null
+  };
+
+  function challengeRenderTick() {
+    const nowRef = challengeTimer.paused ? challengeTimer.pausedAt : Date.now();
+    const elapsed = Math.max(0, (nowRef - challengeTimer.startedAt - challengeTimer.pausedTotal) / 1000);
+
+    let displaySeconds, progress;
+    if (challengeTimer.mode === 'countdown') {
+      const remaining = challengeTimer.timeCapSeconds - elapsed;
+      if (remaining <= 0 && !challengeTimer.paused && !challengeTimer.completed) {
+        challengeTimerComplete();
+        return;
+      }
+      displaySeconds = remaining;
+      progress = Math.min(1, Math.max(0, elapsed / challengeTimer.timeCapSeconds));
+    } else {
+      displaySeconds = elapsed;
+      progress = (elapsed % 60) / 60;
+    }
+
+    document.getElementById('challenge-timer-time').textContent = hiitFormatTime(displaySeconds);
+    const ring = document.getElementById('challenge-ring-progress');
+    ring.style.strokeDashoffset = String(HIIT_RING_CIRCUMFERENCE * (1 - progress));
+    ring.style.stroke = challengeTimer.paused ? HIIT_PAUSE_COLOR : hiitRingColor(progress);
+  }
+
+  function challengeTick() {
+    if (challengeTimer.paused || challengeTimer.completed) return;
+    challengeRenderTick();
+  }
+
+  function challengeTimerComplete() {
+    challengeTimer.completed = true;
+    if (challengeTimer.tickId) { clearInterval(challengeTimer.tickId); challengeTimer.tickId = null; }
+    releaseWakeLock(challengeTimer);
+    stopRadio();
+    hiitBeepComplete();
+    document.getElementById('challenge-timer-time').textContent = '✓';
+    document.getElementById('challenge-timer-phase').textContent = '';
+    showCelebration();
+    showScreenFlash();
+  }
+
+  function challengeCloseTimer() {
+    if (challengeTimer.tickId) { clearInterval(challengeTimer.tickId); challengeTimer.tickId = null; }
+    releaseWakeLock(challengeTimer);
+    stopRadio();
+    document.getElementById('challenge-timer-overlay').classList.add('hidden');
+  }
+
+  document.getElementById('challenge-execute-btn').addEventListener('click', () => {
+    if (!challengePreview) return;
+    challengeTimer.mode = challengePreview.mode;
+    challengeTimer.timeCapSeconds = challengePreview.timeCapSeconds;
+    challengeTimer.startedAt = Date.now();
+    challengeTimer.pausedTotal = 0;
+    challengeTimer.paused = false;
+    challengeTimer.completed = false;
+
+    document.getElementById('challenge-timer-exercise').textContent = challengePreview.targetLabel;
+    document.getElementById('challenge-timer-progress-text').textContent = challengePreview.penaltyNote || '';
+    document.getElementById('challenge-timer-phase').textContent =
+      challengeTimer.mode === 'countdown' ? 'Contra cronometru' : 'Cronometru deschis';
+    document.getElementById('challenge-timer-pause').textContent = '⏸ Pauză';
+
+    const ring = document.getElementById('challenge-ring-progress');
+    ring.style.strokeDasharray = String(HIIT_RING_CIRCUMFERENCE);
+    ring.style.strokeDashoffset = String(HIIT_RING_CIRCUMFERENCE);
+
+    document.getElementById('challenge-timer-overlay').classList.remove('hidden');
+    if (challengeTimer.tickId) clearInterval(challengeTimer.tickId);
+    challengeTimer.tickId = setInterval(challengeTick, 200);
+    hiitBeepStart();
+    requestWakeLock(challengeTimer);
+    startRadio('challenge-radio-toggle');
+    challengeRenderTick();
+  });
+
+  document.getElementById('challenge-timer-pause').addEventListener('click', () => {
+    const btn = document.getElementById('challenge-timer-pause');
+    if (challengeTimer.paused) {
+      challengeTimer.pausedTotal += Date.now() - challengeTimer.pausedAt;
+      challengeTimer.paused = false;
+      btn.textContent = '⏸ Pauză';
+    } else {
+      challengeTimer.paused = true;
+      challengeTimer.pausedAt = Date.now();
+      btn.textContent = '▶ Continuă';
+    }
+    challengeRenderTick();
+  });
+
+  document.getElementById('challenge-timer-close').addEventListener('click', challengeCloseTimer);
 
   // ============================================================
   // Calendar generic (folosit la Nutriție)
@@ -3091,7 +3428,7 @@ obiectului JSON.`;
   // (Antrenament/Bodybuilding personalizat/Easy WOD/Hero WOD/introducere manuală/alergări)
   // într-o singură listă, sortată descrescător.
   function renderMergedWorkoutHistory() {
-    const workoutKeys = [WORKOUT_LOG_KEY, BB_CUSTOM_HISTORY_KEY, EASY_HISTORY_KEY, HERO_HISTORY_KEY, MANUAL_HISTORY_KEY, HIIT_HISTORY_KEY];
+    const workoutKeys = [WORKOUT_LOG_KEY, BB_CUSTOM_HISTORY_KEY, EASY_HISTORY_KEY, HERO_HISTORY_KEY, MANUAL_HISTORY_KEY, HIIT_HISTORY_KEY, CHALLENGE_HISTORY_KEY];
     const container = document.getElementById('custom-workout-history');
     const merged = [];
     workoutKeys.forEach(key => {
@@ -4966,7 +5303,8 @@ Generează antrenamentul concret de azi.`;
     const sheikoProgram = lsGet(SHEIKO_PROGRAM_HISTORY_KEY, []);
     const olympicProgram = lsGet(OLYMPIC_PROGRAM_HISTORY_KEY, []);
     const hiit = lsGet(HIIT_HISTORY_KEY, []);
-    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram, ...hiit];
+    const challenge = lsGet(CHALLENGE_HISTORY_KEY, []);
+    const allWorkouts = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram, ...hiit, ...challenge];
 
     const workoutsPerMonth = new Array(12).fill(0);
     allWorkouts.forEach(e => {
@@ -5015,7 +5353,8 @@ Generează antrenamentul concret de azi.`;
     const sheikoProgram = lsGet(SHEIKO_PROGRAM_HISTORY_KEY, []);
     const olympicProgram = lsGet(OLYMPIC_PROGRAM_HISTORY_KEY, []);
     const hiit = lsGet(HIIT_HISTORY_KEY, []);
-    const all = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram, ...hiit];
+    const challenge = lsGet(CHALLENGE_HISTORY_KEY, []);
+    const all = [...easy, ...hero, ...workout, ...manual, ...runs, ...crossfitProgram, ...bbProgram, ...bbCustom, ...sheikoProgram, ...olympicProgram, ...hiit, ...challenge];
 
     const workoutsToday = all.filter(e => e.date === today).length;
     const workoutsMonth = all.filter(e => e.date.startsWith(monthPrefix)).length;
