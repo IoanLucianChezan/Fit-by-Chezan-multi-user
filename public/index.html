@@ -1721,14 +1721,6 @@
       <p class="hint">Cronometru configurabil pentru orice exercițiu — seturi, repetări, timp de lucru și pauză. Nu se salvează în istoric sau statistici.</p>
 
       <div class="settings-field">
-        <label for="timer-exercise-name">Exercițiu (opțional)</label>
-        <input type="text" id="timer-exercise-name" placeholder="Ex: Genoflexiuni">
-      </div>
-      <div class="settings-field">
-        <label for="timer-reps">Repetări per set (opțional)</label>
-        <input type="number" id="timer-reps" min="1" placeholder="Ex: 12">
-      </div>
-      <div class="settings-field">
         <label for="timer-sets">Seturi</label>
         <input type="number" id="timer-sets" min="1" value="3">
       </div>
@@ -3236,14 +3228,12 @@ Generează challenge-ul de azi (sub 6 minute).`;
   }
 
   document.getElementById('timer-start-btn').addEventListener('click', () => {
-    const exerciseName = document.getElementById('timer-exercise-name').value.trim();
-    const reps = document.getElementById('timer-reps').value.trim();
     const sets = Math.max(1, Number(document.getElementById('timer-sets').value) || 1);
     const workSeconds = Math.max(1, Number(document.getElementById('timer-work-seconds').value) || 30);
     const restSeconds = Math.max(0, Number(document.getElementById('timer-rest-seconds').value) || 0);
     const warmupSeconds = Math.max(0, Number(document.getElementById('timer-warmup-seconds').value) || 0);
 
-    const label = exerciseName ? (reps ? `${exerciseName} × ${reps}` : exerciseName) : 'Exercițiu';
+    const label = 'Exercițiu';
     const intervals = [];
     if (warmupSeconds > 0) intervals.push({ exercise: 'Încălzire', seconds: warmupSeconds, type: 'warmup' });
     for (let round = 1; round <= sets; round++) {
