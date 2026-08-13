@@ -1030,15 +1030,6 @@
         </div>
 
         <div class="settings-field">
-          <label for="challenge-duration">Durată</label>
-          <select id="challenge-duration">
-            <option value="scurt">Scurt (sub 6 min)</option>
-            <option value="mediu" selected>Mediu (6-12 min)</option>
-            <option value="lung">Lung (peste 12 min)</option>
-          </select>
-        </div>
-
-        <div class="settings-field">
           <label for="challenge-limitations">Limitări / accidentări (opțional)</label>
           <input type="text" id="challenge-limitations" placeholder="Ex: umăr sensibil, evit tracțiuni">
         </div>
@@ -1062,6 +1053,25 @@
         <button type="button" id="challenge-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
         <button type="button" id="challenge-back-btn" class="settings-shortcut">← Înapoi</button>
         <span id="challenge-finish-status"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Easy WOD (bodyweight)</h2>
+      <p class="hint">Antrenament pe saltea, fără echipament — flotări, genoflexiuni, abdomene, plank, triceps. Format variat (EMOM, AMRAP, seturi, circuit, tabata), 15-30 minute.</p>
+
+      <div class="workout-actions">
+        <button type="button" id="easy-generate-btn" class="btn-big">🔄 Generează antrenament</button>
+        <span id="easy-generate-status"></span>
+      </div>
+
+      <div id="easy-generate-quote" class="motivational-quote"></div>
+      <div id="easy-workout-preview" class="workout-result"></div>
+
+      <div class="workout-actions" id="easy-finish-wrap" style="display:none;">
+        <button type="button" id="easy-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
+        <button type="button" id="easy-back-btn" class="settings-shortcut">← Înapoi</button>
+        <span id="easy-finish-status"></span>
       </div>
     </div>
 
@@ -1144,25 +1154,6 @@
         <button type="button" id="bb-custom-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
         <button type="button" id="bb-custom-back-btn" class="settings-shortcut">← Înapoi</button>
         <span id="bb-custom-finish-status"></span>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Easy WOD (bodyweight)</h2>
-      <p class="hint">Antrenament pe saltea, fără echipament — flotări, genoflexiuni, abdomene, plank, triceps. Format variat (EMOM, AMRAP, seturi, circuit, tabata), 15-30 minute.</p>
-
-      <div class="workout-actions">
-        <button type="button" id="easy-generate-btn" class="btn-big">🔄 Generează antrenament</button>
-        <span id="easy-generate-status"></span>
-      </div>
-
-      <div id="easy-generate-quote" class="motivational-quote"></div>
-      <div id="easy-workout-preview" class="workout-result"></div>
-
-      <div class="workout-actions" id="easy-finish-wrap" style="display:none;">
-        <button type="button" id="easy-finish-btn" class="btn-big btn-finish">✓ Finalizează antrenamentul</button>
-        <button type="button" id="easy-back-btn" class="settings-shortcut">← Înapoi</button>
-        <span id="easy-finish-status"></span>
       </div>
     </div>
 
@@ -2750,41 +2741,37 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
   // ============================================================
 
   const CHALLENGE_HISTORY_KEY = 'fw_challenge_history';
-  const CHALLENGE_DURATION_LABELS = {
-    scurt: 'Scurt (sub 6 minute)',
-    mediu: 'Mediu (6-12 minute)',
-    lung: 'Lung (peste 12 minute)'
-  };
+  const CHALLENGE_MAX_SECONDS = 360;
 
   const CHALLENGE_SYSTEM_PROMPT = `Ești un antrenor expert în provocări stil CrossFit ("challenges") -
 un singur efort intens, NU un antrenament cu mai multe exerciții rotative. Presupune că utilizatorul
 are acces la orice echipament necesar (bară de tracțiuni, gantere, bară olimpică etc.) - nu întreba
 despre echipament, alege orice exercițiu clasic de CrossFit.
 
-Primești nivelul utilizatorului, durata dorită (categorie) și eventuale limitări/accidentări.
+Primești nivelul utilizatorului și eventuale limitări/accidentări. Challenge-ul trebuie să dureze
+SUB 6 MINUTE (360 de secunde) în total, pentru orice nivel - alege volumul de repetări/timpul
+potrivit ca un utilizator de nivelul respectiv să încheie realist în această limită.
 
-Tipuri posibile de challenge (alege UNUL, cel mai potrivit nivelului și duratei):
+Tipuri posibile de challenge (alege UNUL, cel mai potrivit nivelului):
 1. "Contra cronometru" (countdown) - un număr fix de repetări dintr-un exercițiu sau mic combo,
-   cu un plafon de timp clar (ex: "100 de burpees în 5 minute"). Adaptează plafonul de timp la
-   categoria de durată: scurt = sub 6 minute, mediu = 6-12 minute, lung = peste 12 minute.
-2. "Cronometru deschis" (countup) - un volum mare de repetări (ex: "1000 flotări, 1000
-   genoflexiuni, 500 tracțiuni"), fără plafon de timp - utilizatorul cronometrează cât durează și
-   oprește manual la final. Alege volumul astfel încât timpul realist de finalizare să se
-   încadreze in categoria de durată aleasă.
+   cu un plafon de timp clar sub 6 minute (ex: "100 de burpees în 5 minute").
+2. "Cronometru deschis" (countup) - un volum de repetări (ex: "300 de genoflexiuni + 50 de
+   burpees"), fără plafon de timp - utilizatorul cronometrează cât durează și oprește manual la
+   final. Alege volumul astfel încât timpul realist de finalizare să fie sub 6 minute.
 3. Tip "hold + penalizare" - o poziție statică ținută cât mai mult (ex: plank pe coate), cu o
    penalizare mică de exerciții de făcut de fiecare dată când utilizatorul se oprește din poziție
    (ex: "de fiecare dată când te oprești: 4 burpees, 6 abdomene, 6 genoflexiuni"). Poate fi
-   countdown (target de timp fix) sau countup (ține cât poți).
+   countdown (target de timp fix, sub 6 minute) sau countup (ține cât poți, realist sub 6 minute).
 
 Răspunde STRICT cu un obiect JSON valid, fără text în plus, fără markdown, fără backtick-uri, în
 formatul exact:
 {
   "title": "titlu scurt (ex: '100 Burpees for Time')",
   "mode": "countdown" sau "countup",
-  "timeCapSeconds": număr întreg de secunde (plafonul de timp, DOAR dacă mode e "countdown";
-    altfel pune 0),
+  "timeCapSeconds": număr întreg de secunde, MAXIM 360 (plafonul de timp, DOAR dacă mode e
+    "countdown"; altfel pune 0),
   "targetLabel": "descriere scurtă a ce trebuie făcut, afișată sub cronometru (ex: '100 Burpees',
-    '1000 Flotări + 1000 Genoflexiuni + 500 Tracțiuni', 'Plank pe coate')",
+    '300 Genoflexiuni + 50 Burpees', 'Plank pe coate')",
   "penaltyNote": "penalizarea de făcut la fiecare oprire, sau text gol daca nu există",
   "notes": "1-2 propoziții cu sfaturi de tehnică/siguranță pentru acest challenge"
 }`;
@@ -2792,7 +2779,6 @@ formatul exact:
   function collectChallengeConfig() {
     return {
       level: document.getElementById('challenge-level').value,
-      duration: document.getElementById('challenge-duration').value,
       limitations: document.getElementById('challenge-limitations').value.trim()
     };
   }
@@ -2800,10 +2786,9 @@ formatul exact:
   function buildChallengeUserPrompt(config, dayName, dateStr) {
     return `Ziua curentă: ${dayName}, ${dateStr}
 Nivel: ${config.level}
-Durată dorită: ${CHALLENGE_DURATION_LABELS[config.duration] || config.duration}
 Limitări: ${config.limitations || '(niciuna)'}
 
-Generează challenge-ul de azi.`;
+Generează challenge-ul de azi (sub 6 minute).`;
   }
 
   function buildChallengeMarkdown(plan) {
@@ -2847,7 +2832,9 @@ Generează challenge-ul de azi.`;
       if (!match) throw new Error('Răspunsul AI nu a putut fi interpretat. Încearcă din nou.');
       const plan = JSON.parse(match[0]);
       plan.mode = plan.mode === 'countup' ? 'countup' : 'countdown';
-      plan.timeCapSeconds = plan.mode === 'countdown' ? Math.max(30, Number(plan.timeCapSeconds) || 300) : 0;
+      plan.timeCapSeconds = plan.mode === 'countdown'
+        ? Math.min(CHALLENGE_MAX_SECONDS, Math.max(30, Number(plan.timeCapSeconds) || 300))
+        : 0;
       plan.targetLabel = plan.targetLabel || 'Challenge';
       plan.penaltyNote = plan.penaltyNote || '';
       const content = buildChallengeMarkdown(plan);
