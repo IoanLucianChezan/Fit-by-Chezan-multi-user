@@ -2957,37 +2957,61 @@ Generează circuitul HIIT de azi, cu exerciții exclusiv din categoria aleasă. 
   const CHALLENGE_HISTORY_KEY = 'fw_challenge_history';
   const CHALLENGE_MAX_SECONDS = 360;
 
-  const CHALLENGE_SYSTEM_PROMPT = `Ești un antrenor expert în provocări stil CrossFit ("challenges") -
-un singur efort intens, NU un antrenament cu mai multe exerciții rotative. Presupune că utilizatorul
-are acces la orice echipament necesar (bară de tracțiuni, gantere, bară olimpică etc.) - nu întreba
-despre echipament, alege orice exercițiu clasic de CrossFit.
+  const CHALLENGE_SYSTEM_PROMPT = `Ești un antrenor expert în "finishers" - provocări scurte și
+intense de bodyweight/CrossFit, gândite ca o singură rundă de foc, NU un antrenament complet cu
+încălzire și cooldown detaliate. Presupune că utilizatorul are acces la orice echipament necesar
+(bară de tracțiuni, gantere etc.) - nu întreba despre echipament.
 
 Primești nivelul utilizatorului și eventuale limitări/accidentări. Challenge-ul trebuie să dureze
-SUB 6 MINUTE (360 de secunde) în total, pentru orice nivel - alege volumul de repetări/timpul
-potrivit ca un utilizator de nivelul respectiv să încheie realist în această limită.
+SUB 6 MINUTE (360 secunde) în total.
 
-Tipuri posibile de challenge (alege UNUL, cel mai potrivit nivelului):
-1. "Contra cronometru" (countdown) - un număr fix de repetări dintr-un exercițiu sau mic combo,
-   cu un plafon de timp clar sub 6 minute (ex: "100 de burpees în 5 minute").
-2. "Cronometru deschis" (countup) - un volum de repetări (ex: "300 de genoflexiuni + 50 de
-   burpees"), fără plafon de timp - utilizatorul cronometrează cât durează și oprește manual la
-   final. Alege volumul astfel încât timpul realist de finalizare să fie sub 6 minute.
-3. Tip "hold + penalizare" - o poziție statică ținută cât mai mult (ex: plank pe coate), cu o
-   penalizare mică de exerciții de făcut de fiecare dată când utilizatorul se oprește din poziție
-   (ex: "de fiecare dată când te oprești: 4 burpees, 6 abdomene, 6 genoflexiuni"). Poate fi
-   countdown (target de timp fix, sub 6 minute) sau countup (ține cât poți, realist sub 6 minute).
+Alege UNUL dintre formatele de mai jos și variază-l de la o generare la alta (nu repeta mereu
+același format sau exercițiu):
+1. Reps-in-time: număr fix de repetări dintr-un exercițiu, cu plafon de timp. Ex: "100 Burpees /
+   5 min", "150 Air Squats / 5 min", "100 Push-Ups / 4 min", "200 Mountain Climbers / 4 min",
+   "200 Sit-Ups / 5 min", "100 V-Ups / 5 min", "150 Bicycle Crunches / 4 min", "100 Jump Squats /
+   4 min", "100 Walking Lunges / 5 min", "150 High Knees / 2 min", "200 Jumping Jacks / 3 min",
+   "100 Plank Shoulder Taps / 3 min", "100 Leg Raises / 5 min", "100 Skater Jumps / 3 min",
+   "60 Hand-Release Push-Ups / 4 min", "100 Squat Pulses / 2 min".
+2. Combo reps-in-time: două exerciții cu volum fix, în același plafon. Ex: "50 Push-Ups + 50
+   Squats / 5 min", "50 Burpees + 50 Sit-Ups / 5 min", "100 Squats + 100 Mountain Climbers /
+   5 min", "50 V-Ups + 50 Push-Ups / 5 min", "100 Lunges + 50 Jump Squats / 5 min", "50 Burpees +
+   100 Mountain Climbers / 5 min".
+3. AMRAP: un mini-circuit de 3-4 exerciții, repetat cât mai multe runde posibil în plafonul de
+   timp. Ex: "AMRAP 5 min: 5 burpees + 10 push-ups + 15 air squats", "AMRAP 4 min: 10 V-ups + 20
+   bicycle crunches + 10 leg raises + 20 heel taps", "AMRAP 5 min: 15 squats + 10 alternating
+   lunges + 5 jump squats", "AMRAP 3 min: 5 burpees + 10 squats + 15 mountain climbers".
+4. EMOM: la începutul fiecărui minut un număr fix de repetări, restul minutului odihnă (ex: "EMOM
+   5: 10 burpees la începutul fiecărui minut"), sau EMOM cu exercițiu diferit pe minut (ex: "Core
+   EMOM 5 - min 1: 20 sit-ups, min 2: 30 mountain climbers, min 3: 20 leg raises, min 4: 30
+   bicycle crunches, min 5: plank până la final").
+5. Death by X: repetări crescânde în fiecare minut, până expiră timpul. Ex: "Death by Burpees -
+   5 min: minutul 1 faci 8, minutul 2 faci 10, apoi 12, 14, 16".
+6. Ladder: scară crescătoare de repetări, cât de sus se poate urca în timpul alocat. Ex: "Burpee
+   Ladder - 5 min: 2-4-6-8-10-12...", "Push-Up Ladder - 5 min: 5 push-ups + 10 squats, apoi
+   10+20, 15+30...".
+
+Adaptează volumul/repetările nivelului utilizatorului (mai puține repetări sau plafon mai relaxat
+pentru începători, mai multe pentru avansați). Fii concis - e un finisher rapid, nu un antrenament
+complet: NU adăuga încălzire sau cooldown detaliate, doar exercițiul/formatul ales.
+
+Aproape întotdeauna challenge-ul are plafon fix de timp (mode "countdown"). Folosește "countup"
+(cronometru deschis, fără plafon) DOAR pentru un volum mare fără structură de format de mai sus,
+unde utilizatorul chiar trebuie să cronometreze cât durează (rar, nu implicit).
 
 Răspunde STRICT cu un obiect JSON valid, fără text în plus, fără markdown, fără backtick-uri, în
 formatul exact:
 {
-  "title": "titlu scurt (ex: '100 Burpees for Time')",
+  "title": "titlu scurt (ex: '100 Burpees for Time', 'Death by Burpees', 'Core Blast AMRAP')",
   "mode": "countdown" sau "countup",
   "timeCapSeconds": număr întreg de secunde, MAXIM 360 (plafonul de timp, DOAR dacă mode e
     "countdown"; altfel pune 0),
-  "targetLabel": "descriere scurtă a ce trebuie făcut, afișată sub cronometru (ex: '100 Burpees',
-    '300 Genoflexiuni + 50 Burpees', 'Plank pe coate')",
-  "penaltyNote": "penalizarea de făcut la fiecare oprire, sau text gol daca nu există",
-  "notes": "1-2 propoziții cu sfaturi de tehnică/siguranță pentru acest challenge"
+  "targetLabel": "descrierea completă a formatului/exercițiilor, afișată sub cronometru (ex:
+    '100 Burpees', 'AMRAP: 5 Burpees + 10 Push-Ups + 15 Air Squats', 'Death by Burpees (start 8,
+    +2/min)', 'EMOM: 10 Burpees/min')",
+  "penaltyNote": "detalii suplimentare de structură dacă formatul are pași (ex: progresia exactă
+    a unui ladder, sau exercițiile pe minut la un EMOM cu variație), sau text gol dacă nu e cazul",
+  "notes": "1 propoziție scurtă cu sfat de tehnică/siguranță"
 }`;
 
   function collectChallengeConfig() {
@@ -3013,7 +3037,7 @@ Generează challenge-ul de azi (sub 6 minute).`;
     lines.push(`**Format:** ${plan.mode === 'countdown'
       ? `Contra cronometru — ${Math.round(plan.timeCapSeconds / 60)} min`
       : 'Cronometru deschis (oprești manual la final)'}`);
-    if (plan.penaltyNote) lines.push(`**Penalizare la oprire:** ${plan.penaltyNote}`);
+    if (plan.penaltyNote) lines.push(`**Detalii:** ${plan.penaltyNote}`);
     if (plan.notes) {
       lines.push('');
       lines.push(`**Note:** ${plan.notes}`);
