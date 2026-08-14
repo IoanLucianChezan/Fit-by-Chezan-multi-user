@@ -36,8 +36,8 @@ app.use(cookieParser());
 // ghicirea automata a parolelor prin incercari repetate
 // ============================================================
 
-const LOGIN_MAX_ATTEMPTS = 5;
-const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 6;
+const LOGIN_WINDOW_MS = 3 * 60 * 1000;
 const loginAttempts = new Map();
 
 function checkLoginRateLimit(username) {
